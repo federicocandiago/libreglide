@@ -1,55 +1,61 @@
 # libreGLIDE
 
-Launcher Android **contestuale**, open source e **local-only**, scritto in Flutter con un sottile strato nativo in Kotlin. La home cambia con l'ora del giorno, il luogo (casa, lavoro, in viaggio), l'auto e la musica, e impara dalle tue abitudini. Tutto resta sul telefono.
+<p align="center">
+  <img src="docs/screenshots/space-morning.png" alt="The Space in the morning: quick actions, today's agenda, weather and the apps for this moment" width="300">
+  &nbsp;
+  <img src="docs/screenshots/space-night.png" alt="The Space at night: good night card, tomorrow's weather and the apps for this moment" width="300">
+</p>
 
-*English summary below.*
+A **context-aware**, open source, **local-only** Android launcher, built with Flutter and a thin native Kotlin layer. The home changes with the time of day, your places (home, work, travelling), the car and your music, and it learns from your habits. Everything stays on the phone.
 
-> Versione **1.0.1**. Provato su Pixel 7 con Android 17; funziona da Android 12 in su.
+> Version **1.0.1**. Tested on a Pixel 7 with Android 17; works on Android 12 and later.
 
-## Cosa fa
+## Features
 
-- **Quattro pagine** con swipe orizzontale: **Space ← Home → Collections → A-Z**. Il tasto Home riporta sempre alla Home.
-- **Space:** la pagina del momento. In cima la data sopra lo sfondo, con lo Space corrente (Risveglio, Mattina, Sera, Notte, Casa, Lavoro/Scuola, In movimento, In ascolto, In viaggio…). Sotto, le app più probabili adesso e le card, in ordine di importanza per il contesto:
-  - Agenda e Prossima destinazione;
-  - In ascolto, In auto, Dove ho parcheggiato;
-  - In viaggio, Meteo, Buonanotte, Tempo di utilizzo;
-  - widget Android.
+- **Four pages**, swiped horizontally: **Space ← Home → Collections → A-Z**. The Home button always brings you back Home.
+- **Space:** the page for the moment. The date card shows the current Space: Wake up, Morning, Lunch, Afternoon, Evening, Night, Home, Work/School, On the move, Listening or Travelling. Each Space has its own content:
+  - **Quick actions:** alarm, new event, maps, timer, places to eat, tomorrow's alarm, and more.
+  - **Cards first:** agenda in the morning, tomorrow's weather in the evening, a screen time recap at night.
+  - **A row of apps from a category:** news when you wake up, food at lunch, video in the evening.
+  - **Other cards:** Agenda, Next destination, Now playing, In the car, Where I parked, Travel, Weather, Good night, Screen time, Android widgets.
 
-  Ogni momento ha il suo contenuto: azioni rapide (Sveglia, Nuovo evento, Timer, Dove mangiare…), card in primo piano e una riga di app di una categoria (Notizie al risveglio, Cibo a pranzo, Video la sera). La sera il meteo mostra domani. Le card che tocchi spesso in un contesto salgono e compaiono anche dove non erano previste; tenendo premuta una card si sceglie "Mostra sempre" o "Nascondi" in quello Space. Il cassetto laterale permette di scegliere uno Space a mano.
-- **Home:** lo sfondo incorniciato da barra e dock, fino a 3 widget Android a tutta larghezza e un dock da 4 posti. Le app del dock si riordinano tenendole premute e trascinandole. Il dock può essere un vassoio pieno o trasparente, e gli angoli della cornice si possono spegnere. Pressione lunga sullo sfondo per aggiungere e modificare i widget.
-- **Collections:** una card per categoria con le app più probabili *adesso*, espandibile. Le card si possono fissare o nascondere.
-- **A-Z:** griglia o lista, ricerca senza accenti, barra delle lettere.
-- **Ricerca globale** (swipe in su) con 4 o 8 app suggerite e apertura automatica se c'è un solo risultato. **Contatti** (swipe in giù): un tocco apre il compositore con il numero, una pressione lunga dà chiama, messaggio e scheda. I gesti sono configurabili.
-- **Previsione locale:** Naive Bayes con contatori che decadono nel tempo (abitudine su 30 giorni, slancio su 6 ore). Usa come segnali fascia oraria, tipo di giorno, rete, uscita audio, luogo e movimento. Con l'accesso ai dati di utilizzo impara anche dalle app aperte fuori da libreGLIDE (notifiche, recenti, link), a partire dalle ultime due settimane; si può spegnere. Una schermata di diagnostica spiega le scelte.
-- **Luoghi senza nomi da inserire:** casa e lavoro vengono riconosciuti in automatico (sonno, permanenza nei giorni feriali, Wi-Fi in hash) e si possono correggere.
-- **Digital detox:** blocca le app che scegli, tutto il giorno o in una fascia oraria:
-  - un PIN da 8 a 16 caratteri, salvato solo come hash;
-  - sblocco con il PIN oppure mai;
-  - opzione per nascondere le app bloccate;
-  - una schermata di blocco nera.
+  The Space also **learns from how you use it**. Cards you tap often in a context move up, and they show up even where the profile didn't plan them. Long-press a card to "Always show" or "Hide" it in that Space. The side drawer lets you pick a Space by hand.
+- **Home:** the wallpaper framed by the tab bar and the dock, up to 3 full-width Android widgets, and a 4-slot dock. Long-press and drag an app to reorder the dock. The dock can be a solid tray or transparent, and the frame's rounded corners can be turned off.
+- **Collections:** one card per category with the apps most likely *right now*, expandable. Cards can be pinned or hidden.
+- **A-Z:** grid or list, accent-insensitive search, letter rail.
+- **Global search** (swipe up): 4 or 8 suggested apps, and a single match opens on its own. **Contacts** (swipe down): a tap opens the dialer with the number; a long press offers call, message and contact card. Both gestures can be changed.
+- **On-device prediction:** Naive Bayes with counters that decay over time (30-day habit, 6-hour momentum). Its signals are time slot, type of day, network, audio output, place and motion.
+  - With usage access, it also learns from apps opened outside libreGLIDE (notifications, recents, links), starting from the last two weeks. This can be turned off.
+  - A diagnostics screen explains every choice.
+- **Places without typing names:** home and work are recognized automatically from sleep, weekday stays and hashed Wi-Fi, and they can be corrected.
+- **Digital detox:** locks the apps you choose, all day or during a time range.
+  - A PIN of 8 to 16 characters, stored only as a hash.
+  - Unlock with the PIN, or never.
+  - An option to hide locked apps.
+  - A plain black lock screen.
 
-  Usa un servizio di accessibilità che riceve **solo** il nome dell'app in primo piano.
-- **Aspetto Material You:** colori di sistema o 8 colori predefiniti, 5 stili di palette, contrasto, tema chiaro/scuro/automatico, icone a tema, carattere di sistema (Google Sans Flex dove c'è). In più, un **vetro smerigliato** facoltativo: Space, Collections e A-Z semitrasparenti sopra lo sfondo sfocato da Android.
-- **Sfondo contestuale** facoltativo da Unsplash (con una tua chiave), scelto in base a momento e meteo, visibile solo dentro libreGLIDE.
-- **Lingue:** italiano, inglese, spagnolo, tedesco e francese. L'informativa sulla privacy è in italiano e in inglese.
+  It uses an accessibility service that receives **only** the name of the app in the foreground.
+- **Material You look:** system colors or 8 presets, 5 palette styles, contrast levels, light/dark/automatic theme, themed icons, the system font (Google Sans Flex where available), and an optional **frosted glass** mode with Android's system blur.
+- **Contextual wallpaper** from Unsplash (optional, with your own key), chosen by moment and weather, shown only inside libreGLIDE.
+- **Languages:** English, Italian, Spanish, German and French. The privacy policy is available in English and Italian.
 
 ## Privacy
 
-Informativa completa: [docs/PRIVACY.md](docs/PRIVACY.md), visibile anche nell'app (onboarding e Impostazioni → Informazioni).
+Full policy: [docs/PRIVACY.md](docs/PRIVACY.md). It is also shown in the app, during onboarding and in Settings → About.
 
-- Nessun account, nessuna pubblicità, nessuna telemetria.
-- **Connessioni facoltative:** solo lo sfondo Unsplash (con una chiave inserita da te) e la card Meteo (Open-Meteo, posizione arrotondata). Tutto il codice di rete è in `lib/net/`.
-- **Permessi:** ogni permesso è facoltativo e chiesto dalla funzione che lo usa. La posizione in background serve solo a "Dove ho parcheggiato", che è spento di default.
-- **Backup:** lo storico delle aperture è in SQLite, viene cancellato dopo 180 giorni ed è escluso dal backup cloud.
-- **Cancellazione:** si può cancellare tutto dalle impostazioni.
+- No accounts, no ads, no telemetry.
+- **Optional network use:** only the Unsplash wallpaper (with a key you enter) and the Weather card (Open-Meteo, with a rounded location). All network code lives in `lib/net/`.
+- **Permissions:** every permission is optional and is requested by the feature that needs it. Background location is used only by "Where I parked", which is off by default.
+- **Storage:** launch history is kept in SQLite, deleted after 180 days and excluded from cloud backup.
+- **Deleting data:** everything can be wiped from the settings.
 
-## Installare
+## Install
 
-Scarica l'APK dall'ultima [release](https://github.com/federicocandiago/libreglide/releases). Poi apri libreGLIDE e impostalo come app Home. Serve Android 12 o successivo.
+Download the APK from the latest [release](https://github.com/federicocandiago/libreglide/releases), open libreGLIDE and set it as your Home app. It requires Android 12 or later on a 64-bit (arm64) phone.
 
-## Compilare
+## Build
 
-Servono Flutter 3.47+, JDK 17 e l'SDK di Android con la piattaforma 37 (Android 17). `minSdk` è 31.
+You need Flutter 3.47+, JDK 17 and the Android SDK with platform 37 (Android 17). `minSdk` is 31.
 
 ```sh
 flutter pub get
@@ -57,54 +63,40 @@ flutter test
 flutter build apk --release --target-platform android-arm64
 ```
 
-Senza `android/key.properties` la release viene firmata con la chiave di debug.
+Without `android/key.properties`, the release build is signed with the debug key.
 
-Per i comandi di sviluppo (aprire una schermata senza toccare il telefono):
+Developer commands open a screen without touching the phone:
 
 ```sh
 adb shell am start -n org.libreglide.launcher/.MainActivity --es open settings
 ```
 
-## Struttura
+## Project layout
 
 ```
 lib/
-  core/        logica pura in Dart, testabile senza dispositivo
-               (contesto, previsione, Collections, luoghi, Space, ricerca, detox…)
-  data/        impostazioni (shared_preferences) e storico (SQLite)
-  net/         l'unico codice di rete (Unsplash, Open-Meteo)
-  platform/    lato Dart del bridge con Kotlin
-  state/       controller (app, card, luoghi, meteo, sfondo)
-  theme/       palette Material You e carattere di sistema
-  ui/          pagine e widget (stile Glide in ui/glide_style.dart)
-  legal/       informativa sulla privacy
-  l10n/        traduzioni (ARB)
+  core/        pure Dart logic, testable without a device
+               (context, prediction, Collections, places, Spaces, search, detox…)
+  data/        settings (shared_preferences) and history (SQLite)
+  net/         the only network code (Unsplash, Open-Meteo)
+  platform/    Dart side of the Kotlin bridge
+  state/       controllers (apps, cards, places, weather, wallpaper)
+  theme/       Material You palette and system font
+  ui/          pages and widgets (Glide style in ui/glide_style.dart)
+  legal/       privacy policy
+  l10n/        translations (ARB)
 android/app/src/main/kotlin/org/libreglide/launcher/
-  MainActivity.kt, LibreGlideApplication.kt   activity Home ed engine sempre caldo
-  LauncherBridge.kt                            app, icone, permessi, contesto, widget
-  Detox*.kt                                    Digital detox (servizio e schermata di blocco)
-  ParkingReceiver.kt, MediaWatcher.kt          parcheggio e musica
-test/core/                                     test del nucleo
-docs/                                          specifiche e informativa
+  MainActivity.kt, LibreGlideApplication.kt   Home activity and always-warm engine
+  LauncherBridge.kt                            apps, icons, permissions, context, widgets
+  Detox*.kt                                    Digital detox (service and lock screen)
+  WindowGlass.kt                               frosted glass (system blur)
+  ParkingReceiver.kt, MediaWatcher.kt          parking and music
+test/core/                                     core tests
+docs/                                          specs (in Italian), privacy policy, screenshots
 ```
 
-## Licenza
+## License
 
-[GNU General Public License v3.0](LICENSE) o successiva.
+[GNU General Public License v3.0](LICENSE) or later.
 
-Dati meteo di [Open-Meteo.com](https://open-meteo.com) (CC BY 4.0). Foto di [Unsplash](https://unsplash.com), con il credito all'autore mostrato nell'app. Le licenze delle librerie sono in Impostazioni → Informazioni → Licenze open source.
-
----
-
-## English
-
-libreGLIDE is an open source, **local-only**, context-aware Android launcher built with Flutter and a thin Kotlin layer.
-
-- **Context:** the home adapts to the time of day, your places (home and work are recognized automatically), driving, music and travel.
-- **Habits:** it learns which apps you use with an on-device Naive Bayes predictor.
-- **Pages:** Space (cards and suggestions for the moment), Home (wallpaper, widgets, dock), Collections (apps by category, sorted for now) and A-Z.
-- **Digital detox:** locks chosen apps on a schedule, with a PIN.
-- **No tracking:** no accounts, ads or telemetry.
-- **Optional network:** only Unsplash wallpapers (with your own key) and Open-Meteo weather.
-
-UI in Italian, English, Spanish, German and French. Licensed under the GPL-3.0-or-later.
+Weather data by [Open-Meteo.com](https://open-meteo.com) (CC BY 4.0). Photos from [Unsplash](https://unsplash.com), with the author credit shown in the app. Library licenses are listed in Settings → About → Open source licenses.
