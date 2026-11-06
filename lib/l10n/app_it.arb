@@ -1,0 +1,593 @@
+{
+  "@@locale": "it",
+  "appTitle": "libreGLIDE",
+  "suggestionsTitle": "Per te adesso",
+  "learningHint": "libreGLIDE sta imparando le tue abitudini: le app suggerite compariranno dopo qualche apertura.",
+  "favoritesEmpty": "Tieni premuta un'app per aggiungerla ai preferiti",
+  "contextChip": "{slot} · {dayType}",
+  "@contextChip": {
+    "placeholders": {
+      "slot": {},
+      "dayType": {}
+    }
+  },
+  "notDefaultBanner": "libreGLIDE non è ancora l'app Home",
+  "setAction": "Imposta",
+  "slotWakeUp": "Risveglio",
+  "slotMorning": "Mattina",
+  "slotLunch": "Pranzo",
+  "slotAfternoon": "Pomeriggio",
+  "slotEvening": "Sera",
+  "slotNight": "Notte",
+  "dayWorkday": "feriale",
+  "dayHoliday": "festivo",
+  "pageHome": "Home",
+  "pageCollections": "Collections",
+  "pageAllApps": "Tutte le app",
+  "appCount": "{count, plural, =1{1 app} other{{count} app}}",
+  "@appCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pinCategory": "Fissa in cima",
+  "unpinCategory": "Rimuovi dai fissati",
+  "hideCategory": "Nascondi categoria",
+  "categoryHidden": "Categoria nascosta. Puoi ripristinarla dalle impostazioni.",
+  "undo": "Annulla",
+  "noCollections": "Nessuna app da mostrare",
+  "catSocial": "Social",
+  "catMessaging": "Messaggi e chiamate",
+  "catMusic": "Musica e audio",
+  "catVideo": "Video",
+  "catPhoto": "Foto",
+  "catNews": "Notizie",
+  "catMaps": "Mappe e viaggi",
+  "catProductivity": "Produttività",
+  "catWork": "Lavoro",
+  "catEducation": "Studio",
+  "catFinance": "Finanza",
+  "catShopping": "Shopping",
+  "catFood": "Cibo",
+  "catHealth": "Salute e sport",
+  "catGames": "Giochi",
+  "catTools": "Strumenti",
+  "catSystem": "Sistema",
+  "catOther": "Altro",
+  "searchHint": "Cerca app",
+  "noResults": "Nessuna app trovata",
+  "layoutGrid": "Griglia",
+  "layoutList": "Lista",
+  "addFavorite": "Aggiungi ai preferiti",
+  "removeFavorite": "Rimuovi dai preferiti",
+  "favoritesFull": "Puoi avere al massimo {max} preferiti",
+  "@favoritesFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "changeCategory": "Cambia categoria",
+  "automaticCategory": "Categoria automatica",
+  "hideApp": "Nascondi",
+  "appInfo": "Informazioni app",
+  "uninstall": "Disinstalla",
+  "appHidden": "{app} nascosta",
+  "@appHidden": {
+    "placeholders": {
+      "app": {}
+    }
+  },
+  "settingsTitle": "Impostazioni",
+  "sectionAppearance": "Aspetto",
+  "theme": "Tema",
+  "themeSystem": "Automatico",
+  "themeLight": "Chiaro",
+  "themeDark": "Scuro",
+  "colors": "Colori",
+  "colorSource": "Origine del colore",
+  "colorSystem": "Sistema",
+  "colorSystemDesc": "Segue i colori di Android",
+  "colorPreset": "Colore scelto",
+  "paletteStyle": "Stile della palette",
+  "styleTonalSpot": "Tonale",
+  "styleVibrant": "Vivace",
+  "styleExpressive": "Espressivo",
+  "styleNeutral": "Neutro",
+  "styleMonochrome": "Monocromo",
+  "contrast": "Contrasto",
+  "contrastStandard": "Standard",
+  "contrastMedium": "Medio",
+  "contrastHigh": "Alto",
+  "themedIcons": "Icone a tema",
+  "themedIconsDesc": "Icone monocromatiche colorate con la palette (Android 13+)",
+  "preview": "Anteprima",
+  "presetLaguna": "Laguna",
+  "presetSalvia": "Salvia",
+  "presetTerracotta": "Terracotta",
+  "presetAmbra": "Ambra",
+  "presetLampone": "Lampone",
+  "presetLavanda": "Lavanda",
+  "presetPetrolio": "Petrolio",
+  "presetGrafite": "Grafite",
+  "sectionApps": "App",
+  "allAppsLayout": "Vista di Tutte le app",
+  "showSystemApps": "Mostra app di sistema",
+  "showSystemAppsDesc": "Telefono, Fotocamera, Impostazioni e app preinstallate",
+  "hiddenApps": "App nascoste",
+  "hiddenAppsEmpty": "Nessuna app nascosta",
+  "restore": "Ripristina",
+  "fixedOrder": "Ordine fisso delle Collections",
+  "fixedOrderDesc": "Non riordinare card e icone in base al contesto",
+  "hiddenCategories": "Categorie nascoste",
+  "hiddenCategoriesEmpty": "Nessuna categoria nascosta",
+  "sectionLanguage": "Lingua",
+  "languageSystem": "Lingua di sistema",
+  "sectionLauncher": "Launcher",
+  "setDefault": "Imposta libreGLIDE come app Home",
+  "isDefault": "libreGLIDE è l'app Home predefinita",
+  "androidSettings": "Impostazioni di Android",
+  "sectionData": "Dati e privacy",
+  "launchesCount": "{count, plural, =0{Nessuna apertura registrata} =1{1 apertura registrata} other{{count} aperture registrate}}",
+  "@launchesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "privacyNote": "Tutti i dati restano sul telefono ed escono solo se li esporti tu. Il database è escluso dal backup cloud.",
+  "clearHistory": "Cancella lo storico delle aperture",
+  "clearHistoryConfirm": "Cancellare lo storico? Le previsioni ripartiranno da zero.",
+  "cancel": "Annulla",
+  "delete": "Cancella",
+  "historyCleared": "Storico cancellato",
+  "diagnostics": "Diagnostica",
+  "diagnosticsDesc": "Contesto corrente e motivazione delle previsioni",
+  "currentContext": "Contesto corrente",
+  "predictions": "Previsioni",
+  "noPredictions": "Servono almeno 3 aperture di un'app per prevederla.",
+  "sectionAbout": "Informazioni",
+  "aboutDesc": "Launcher contestuale open source e local-only.",
+  "tabSpace": "Space",
+  "tabCollections": "Collections",
+  "tabAllApps": "A-Z",
+  "spacesTitle": "Spaces",
+  "azHeader": "A-Z App",
+  "actionAlarm": "Sveglia",
+  "actionDnd": "Non disturbare",
+  "infoBanner": "Le informazioni utili compariranno qui durante la giornata.",
+  "nowAppsHeader": "Per questo momento",
+  "nextAlarm": "Prossima sveglia",
+  "noAlarm": "Nessuna sveglia impostata",
+  "addToDock": "Aggiungi al dock",
+  "searchApps": "Cerca",
+  "searchTopApps": "App sopra la ricerca",
+  "searchTopAppsDesc": "Le più usate in questo contesto, sopra i risultati della ricerca.",
+  "hiddenSummary": "{apps} app, {categories} categorie",
+  "@hiddenSummary": {
+    "placeholders": {
+      "apps": {
+        "type": "int"
+      },
+      "categories": {
+        "type": "int"
+      }
+    }
+  },
+  "languageSystemShort": "Sistema",
+  "version": "Versione {version}",
+  "@version": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "agendaToday": "Oggi",
+  "agendaTomorrow": "Domani",
+  "noEventsToday": "Nessun evento oggi",
+  "noEventsTomorrow": "Nessun evento domani",
+  "allDay": "Tutto il giorno",
+  "agendaPermission": "Mostra qui i tuoi prossimi impegni del calendario.",
+  "allow": "Consenti",
+  "newEvent": "Nuovo evento",
+  "navigate": "Indicazioni",
+  "nowPlaying": "In ascolto",
+  "mediaPermission": "Controlla la musica da qui. Serve l'accesso alle notifiche: libreGLIDE lo usa solo per i controlli multimediali e non legge né salva le notifiche.",
+  "play": "Riproduci",
+  "pause": "Pausa",
+  "next": "Successivo",
+  "previous": "Precedente",
+  "sectionSpace": "Space",
+  "cardAgenda": "Agenda",
+  "cardAgendaDesc": "Prossimi impegni dal calendario del telefono",
+  "cardMedia": "In ascolto",
+  "cardMediaDesc": "Controlli della musica in riproduzione, anche quando colleghi le cuffie",
+  "privacyPolicy": "Informativa sulla privacy",
+  "privacyPolicyDesc": "Cosa resta sul telefono e cosa no",
+  "openSource": "Librerie open source",
+  "openSourceDesc": "Licenze dei componenti usati da libreGLIDE",
+  "openSourceCount": "{count} componenti",
+  "@openSourceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "licenseCount": "{count} licenze",
+  "@licenseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appLicense": "Licenza di libreGLIDE",
+  "appLicenseUndefined": "Da definire prima della pubblicazione",
+  "unsplashAttribution": "Le foto dello sfondo contestuale sono di autori Unsplash, citati sulla Home",
+  "showOnboarding": "Rivedi la presentazione",
+  "obWelcomeTitle": "Benvenuto in libreGLIDE",
+  "obWelcomeText": "Il launcher che cambia con il tuo momento: ti mostra le app e le informazioni giuste, quando servono.",
+  "obStart": "Inizia",
+  "obNext": "Avanti",
+  "obBack": "Indietro",
+  "obHowTitle": "Come funziona",
+  "obHowSpace": "Lo Space mostra agenda, musica e le app adatte a questo momento.",
+  "obHowHome": "La Home lascia spazio al tuo sfondo, con il dock delle app preferite.",
+  "obHowCollections": "Le Collections raggruppano le app da sole e mettono prima quelle che usi adesso.",
+  "obHowSearch": "Swipe verso l'alto per cercare un'app, verso il basso per i contatti.",
+  "obHowDrawer": "Tocca le strisce colorate in alto per scegliere uno Space.",
+  "obPrivacyTitle": "La tua privacy",
+  "obPrivacy1": "Nessun account, nessuna pubblicità, nessuna telemetria.",
+  "obPrivacy2": "Le tue abitudini restano sul telefono: lo sviluppatore non le vede.",
+  "obPrivacy3": "Internet solo se scegli lo sfondo Unsplash con una tua chiave.",
+  "obReadPolicy": "Leggi l'informativa completa",
+  "obCollectionsTitle": "Le tue raccolte",
+  "obCollectionsText": "Quali usi di più? Resteranno in cima per le prime settimane, poi conterà come usi davvero il telefono.",
+  "obCollectionsHint": "Scegline quante vuoi, anche nessuna. L'ordine di scelta conta.",
+  "obFinishTitle": "Ultimi ritocchi",
+  "obDockPrefill": "Proponi un dock con telefono, messaggi, fotocamera e browser",
+  "obFinish": "Fine",
+  "photoBy": "Foto di {name} · Unsplash",
+  "@photoBy": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "sectionWallpaper": "Sfondo",
+  "contextWallpaper": "Sfondo contestuale",
+  "contextWallpaperDesc": "Una foto Unsplash che cambia con il momento: festività, viaggi, ora del giorno, musica. Solo dentro libreGLIDE: lo sfondo del telefono non viene toccato.",
+  "unsplashKey": "Chiave Unsplash",
+  "unsplashKeyNone": "Non impostata",
+  "unsplashKeySet": "Impostata ({hint})",
+  "@unsplashKeySet": {
+    "placeholders": {
+      "hint": {}
+    }
+  },
+  "unsplashKeyHelp": "Crea un'applicazione gratuita su unsplash.com/developers e incolla qui la sua Access Key. La chiave resta sul telefono.",
+  "unsplashGetKey": "Ottieni una chiave",
+  "save": "Salva",
+  "remove": "Rimuovi",
+  "keyInvalid": "Chiave non valida",
+  "keyCheckFailed": "Impossibile verificare la chiave: controlla la connessione",
+  "changePhoto": "Cambia foto",
+  "changePhotoDesc": "Un'altra foto per questo momento: {moment}",
+  "@changePhotoDesc": {
+    "placeholders": {
+      "moment": {}
+    }
+  },
+  "wallpaperLoading": "Cerco una foto…",
+  "wallpaperError": "Foto non disponibile: si vede lo sfondo del telefono",
+  "wallpaperNetworkNote": "Usa Internet solo quando cambia il momento, con la tua chiave. Senza chiave libreGLIDE non si collega mai.",
+  "sectionGestures": "Gesti",
+  "swipeDownAction": "Swipe verso il basso",
+  "swipeUpAction": "Swipe verso l'alto",
+  "gestureSearch": "Ricerca",
+  "gestureContacts": "Contatti",
+  "gestureNone": "Niente",
+  "gesturesDesc": "Sulla Home e, per lo swipe in giù, anche sulla barra in alto.",
+  "collectionLabels": "Nomi nelle Collections",
+  "collectionLabelsDesc": "Mostra il nome sotto le icone anche nelle righe chiuse",
+  "contactsTitle": "Contatti",
+  "contactsFavorites": "Preferiti e più usati",
+  "contactsSearchHint": "Cerca contatti",
+  "contactsPermission": "Mostra qui i contatti preferiti e quelli che usi di più. I contatti vengono letti solo sul telefono.",
+  "contactsEmpty": "Aggiungi una stella ai contatti preferiti nell'app Contatti: compariranno qui, insieme a quelli che apri più spesso.",
+  "noContactsFound": "Nessun contatto trovato",
+  "call": "Chiama",
+  "message": "Messaggio",
+  "openContact": "Scheda contatto",
+  "searchCollections": "Sfoglia le raccolte",
+  "cardEvening": "Buonanotte",
+  "cardEveningDesc": "Di sera: sveglia di domani, Non disturbare e promemoria di ricarica",
+  "dndOn": "Non disturbare attivo",
+  "chargeReminder": "Batteria al {level}%: mettilo in carica per la notte",
+  "@chargeReminder": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "cardNextPlace": "Prossima destinazione",
+  "cardNextPlaceDesc": "Indicazioni per il prossimo impegno con un luogo, nelle 3 ore prima",
+  "cardTravel": "In viaggio",
+  "cardTravelDesc": "Ora di casa e app di viaggio quando sei in un altro fuso orario o in roaming",
+  "homeTime": "A casa sono le {time}",
+  "@homeTime": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "travelHere": "Ora vivo qui",
+  "autoLaunch": "Apri da sola l'unica app trovata",
+  "autoLaunchDesc": "Quando resta una sola app che corrisponde a ciò che scrivi (almeno 2 lettere), si apre automaticamente.",
+  "sectionSearchGestures": "Ricerca e gesti",
+  "resultsCount": "{count, plural, =1{1 risultato} other{{count} risultati}}",
+  "@resultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardWidgets": "Widget",
+  "cardWidgetsDesc": "Widget Android a tutta larghezza nello Space",
+  "addWidget": "Aggiungi widget",
+  "noWidgets": "Nessun widget nello Space: aggiungine uno.",
+  "widgetHeight": "Altezza",
+  "widgetShorter": "Più basso",
+  "widgetTaller": "Più alto",
+  "moveUp": "Sposta su",
+  "moveDown": "Sposta giù",
+  "widgetMinSize": "Minimo {w}×{h} dp",
+  "@widgetMinSize": {
+    "placeholders": {
+      "w": {
+        "type": "int"
+      },
+      "h": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetCount": "{count, plural, =0{Nessun widget} =1{1 widget} other{{count} widget}}",
+  "@widgetCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardWeather": "Meteo",
+  "cardWeatherDesc": "Previsioni da Open-Meteo con la posizione approssimativa, arrotondata a circa 10 km. Usa Internet.",
+  "weatherPermission": "Per il meteo serve la posizione approssimativa: viene arrotondata a circa 10 km prima di chiedere le previsioni.",
+  "weatherHere": "Qui",
+  "weatherSource": "Dati meteo: Open-Meteo.com (CC BY 4.0)",
+  "weatherClear": "Sereno",
+  "weatherPartly": "Poco nuvoloso",
+  "weatherCloudy": "Nuvoloso",
+  "weatherFog": "Nebbia",
+  "weatherDrizzle": "Pioviggine",
+  "weatherRain": "Pioggia",
+  "weatherSnow": "Neve",
+  "weatherShowers": "Rovesci",
+  "weatherStorm": "Temporale",
+  "cardCar": "In auto",
+  "cardCarDesc": "Mappe, musica e prossima destinazione quando guidi (Android Auto o autoradio Bluetooth)",
+  "carBluetooth": "Riconosci l'autoradio Bluetooth",
+  "carBluetoothDesc": "Facoltativo: serve il permesso Dispositivi nelle vicinanze. Senza, funziona solo con Android Auto.",
+  "screenTime": "Tempo di utilizzo",
+  "screenTimeDesc": "Quanto hai usato il telefono oggi, come in Olauncher. Serve l'accesso ai dati di utilizzo; i dati restano sul telefono.",
+  "screenTimeOff": "Spento",
+  "screenTimeHome": "Home",
+  "screenTimeSpace": "Space",
+  "screenTimeToday": "Oggi",
+  "screenTimePermission": "Per mostrare il tempo di utilizzo serve l'accesso ai dati di utilizzo. I dati restano sul telefono.",
+  "durationHM": "{h} h {m} min",
+  "@durationHM": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "durationM": "{m} min",
+  "@durationM": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "spaceHome": "Casa",
+  "spaceWork": "Lavoro",
+  "spaceSchool": "Scuola",
+  "spaceWorkOrSchool": "Lavoro/Scuola",
+  "spaceMoving": "In movimento",
+  "spaceListening": "In ascolto",
+  "spaceTravel": "In viaggio",
+  "spacesContext": "Dal contesto",
+  "spacesTime": "Dall'ora del giorno",
+  "actionEmail": "Email",
+  "actionToHome": "Verso casa",
+  "actionToWork": "Verso il lavoro",
+  "actionMaps": "Mappe",
+  "sectionPlaces": "Luoghi",
+  "placesEnabled": "Riconosci casa e lavoro",
+  "placesEnabledDesc": "Gli Space Casa e Lavoro/Scuola si attivano da soli. Usa la posizione precisa solo mentre usi il launcher e il Wi-Fi come impronta cifrata; tutto resta sul telefono.",
+  "placesPermission": "Per riconoscere casa e lavoro serve la posizione precisa, solo mentre usi il launcher. Coordinate e reti Wi-Fi restano sul telefono e non vengono mai inviate.",
+  "placeHome": "Casa",
+  "placeWork": "Lavoro/Scuola",
+  "placeRecognized": "Riconosciuto ({percent}%)",
+  "@placeRecognized": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "placeByUser": "Impostato da te",
+  "placeLearningHome": "In apprendimento: servono alcune notti",
+  "placeLearningWork": "In apprendimento: servono alcuni giorni feriali",
+  "workLabel": "Nome dello Space di lavoro",
+  "workLabelAuto": "Lavoro/Scuola",
+  "workLabelWork": "Lavoro",
+  "workLabelSchool": "Scuola",
+  "hereIsHome": "Questa è casa mia",
+  "hereIsWork": "Questo è il mio lavoro/scuola",
+  "notHome": "Questa non è casa mia",
+  "notWork": "Questo non è il mio lavoro/scuola",
+  "hereUnknown": "Luogo attuale non ancora noto: torna qui dopo qualche minuto sul launcher.",
+  "resetPlaces": "Reimposta i luoghi",
+  "resetPlacesConfirm": "Dimenticare tutti i luoghi e i campioni di posizione? Casa e lavoro verranno riconosciuti di nuovo.",
+  "placesCount": "{count, plural, =0{Nessun luogo} =1{1 luogo} other{{count} luoghi}}",
+  "@placesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editHome": "Modifica i widget",
+  "homeWidgetsFull": "Al massimo {max} widget sulla Home",
+  "@homeWidgetsFull": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "done": "Fine",
+  "widgetRows": "{rows, plural, =1{1 riga} other{{rows} righe}}",
+  "@widgetRows": {
+    "placeholders": {
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
+  "cardParking": "Dove ho parcheggiato",
+  "cardParkingDesc": "Quando ti scolleghi dall'autoradio Bluetooth salva dove hai lasciato l'auto. Usa la posizione in background solo in quel momento; resta sul telefono.",
+  "parkedAt": "Parcheggiato alle {time} · {ago}",
+  "@parkedAt": {
+    "placeholders": {
+      "time": {},
+      "ago": {}
+    }
+  },
+  "parkedImprecise": "Posizione approssimativa ({meters} m)",
+  "@parkedImprecise": {
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
+  "forget": "Dimentica",
+  "agoMinutes": "{m} min fa",
+  "@agoMinutes": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "agoHours": "{h} h fa",
+  "@agoHours": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      }
+    }
+  },
+  "parkingNeedsBluetooth": "Per riconoscere l'auto serve il permesso Dispositivi nelle vicinanze.",
+  "parkingNeedsPrecise": "Per salvare il punto serve la posizione precisa.",
+  "parkingNeedsBackground": "Per salvare il punto quando scendi dall'auto (con il telefono in tasca) serve la posizione \"Consenti sempre\". Viene usata solo allo scollegamento dall'autoradio.",
+  "parkingWaiting": "Il punto verrà salvato la prossima volta che ti scolleghi dall'autoradio.",
+  "spaceAutomatic": "Automatico",
+  "spaceNow": "ora",
+  "workLabelBoth": "Entrambi",
+  "groupLook": "Aspetto e contenuti",
+  "groupBehavior": "Comportamento",
+  "groupSystem": "Sistema",
+  "stateOn": "Attivo",
+  "stateOff": "Spento",
+  "cardsActive": "{count, plural, =0{Nessuna card attiva} =1{1 card attiva} other{{count} card attive}}",
+  "@cardsActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "parkingBackgroundBlocked": "Android non mostra più la richiesta. Apri le impostazioni dell'app, poi Autorizzazioni › Posizione e scegli \"Consenti sempre\". La posizione viene letta solo quando ti scolleghi dall'autoradio.",
+  "openSettings": "Apri impostazioni",
+  "turnOff": "Disattiva",
+  "obHowDetox": "Digital detox (nelle impostazioni): blocca le app che ti distraggono, tutto il giorno o in una fascia oraria, con un PIN.",
+  "notNow": "Non ora",
+  "ok": "OK",
+  "detoxTitle": "Digital detox",
+  "detoxDesc": "Blocca le app che scegli, tutto il giorno o in una fascia oraria. Quando le apri compare una schermata nera.",
+  "detoxServiceTitle": "Attiva il servizio di blocco",
+  "detoxServiceExplain": "Per accorgersi di quando apri un'app bloccata, libreGLIDE usa un servizio di accessibilità. Riceve solo il nome dell'app che passa in primo piano: non legge lo schermo, non registra nulla e non consuma batteria quando non cambi app.\n\nNelle impostazioni che si aprono, attiva \"libreGLIDE · Digital detox\". Se Android lo mostra disattivato (\"impostazione con restrizioni\"), apri le informazioni dell'app libreGLIDE, menu ⋮, \"Consenti impostazioni con restrizioni\".",
+  "detoxServiceOpen": "Apri impostazioni",
+  "detoxServiceOff": "Servizio di blocco non attivo",
+  "detoxServiceOffDesc": "Le app si bloccano solo se aperte da libreGLIDE. Tocca per attivarlo.",
+  "detoxServiceOn": "Servizio di blocco attivo",
+  "detoxActiveNow": "Il blocco è attivo adesso.",
+  "detoxStartsAt": "Il blocco parte alle {time}.",
+  "@detoxStartsAt": {"placeholders": {"time": {"type": "String"}}},
+  "detoxPin": "PIN",
+  "detoxSetPin": "Imposta il PIN",
+  "detoxChangePin": "Cambia il PIN",
+  "detoxPinDesc": "Da 8 a 16 caratteri. Serve per sbloccare le app e per cambiare queste impostazioni mentre il detox è acceso.",
+  "detoxPinLabel": "PIN",
+  "detoxOldPin": "PIN attuale",
+  "detoxNewPin": "Nuovo PIN",
+  "detoxConfirmPin": "Conferma il PIN",
+  "detoxPinLength": "Da 8 a 16 caratteri.",
+  "detoxPinMismatch": "I due PIN non coincidono.",
+  "detoxPinWarning": "Non perderlo: non si può recuperare. Senza PIN l'unico modo per uscire dal detox è riavviare il telefono in modalità provvisoria.",
+  "detoxWrongPin": "PIN sbagliato.",
+  "detoxWait": "Troppi tentativi. Riprova tra {seconds} s.",
+  "@detoxWait": {"placeholders": {"seconds": {"type": "int"}}},
+  "detoxSchedule": "Orario",
+  "detoxWhen": "Quando",
+  "detoxAllDay": "Tutto il giorno",
+  "detoxTimeRange": "Fascia oraria",
+  "detoxFrom": "Dalle",
+  "detoxTo": "Alle",
+  "detoxUnlock": "Sblocco",
+  "detoxUnlockTitle": "Le app bloccate",
+  "detoxUnlockPin": "Con il PIN",
+  "detoxUnlockNever": "Mai",
+  "detoxUnlockPinDesc": "Con il PIN l'app resta aperta finché non la lasci.",
+  "detoxUnlockNeverDesc": "Nessuno sblocco: si torna solo alla Home.",
+  "detoxApps": "App",
+  "detoxLockedApps": "App bloccate",
+  "detoxAppsCount": "{count, plural, =0{Nessuna app} =1{1 app} other{{count} app}}",
+  "@detoxAppsCount": {"placeholders": {"count": {"type": "int"}}},
+  "detoxHide": "Nascondi le app bloccate",
+  "detoxHideDesc": "Durante il detox spariscono da Collections, A-Z, ricerca e dock. Restano separate dalle app nascoste: finito il detox tornano al loro posto.",
+  "detoxEmergency": "Se blocchi Impostazioni, per spegnere il detox ti servirà il PIN qui in libreGLIDE. Se lo perdi, riavvia in modalità provvisoria: Android spegne i servizi di accessibilità.",
+  "detoxSystemGroup": "Sistema",
+  "detoxSystemGroupDesc": "Installazione e disinstallazione, Impostazioni, Play Store",
+  "detoxGroupCount": "{locked} di {total} bloccate",
+  "@detoxGroupCount": {"placeholders": {"locked": {"type": "int"}, "total": {"type": "int"}}},
+  "frostedGlass": "Vetro smerigliato",
+  "frostedGlassDesc": "Space, Collections e A-Z diventano semitrasparenti sopra lo sfondo sfocato. La sfocatura la fa Android; in risparmio energetico le pagine tornano piene.",
+  "dockStyle": "Dock",
+  "dockTray": "Vassoio",
+  "dockTransparent": "Trasparente",
+  "homeCorners": "Angoli arrotondati sulla Home",
+  "homeCornersDesc": "Barra e dock incorniciano lo sfondo con angoli appena arrotondati."
+}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- libreGLIDE: un aliante che plana davanti al sole.
+     Area 108×108 come le adaptive icon di Android; zona sicura: cerchio r=33. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="432" height="432">
+  <defs>
+    <linearGradient id="sun" x1="0.75" y1="0.05" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#FFC81E"/>
+      <stop offset="1" stop-color="#FF7420"/>
+    </linearGradient>
+    <g id="glider">
+      <!-- ala -->
+      <path d="M3,69 C30,62 62,53.2 104.5,38.6 C105,39.3 104.4,40 103.4,40.4 C72,52.6 44,60.2 3.6,70.4 C2.7,70.5 2.5,69.3 3,69 Z"/>
+      <!-- timone orizzontale -->
+      <path d="M31.5,54 C38,52.4 45,50.8 50.2,49.6 C50.5,50.2 50.1,50.6 49.4,50.7 C44,51.9 38,53.3 31.8,54.9 C31.2,55 31.1,54.2 31.5,54 Z"/>
+      <!-- deriva -->
+      <path d="M40.6,58.6 L43.4,58 L41.2,52.4 L38.9,52.7 Z"/>
+      <!-- fusoliera -->
+      <path d="M40.6,59.4 C52,57.8 62,56.8 70,56 C75,55.5 79.8,55.7 80,54.6 C80.2,53 76,51.4 70,51.5 C64,51.6 58,53.4 52,55.3 C47,56.8 43.4,57.6 40.4,58 C39.6,58.2 39.8,59.5 40.6,59.4 Z"/>
+    </g>
+  </defs>
+  <rect width="108" height="108" fill="#FFFCF6"/>
+  <circle cx="54" cy="54" r="26" fill="url(#sun)"/>
+  <!-- bordo bianco che stacca l'aliante dal sole -->
+  <use href="#glider" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="3.4" stroke-linejoin="round"/>
+  <use href="#glider" fill="#14235A" stroke="#14235A" stroke-width="0.9" stroke-linejoin="round"/>
+  <!-- tettuccio -->
+  <path d="M63.2,53.7 C64.8,52.4 69,51.9 71.8,52.3 C70.2,53.2 66,53.9 63.2,53.7 Z" fill="#FFFFFF"/>
+</svg>

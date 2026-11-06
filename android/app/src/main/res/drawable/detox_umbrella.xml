@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ombrellone e sole di Digital detox: disegno originale di libreGLIDE, monocromo. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="160dp"
+    android:viewportWidth="200"
+    android:viewportHeight="160">
+    <!-- Sole -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M160,38m-15,0a15,15 0,1 1,30 0a15,15 0,1 1,-30 0" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M181,38L188,38M174.85,52.85L179.8,57.8M160,59L160,66M145.15,52.85L140.2,57.8M139,38L132,38M145.15,23.15L140.2,18.2M160,17L160,10M174.85,23.15L179.8,18.2" />
+    <!-- Ombrellone, inclinato verso il sole -->
+    <group
+        android:pivotX="88"
+        android:pivotY="148"
+        android:rotation="12">
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="5"
+            android:strokeLineCap="round"
+            android:pathData="M88,22L88,148" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M38,82C38,50 62,30 88,30C114,30 138,50 138,82Q125.5,73 113,82Q100.5,73 88,82Q75.5,73 63,82Q50.5,73 38,82Z" />
+        <path
+            android:strokeColor="#FF000000"
+            android:strokeWidth="2.5"
+            android:strokeLineCap="round"
+            android:pathData="M88,32C80,46 70,62 64,80M88,32C96,46 106,62 112,80M88,32L88,80" />
+    </group>
+    <!-- Sabbia -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M10,150Q55,140 100,150T190,150" />
+</vector>

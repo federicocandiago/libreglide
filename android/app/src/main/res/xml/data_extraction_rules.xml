@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lo storico delle aperture (database) non lascia mai il dispositivo:
+     escluso dal backup cloud e dal trasferimento tra dispositivi.
+     Le impostazioni (shared_preferences) possono essere salvate. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database" path="." />
+    </device-transfer>
+</data-extraction-rules>

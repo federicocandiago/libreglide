@@ -1,0 +1,194 @@
+/// Luoghi: campioni a ogni ritorno sul launcher, riconoscimento di casa e
+/// lavoro, correzioni dell'utente. Tutto in locale (spec-motore-contesto §6).
+library;
+
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+
+import '../core/places.dart';
+import '../data/launch_store.dart';
+import '../data/settings.dart';
+import '../platform/launcher_bridge.dart';
+
+class PlacesController extends ChangeNotifier {
+  PlacesController(
+    this._bridge,
+    this._store,
+    this._settings, {
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
+
+  final LauncherBridge _bridge;
+  final LaunchStore _store;
+  final SettingsController _settings;
+  final DateTime Function() _clock;
+
+  PlaceEngine engine = PlaceEngine();
+  List<LocationSample> _samples = [];
+  List<int?> _placeOf = [];
+
+  /// Permesso di posizione precisa concesso.
+  bool? permission;
+
+  int? _currentId;
+  DateTime? _currentAt;
+  DateTime? _lastSample;
+  DateTime? _lastFix;
+  String? _lastWifi;
+  DateTime? _lastInference;
+  bool _busy = false;
+
+  static const _minInterval = Duration(minutes: 3);
+  static const _inferEvery = Duration(hours: 6);
+
+  /// Il luogo vale come "attuale" per 30 minuti dall'ultimo campione.
+  static const _currentValidity = Duration(minutes: 30);
+
+  Future<void> load() async {
+    final json = await _store.readKv('places');
+    if (json != null) {
+      try {
+        engine = PlaceEngine.fromJson(jsonDecode(json) as List<dynamic>);
+      } catch (e) {
+        debugPrint('libreglide: stato dei luoghi illeggibile: $e');
+      }
+    }
+    final (samples, placeOf) = await _store.loadSamples(_clock());
+    _samples = samples;
+    _placeOf = placeOf;
+    permission = await _bridge.hasPreciseLocation();
+    notifyListeners();
+  }
+
+  Future<void> _save() => _store.writeKv('places', jsonEncode(engine.toJson()));
+
+  /// Luogo attuale, se recente.
+  Place? get current {
+    final at = _currentAt;
+    if (at == null || _clock().difference(at) > _currentValidity) return null;
+    return engine.byId(_currentId);
+  }
+
+  PlaceRole? get currentRole => current?.effectiveRole;
+
+  Place? get home => engine.withRole(PlaceRole.home);
+  Place? get work => engine.withRole(PlaceRole.work);
+
+  /// Oltre 100 km da casa: in viaggio.
+  bool get farFromHome {
+    final h = home;
+    if (h == null || _samples.isEmpty) return false;
+    final last = _samples.last;
+    if (last.lat == null || _clock().difference(last.ts) > _currentValidity) {
+      return false;
+    }
+    return distanceMeters(h.lat, h.lon, last.lat!, last.lon!) / 1000 >
+        travelDistanceKm;
+  }
+
+  Future<void> requestPermission() => _bridge.requestPreciseLocation();
+
+  /// Prende un campione (al massimo ogni 3 minuti) e, ogni 6 ore,
+  /// ricalcola i ruoli.
+  /// Cosa vede l'interfaccia: si avvisa solo se cambia.
+  String _signature() => [
+    permission,
+    current?.id,
+    for (final p in engine.places) '${p.id}:${p.effectiveRole.name}',
+  ].join('|');
+
+  Future<void> sample({bool force = false}) async {
+    if (!_settings.placesEnabled || _busy) return;
+    final before = _signature();
+    final now = _clock();
+    permission = await _bridge.hasPreciseLocation();
+    if (!permission!) {
+      if (_signature() != before) notifyListeners();
+      return;
+    }
+    if (!force &&
+        _lastSample != null &&
+        now.difference(_lastSample!) < _minInterval) {
+      return;
+    }
+    _busy = true;
+    try {
+      // Stessa rete Wi-Fi già riconosciuta e posizione presa da poco:
+      // basta l'impronta, senza accendere la localizzazione.
+      LocationSample? s;
+      if (_lastFix != null &&
+          now.difference(_lastFix!) < const Duration(minutes: 15)) {
+        final quick = await _bridge.placeSample(withLocation: false);
+        final wifi = quick?.wifi;
+        if (wifi != null &&
+            wifi == _lastWifi &&
+            engine.places.any((p) => p.trustsWifi(wifi))) {
+          s = quick;
+        }
+      }
+      s ??= await _bridge.placeSample();
+      _lastSample = now;
+      if (s == null) return;
+      if (s.lat != null) _lastFix = now;
+      _lastWifi = s.wifi;
+      final id = engine.addSample(s);
+      _samples.add(s);
+      _placeOf.add(id);
+      await _store.insertSample(s, id);
+      if (id != null) {
+        _currentId = id;
+        _currentAt = s.ts;
+      }
+      if (_lastInference == null ||
+          now.difference(_lastInference!) > _inferEvery) {
+        infer();
+      }
+      await _save();
+    } catch (e) {
+      debugPrint('libreglide: campione di posizione non riuscito: $e');
+    } finally {
+      _busy = false;
+      if (_signature() != before) notifyListeners();
+    }
+  }
+
+  void infer() {
+    final now = _clock();
+    engine
+      ..maintain(now)
+      ..inferRoles(_samples, _placeOf, now);
+    _lastInference = now;
+  }
+
+  // region Correzioni dell'utente
+  Future<void> setCurrentAs(PlaceRole role) async {
+    final p = current;
+    if (p == null) return;
+    engine.setUserRole(p.id, role);
+    infer();
+    await _save();
+    notifyListeners();
+  }
+
+  Future<void> notThis(PlaceRole role) async {
+    final p = current;
+    if (p == null) return;
+    engine.block(p.id, role);
+    infer();
+    await _save();
+    notifyListeners();
+  }
+
+  Future<void> reset() async {
+    engine.reset();
+    _samples = [];
+    _placeOf = [];
+    _currentId = null;
+    _currentAt = null;
+    await _store.clearSamples();
+    await _save();
+    notifyListeners();
+  }
+  // endregion
+}

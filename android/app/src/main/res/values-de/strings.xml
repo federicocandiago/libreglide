@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detox_service_label">libreGLIDE · Digital detox</string>
+    <string name="detox_service_summary">Sperrt die Apps, die du für den Digital detox ausgewählt hast.</string>
+    <string name="detox_service_description">libreGLIDE nutzt diesen Dienst nur für den Digital detox: Wenn eine App in den Vordergrund kommt, liest er ihren Paketnamen und zeigt den Sperrbildschirm, falls du sie gesperrt hast. Er kann den Bildschirminhalt nicht lesen, zeichnet nichts auf und nichts verlässt das Smartphone.</string>
+    <string name="detox_locked_title">App gesperrt</string>
+    <string name="detox_locked_body">%1$s ist pausiert: Es ist Zeit für Digital detox.</string>
+    <string name="detox_locked_until">Wieder verfügbar um %1$s.</string>
+    <string name="detox_pin_hint">PIN</string>
+    <string name="detox_unlock">Entsperren</string>
+    <string name="detox_home">Zurück zu Home</string>
+    <string name="detox_wrong_pin">Falsche PIN</string>
+    <string name="detox_wait">Zu viele Versuche. Versuch es in %1$d s erneut.</string>
+</resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icona a tema (Android 13+): un solo colore, due intensità. Il sistema la
+     colora con la palette dell'utente. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#73FFFFFF"
+        android:pathData="M28,54 a26,26 0 1,0 52,0 a26,26 0 1,0 -52,0 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3,69 C30,62 62,53.2 104.5,38.6 C105,39.3 104.4,40 103.4,40.4 C72,52.6 44,60.2 3.6,70.4 C2.7,70.5 2.5,69.3 3,69 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineJoin="round"
+        android:strokeWidth="0.9" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M31.5,54 C38,52.4 45,50.8 50.2,49.6 C50.5,50.2 50.1,50.6 49.4,50.7 C44,51.9 38,53.3 31.8,54.9 C31.2,55 31.1,54.2 31.5,54 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineJoin="round"
+        android:strokeWidth="0.9" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M40.6,58.6 L43.4,58 L41.2,52.4 L38.9,52.7 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineJoin="round"
+        android:strokeWidth="0.9" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M40.6,59.4 C52,57.8 62,56.8 70,56 C75,55.5 79.8,55.7 80,54.6 C80.2,53 76,51.4 70,51.5 C64,51.6 58,53.4 52,55.3 C47,56.8 43.4,57.6 40.4,58 C39.6,58.2 39.8,59.5 40.6,59.4 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineJoin="round"
+        android:strokeWidth="0.9" />
+</vector>

@@ -1,0 +1,130 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Disinstallazione dal menu dell'app (conferma di sistema). -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- Tipo di rete (Wi-Fi, dati, offline) per il contesto: permesso normale, nessun dialogo. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Solo per lo sfondo Unsplash, facoltativo: senza una chiave inserita dall'utente
+         libreGLIDE non apre connessioni (vedi lib/net/unsplash.dart). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Card Agenda: prossimi impegni. Chiesto dalla card, facoltativo. -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <!-- Pannello contatti (swipe verso l'alto): preferiti e ricerca. Chiesto dal pannello, facoltativo. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Meteo (facoltativo): solo posizione APPROSSIMATIVA, arrotondata prima dell'invio. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Luoghi (facoltativo): posizione precisa solo mentre usi il launcher, per
+         distinguere casa e lavoro. Coordinate e impronte Wi-Fi restano sul telefono. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- "Dove ho parcheggiato" (facoltativo, spento di default): unico uso in background
+         della posizione, quando il telefono si scollega dall'autoradio Bluetooth. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- Card In auto (facoltativo): riconoscere l'autoradio Bluetooth. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- Tempo di utilizzo (facoltativo, spento di default): accesso speciale concesso
+         dall'utente nelle impostazioni di Android. I dati restano sul telefono. -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <application
+        android:name=".LibreGlideApplication"
+        android:label="libreGLIDE"
+        android:icon="@mipmap/ic_launcher"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:stateNotNeeded="true"
+            android:clearTaskOnLaunch="true"
+            android:resumeWhilePausing="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/LauncherTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/LauncherTheme" />
+            <!-- App Home -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Icona nel cassetto delle app, utile in sviluppo e per aprire le impostazioni -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- Card In ascolto: serve solo ad accedere alle sessioni multimediali.
+             Non legge né salva le notifiche (vedi MediaListenerService). -->
+        <service
+            android:name=".MediaListenerService"
+            android:label="libreGLIDE"
+            android:exported="false"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+        <!-- Collegamento e scollegamento dall'auto, per il parcheggio. -->
+        <receiver
+            android:name=".ParkingReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+                <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+            </intent-filter>
+        </receiver>
+        <!-- Digital detox (facoltativo, spento di default): servizio di accessibilità
+             attivato a mano dall'utente. Riceve solo il nome dell'app in primo piano,
+             non il contenuto dello schermo (vedi DetoxService e xml/detox_service.xml). -->
+        <service
+            android:name=".DetoxService"
+            android:label="@string/detox_service_label"
+            android:exported="false"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/detox_service" />
+        </service>
+        <activity
+            android:name=".DetoxLockActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="org.libreglide.launcher.detox"
+            android:excludeFromRecents="true"
+            android:theme="@style/DetoxLockTheme"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|uiMode" />
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+
+    <queries>
+        <!-- App di sistema che Digital detox può bloccare (non hanno un'icona). -->
+        <package android:name="com.android.settings" />
+        <package android:name="com.google.android.packageinstaller" />
+        <package android:name="com.android.packageinstaller" />
+        <package android:name="com.android.vending" />
+        <!-- Visibilità delle app avviabili (package visibility). -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
+        </intent>
+    </queries>
+</manifest>

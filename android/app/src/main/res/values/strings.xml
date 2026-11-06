@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detox_service_label">libreGLIDE · Digital detox</string>
+    <string name="detox_service_summary">Locks the apps you chose during Digital detox.</string>
+    <string name="detox_service_description">libreGLIDE uses this service only for Digital detox: when an app comes to the foreground it reads its package name and, if it is one you locked, shows the lock screen. It cannot read the content of the screen, it does not record anything and nothing leaves the phone.</string>
+    <string name="detox_locked_title">App locked</string>
+    <string name="detox_locked_body">%1$s is paused: it\'s Digital detox time.</string>
+    <string name="detox_locked_until">Available again at %1$s.</string>
+    <string name="detox_pin_hint">PIN</string>
+    <string name="detox_unlock">Unlock</string>
+    <string name="detox_home">Back to Home</string>
+    <string name="detox_wrong_pin">Wrong PIN</string>
+    <string name="detox_wait">Too many attempts. Try again in %1$d s.</string>
+</resources>
