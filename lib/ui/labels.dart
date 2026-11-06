@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../core/categories.dart';
 import '../core/space.dart';
+import '../core/space_profile.dart';
 import '../core/time_context.dart';
 import '../l10n/gen/app_localizations.dart';
 
@@ -119,4 +120,36 @@ IconData spaceIcon(SpaceKind k) => switch (k) {
   SpaceKind.listening => Icons.headphones_rounded,
   SpaceKind.travel => Icons.flight_takeoff_rounded,
   _ => slotIcon(k.slot!),
+};
+
+String spaceCardLabel(L10n l, SpaceCard card) => switch (card) {
+  SpaceCard.car => l.cardCar,
+  SpaceCard.parking => l.cardParking,
+  SpaceCard.evening => l.cardEvening,
+  SpaceCard.alarm => l.nextAlarm,
+  SpaceCard.media => l.cardMedia,
+  SpaceCard.travel => l.cardTravel,
+  SpaceCard.nextPlace => l.cardNextPlace,
+  SpaceCard.agenda => l.cardAgenda,
+  SpaceCard.weather => l.cardWeather,
+  SpaceCard.apps => l.nowAppsHeader,
+  SpaceCard.category => l.cardCategory,
+  SpaceCard.screenTime => l.screenTime,
+  SpaceCard.placesInvite => l.sectionPlaces,
+};
+
+IconData spaceCardIcon(SpaceCard card) => switch (card) {
+  SpaceCard.car => Icons.directions_car_rounded,
+  SpaceCard.parking => Icons.local_parking_rounded,
+  SpaceCard.evening => Icons.bedtime_rounded,
+  SpaceCard.alarm => Icons.alarm_rounded,
+  SpaceCard.media => Icons.headphones_rounded,
+  SpaceCard.travel => Icons.flight_rounded,
+  SpaceCard.nextPlace => Icons.near_me_rounded,
+  SpaceCard.agenda => Icons.event_rounded,
+  SpaceCard.weather => Icons.wb_sunny_rounded,
+  SpaceCard.apps => Icons.auto_awesome_rounded,
+  SpaceCard.category => Icons.apps_rounded,
+  SpaceCard.screenTime => Icons.hourglass_bottom_rounded,
+  SpaceCard.placesInvite => Icons.home_work_rounded,
 };

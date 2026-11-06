@@ -1428,4 +1428,48 @@ class L10nEn extends L10n {
 
   @override
   String get diagnosticsCards => 'Space cards';
+
+  @override
+  String get spaceCards => 'Cards per Space';
+
+  @override
+  String get spaceCardsEntryDesc => 'Choose which cards each Space shows';
+
+  @override
+  String get spaceCardsDesc =>
+      'Automatic follows the moment and your usage. Always and Never apply only to that Space and override everything.';
+
+  @override
+  String spaceCardsCustom(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count custom choices',
+      one: '1 custom choice',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardAutoShort => 'Automatic';
+
+  @override
+  String get cardAlways => 'Always';
+
+  @override
+  String get cardNever => 'Never';
+
+  @override
+  String get cardDefaultShown => 'Shown by default';
+
+  @override
+  String get cardDefaultHidden => 'Hidden by default';
+
+  @override
+  String get manageSpaceCards => 'Manage this Space’s cards…';
+
+  @override
+  String unsplashKeyVerified(String suffix) {
+    return 'Key verified · $suffix';
+  }
 }

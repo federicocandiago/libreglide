@@ -410,5 +410,16 @@
   "cardHideHere": "Hide in this Space",
   "cardAuto": "Automatic (as before)",
   "cardCategory": "Apps for the moment",
-  "diagnosticsCards": "Space cards"
+  "diagnosticsCards": "Space cards",
+  "spaceCards": "Cards per Space",
+  "spaceCardsEntryDesc": "Choose which cards each Space shows",
+  "spaceCardsDesc": "Automatic follows the moment and your usage. Always and Never apply only to that Space and override everything.",
+  "spaceCardsCustom": "{count, plural, =1{1 custom choice} other{{count} custom choices}}",
+  "cardAutoShort": "Automatic",
+  "cardAlways": "Always",
+  "cardNever": "Never",
+  "cardDefaultShown": "Shown by default",
+  "cardDefaultHidden": "Hidden by default",
+  "manageSpaceCards": "Manage this Space’s cards…",
+  "unsplashKeyVerified": "Key verified · {suffix}"
 }

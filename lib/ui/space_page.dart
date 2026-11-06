@@ -11,6 +11,7 @@ import '../data/settings.dart';
 import 'glide_style.dart';
 import 'labels.dart';
 import 'scope.dart';
+import 'settings/space_cards_page.dart';
 import 'space_cards.dart';
 import 'widgets/app_icon.dart';
 import 'widgets/context_wallpaper.dart';
@@ -704,7 +705,7 @@ class _CardShellState extends State<_CardShell> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
                 child: Text(
-                  '${_cardLabel(context, widget.card)} · $space'.toUpperCase(),
+                  '${spaceCardLabel(l, widget.card)} · $space'.toUpperCase(),
                   style: capsStyle(context),
                 ),
               ),
@@ -726,6 +727,19 @@ class _CardShellState extends State<_CardShell> {
                   title: Text(l.cardAuto),
                   onTap: () => set(null),
                 ),
+              const Divider(indent: 24, endIndent: 24),
+              ListTile(
+                leading: const Icon(Icons.tune_rounded),
+                title: Text(l.manageSpaceCards),
+                onTap: () {
+                  Navigator.pop(sheet);
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => SpaceCardsPage(kind: widget.kind),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 8),
             ],
           ),
@@ -744,23 +758,4 @@ class _CardShellState extends State<_CardShell> {
     onPointerCancel: (_) => _down = null,
     child: GestureDetector(onLongPress: _menu, child: widget.child),
   );
-}
-
-String _cardLabel(BuildContext context, SpaceCard card) {
-  final l = context.l10n;
-  return switch (card) {
-    SpaceCard.car => l.cardCar,
-    SpaceCard.parking => l.cardParking,
-    SpaceCard.evening => l.cardEvening,
-    SpaceCard.alarm => l.actionAlarm,
-    SpaceCard.media => l.cardMedia,
-    SpaceCard.travel => l.cardTravel,
-    SpaceCard.nextPlace => l.cardNextPlace,
-    SpaceCard.agenda => l.cardAgenda,
-    SpaceCard.weather => l.cardWeather,
-    SpaceCard.apps => l.nowAppsHeader,
-    SpaceCard.category => l.cardCategory,
-    SpaceCard.screenTime => l.screenTime,
-    SpaceCard.placesInvite => l.sectionPlaces,
-  };
 }

@@ -24,6 +24,7 @@ import 'perf_probe.dart';
 import 'settings/hidden_page.dart';
 import 'settings/legal_pages.dart';
 import 'settings/settings_page.dart';
+import 'settings/space_cards_page.dart';
 import 'space_page.dart';
 
 /// Pagine, nell'ordine di Glide: Space ← Home (ora) → Collections → A-Z.
@@ -176,6 +177,13 @@ class _LauncherShellState extends State<LauncherShell> {
       case final String t when t.startsWith('settings:'):
         final page = settingsSubPageFor(context, t.substring(9));
         if (page != null) push(page);
+      case 'spacecards':
+        push(const SpaceCardsListPage());
+      case final String t when t.startsWith('spacecards:'):
+        final kind = SpaceKind.values
+            .where((k) => k.name == t.substring(11))
+            .firstOrNull;
+        if (kind != null) push(SpaceCardsPage(kind: kind));
       case final String t when t.startsWith('space:'):
         // Come scegliere uno Space dal cassetto ("auto" = automatico).
         final name = t.substring(6);

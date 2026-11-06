@@ -8,7 +8,7 @@
 
 A **context-aware**, open source, **local-only** Android launcher, built with Flutter and a thin native Kotlin layer. The home changes with the time of day, your places (home, work, travelling), the car and your music, and it learns from your habits. Everything stays on the phone.
 
-> Version **1.0.1**. Tested on a Pixel 7 with Android 17; works on Android 12 and later.
+> Version **1.1.0**. Tested on a Pixel 7 with Android 17; works on Android 12 and later.
 
 ## Features
 
@@ -19,7 +19,7 @@ A **context-aware**, open source, **local-only** Android launcher, built with Fl
   - **A row of apps from a category:** news when you wake up, food at lunch, video in the evening.
   - **Other cards:** Agenda, Next destination, Now playing, In the car, Where I parked, Travel, Weather, Good night, Screen time, Android widgets.
 
-  The Space also **learns from how you use it**. Cards you tap often in a context move up, and they show up even where the profile didn't plan them. Long-press a card to "Always show" or "Hide" it in that Space. The side drawer lets you pick a Space by hand.
+  The Space also **learns from how you use it**. Cards you tap often in a context move up, and they show up even where the profile didn't plan them. Long-press a card to "Always show" or "Hide" it in that Space, or open **Settings → Space → Cards per Space** to choose Automatic, Always or Never for every card in every Space. The side drawer lets you pick a Space by hand.
 - **Home:** the wallpaper framed by the tab bar and the dock, up to 3 full-width Android widgets, and a 4-slot dock. Long-press and drag an app to reorder the dock. The dock can be a solid tray or transparent, and the frame's rounded corners can be turned off.
 - **Collections:** one card per category with the apps most likely *right now*, expandable. Cards can be pinned or hidden.
 - **A-Z:** grid or list, accent-insensitive search, letter rail.

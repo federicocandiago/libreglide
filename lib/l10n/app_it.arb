@@ -607,5 +607,18 @@
   "cardHideHere": "Nascondi in questo Space",
   "cardAuto": "Automatico (come prima)",
   "cardCategory": "App del momento",
-  "diagnosticsCards": "Card dello Space"
+  "diagnosticsCards": "Card dello Space",
+  "spaceCards": "Card per Space",
+  "spaceCardsEntryDesc": "Scegli quali card mostrare in ogni Space",
+  "spaceCardsDesc": "Automatico segue il momento e il tuo uso. Sempre e Mai valgono solo per quello Space e vincono su tutto.",
+  "spaceCardsCustom": "{count, plural, =1{1 scelta personale} other{{count} scelte personali}}",
+  "@spaceCardsCustom": {"placeholders": {"count": {"type": "int"}}},
+  "cardAutoShort": "Automatico",
+  "cardAlways": "Sempre",
+  "cardNever": "Mai",
+  "cardDefaultShown": "Di default visibile",
+  "cardDefaultHidden": "Di default nascosta",
+  "manageSpaceCards": "Gestisci le card di questo Space…",
+  "unsplashKeyVerified": "Chiave verificata · {suffix}",
+  "@unsplashKeyVerified": {"placeholders": {"suffix": {"type": "String"}}}
 }

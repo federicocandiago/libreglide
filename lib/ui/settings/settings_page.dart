@@ -14,10 +14,11 @@ import '../onboarding_page.dart';
 import 'hidden_page.dart';
 import 'legal_pages.dart';
 import 'settings_widgets.dart';
+import 'space_cards_page.dart';
 import 'widgets_page.dart';
 import '../widgets/logo.dart';
 
-const String appVersion = '1.0.1';
+const String appVersion = '1.1.0';
 
 /// Lingue dell'interfaccia, ciascuna nel proprio nome.
 const Map<String, String> languageNames = {
@@ -383,6 +384,13 @@ List<Widget> _sections(BuildContext context) {
       icon: Icons.dashboard_customize_outlined,
       title: l.sectionSpace,
       children: [
+        SettingsTile(
+          icon: Icons.tune_rounded,
+          title: l.spaceCards,
+          subtitle: l.spaceCardsEntryDesc,
+          trailing: chevron,
+          onTap: () => open(const SpaceCardsListPage()),
+        ),
         SettingsSwitchTile(
           icon: Icons.event_rounded,
           title: l.cardAgenda,
@@ -725,12 +733,15 @@ class _WallpaperSection extends StatelessWidget {
     final settings = scope.settings;
     final wallpaper = scope.wallpaper;
     final l = context.l10n;
-    final key = settings.unsplashKey;
-    final hasKey = key != null && key.isNotEmpty;
-
     return ListenableBuilder(
-      listenable: wallpaper,
+      // Anche le impostazioni: la voce della chiave cambia appena la
+      // finestra la verifica e la salva.
+      listenable: Listenable.merge([settings, wallpaper]),
       builder: (context, _) {
+        final key = settings.unsplashKey;
+        final hasKey = key != null && key.isNotEmpty;
+        final invalid = wallpaper.status == WallpaperStatus.invalidKey;
+        final scheme = Theme.of(context).colorScheme;
         final status = switch (wallpaper.status) {
           WallpaperStatus.loading => l.wallpaperLoading,
           WallpaperStatus.invalidKey => l.keyInvalid,
@@ -744,10 +755,24 @@ class _WallpaperSection extends StatelessWidget {
             SettingsTile(
               icon: Icons.key_rounded,
               title: l.unsplashKey,
-              subtitle: hasKey
-                  ? l.unsplashKeySet('…${key.substring(key.length - 4)}')
-                  : l.unsplashKeyNone,
-              trailing: const Icon(Icons.chevron_right_rounded),
+              subtitle: !hasKey
+                  ? l.unsplashKeyNone
+                  : invalid
+                  ? l.keyInvalid
+                  : l.unsplashKeyVerified('…${key.substring(key.length - 4)}'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (hasKey)
+                    Icon(
+                      invalid
+                          ? Icons.error_outline_rounded
+                          : Icons.verified_rounded,
+                      color: invalid ? scheme.error : scheme.primary,
+                    ),
+                  const Icon(Icons.chevron_right_rounded),
+                ],
+              ),
               onTap: () => showDialog<void>(
                 context: context,
                 builder: (_) => const _UnsplashKeyDialog(),

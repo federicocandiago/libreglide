@@ -2568,6 +2568,72 @@ abstract class L10n {
   /// In it, this message translates to:
   /// **'Card dello Space'**
   String get diagnosticsCards;
+
+  /// No description provided for @spaceCards.
+  ///
+  /// In it, this message translates to:
+  /// **'Card per Space'**
+  String get spaceCards;
+
+  /// No description provided for @spaceCardsEntryDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Scegli quali card mostrare in ogni Space'**
+  String get spaceCardsEntryDesc;
+
+  /// No description provided for @spaceCardsDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Automatico segue il momento e il tuo uso. Sempre e Mai valgono solo per quello Space e vincono su tutto.'**
+  String get spaceCardsDesc;
+
+  /// No description provided for @spaceCardsCustom.
+  ///
+  /// In it, this message translates to:
+  /// **'{count, plural, =1{1 scelta personale} other{{count} scelte personali}}'**
+  String spaceCardsCustom(int count);
+
+  /// No description provided for @cardAutoShort.
+  ///
+  /// In it, this message translates to:
+  /// **'Automatico'**
+  String get cardAutoShort;
+
+  /// No description provided for @cardAlways.
+  ///
+  /// In it, this message translates to:
+  /// **'Sempre'**
+  String get cardAlways;
+
+  /// No description provided for @cardNever.
+  ///
+  /// In it, this message translates to:
+  /// **'Mai'**
+  String get cardNever;
+
+  /// No description provided for @cardDefaultShown.
+  ///
+  /// In it, this message translates to:
+  /// **'Di default visibile'**
+  String get cardDefaultShown;
+
+  /// No description provided for @cardDefaultHidden.
+  ///
+  /// In it, this message translates to:
+  /// **'Di default nascosta'**
+  String get cardDefaultHidden;
+
+  /// No description provided for @manageSpaceCards.
+  ///
+  /// In it, this message translates to:
+  /// **'Gestisci le card di questo Space…'**
+  String get manageSpaceCards;
+
+  /// No description provided for @unsplashKeyVerified.
+  ///
+  /// In it, this message translates to:
+  /// **'Chiave verificata · {suffix}'**
+  String unsplashKeyVerified(String suffix);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {
