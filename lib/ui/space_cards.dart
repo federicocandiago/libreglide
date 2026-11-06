@@ -11,6 +11,7 @@ import '../core/categories.dart';
 import '../core/weather.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../platform/launcher_bridge.dart';
+import '../state/launcher_controller.dart';
 import 'glide_style.dart';
 import 'labels.dart';
 import 'scope.dart';
@@ -389,6 +390,34 @@ class _PermissionBody extends StatelessWidget {
 }
 
 /// Riga di icone delle app di una categoria (le più probabili adesso).
+/// Riga di app di una categoria, per il momento (es. Notizie al
+/// risveglio, Cibo a pranzo, Video la sera).
+class CategoryAppsCard extends StatelessWidget {
+  const CategoryAppsCard({super.key, required this.category});
+
+  final AppCategory category;
+
+  /// La categoria ha app da mostrare.
+  static bool hasApps(LauncherController controller, AppCategory category) =>
+      controller.collections.any(
+        (g) => g.category == category && g.row(1).isNotEmpty,
+      );
+
+  @override
+  Widget build(BuildContext context) => FlatCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CapsHeader(
+          icon: categoryIcon(category),
+          label: categoryLabel(context.l10n, category),
+        ),
+        _CategoryApps(category: category),
+      ],
+    ),
+  );
+}
+
 class _CategoryApps extends StatelessWidget {
   const _CategoryApps({required this.category});
 
@@ -696,7 +725,10 @@ String weatherLabel(L10n l, WeatherKind k) => switch (k) {
 /// Meteo, come in Glide: temperatura grande e sottile, simbolo, massima e
 /// minima con barrette colorate; sotto le prossime ore.
 class WeatherCard extends StatelessWidget {
-  const WeatherCard({super.key});
+  const WeatherCard({super.key, this.tomorrow = false});
+
+  /// Sera e notte: la previsione di domani invece delle prossime ore.
+  final bool tomorrow;
 
   @override
   Widget build(BuildContext context) {
@@ -733,6 +765,83 @@ class WeatherCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(2),
       ),
     );
+
+    final next = tomorrow ? w.tomorrow : null;
+    if (next != null) {
+      return FlatCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            CapsHeader(icon: Icons.event_outlined, label: l.weatherTomorrow),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                cardPadding,
+                0,
+                cardPadding,
+                8,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    weatherIcon(next.kind, isDay: true),
+                    size: 48,
+                    color: c.accent,
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          weatherLabel(l, next.kind),
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                        if (next.rainChance >= 20)
+                          Text(
+                            l.rainChance(next.rainChance),
+                            style: const TextStyle(
+                              color: Color(0xFF4A9BE0),
+                              fontSize: 13.5,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  bar(const Color(0xFFE5735C)),
+                  Text(
+                    deg(next.max),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  bar(const Color(0xFF4A9BE0)),
+                  Text(
+                    deg(next.min),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 2, 16, 10),
+              child: Text(
+                l.weatherSource,
+                textAlign: TextAlign.end,
+                style: TextStyle(color: c.muted, fontSize: 10.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return FlatCard(
       child: Column(

@@ -309,6 +309,21 @@ class LauncherBridge {
   Future<bool> hasUsageAccess() async =>
       await _methods.invokeMethod<bool>('hasUsageAccess') ?? false;
 
+  /// Aperture di app dalla cronologia di Android da [since]: (pacchetto, ora).
+  Future<List<(String, DateTime)>> usageOpenings(DateTime since) async {
+    final list = await _methods.invokeListMethod<Map<Object?, Object?>>(
+      'usageOpenings',
+      {'since': since.millisecondsSinceEpoch},
+    );
+    return [
+      for (final m in list ?? const <Map<Object?, Object?>>[])
+        (
+          m['package'] as String,
+          DateTime.fromMillisecondsSinceEpoch((m['ts'] as num).toInt()),
+        ),
+    ];
+  }
+
   Future<bool> openUsageAccess() async =>
       await _methods.invokeMethod<bool>('openUsageAccess') ?? false;
 
@@ -538,6 +553,10 @@ class LauncherBridge {
 
   Future<bool> openAlarms() async =>
       await _methods.invokeMethod<bool>('openAlarms') ?? false;
+
+  /// Timer dell'orologio (o le sveglie, se l'orologio non li espone).
+  Future<bool> openTimers() async =>
+      await _methods.invokeMethod<bool>('openTimers') ?? false;
 
   Future<bool> openDoNotDisturb() async =>
       await _methods.invokeMethod<bool>('openDoNotDisturb') ?? false;

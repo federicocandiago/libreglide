@@ -17,7 +17,7 @@ import 'settings_widgets.dart';
 import 'widgets_page.dart';
 import '../widgets/logo.dart';
 
-const String appVersion = '1.0.0';
+const String appVersion = '1.0.1';
 
 /// Lingue dell'interfaccia, ciascuna nel proprio nome.
 const Map<String, String> languageNames = {
@@ -618,6 +618,21 @@ List<Widget> _sections(BuildContext context) {
           title: l.launchesCount(controller.predictor.totalLaunches),
           subtitle: l.privacyNote,
         ),
+        SettingsSwitchTile(
+          icon: Icons.history_rounded,
+          title: l.learnFromUsage,
+          subtitle: l.learnFromUsageDesc,
+          value: settings.learnFromUsage,
+          onChanged: settings.setLearnFromUsage,
+        ),
+        if (settings.learnFromUsage && controller.usageAccess == false)
+          SettingsTile(
+            icon: Icons.lock_open_rounded,
+            title: l.usageAccessNeeded,
+            subtitle: l.usageAccessNeededDesc,
+            trailing: const Icon(Icons.open_in_new_rounded),
+            onTap: controller.bridge.openUsageAccess,
+          ),
         SettingsTile(
           icon: Icons.insights_rounded,
           title: l.diagnostics,

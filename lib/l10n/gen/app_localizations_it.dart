@@ -1381,4 +1381,58 @@ class L10nIt extends L10n {
   @override
   String get homeCornersDesc =>
       'Barra e dock incorniciano lo sfondo con angoli appena arrotondati.';
+
+  @override
+  String get learnFromUsage => 'Impara anche dalle app aperte altrove';
+
+  @override
+  String get learnFromUsageDesc =>
+      'Usa la cronologia di utilizzo di Android (notifiche, recenti, link) per suggerire le app giuste da subito. Resta sul telefono; spegnendo si cancella.';
+
+  @override
+  String get usageAccessNeeded => 'Consenti l\'accesso ai dati di utilizzo';
+
+  @override
+  String get usageAccessNeededDesc =>
+      'Serve per leggere la cronologia di utilizzo di Android.';
+
+  @override
+  String launchSourcesNote(int usage) {
+    return 'di cui $usage dalla cronologia di Android';
+  }
+
+  @override
+  String get weatherTomorrow => 'Domani';
+
+  @override
+  String rainChance(int percent) {
+    return 'Probabilità di pioggia $percent%';
+  }
+
+  @override
+  String get actionAlarmTomorrow => 'Sveglia di domani';
+
+  @override
+  String get actionTimer => 'Timer';
+
+  @override
+  String get actionFood => 'Dove mangiare';
+
+  @override
+  String get foodQuery => 'ristoranti';
+
+  @override
+  String get cardShowHere => 'Mostra sempre in questo Space';
+
+  @override
+  String get cardHideHere => 'Nascondi in questo Space';
+
+  @override
+  String get cardAuto => 'Automatico (come prima)';
+
+  @override
+  String get cardCategory => 'App del momento';
+
+  @override
+  String get diagnosticsCards => 'Card dello Space';
 }

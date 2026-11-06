@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../core/time_context.dart';
 import '../core/agenda.dart';
 import '../core/space.dart';
+import '../core/space_profile.dart';
 import '../data/settings.dart';
 import 'glide_style.dart';
 import 'labels.dart';
@@ -100,54 +101,52 @@ class _SpacePageState extends State<SpacePage>
                       ..._cards(
                         context,
                         kind,
-                        appsCard: _padded(
-                          FlatCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                CapsHeader(
-                                  icon: spaceIcon(kind),
-                                  label: l.nowAppsHeader,
-                                ),
-                                if (apps.isEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      14,
-                                      0,
-                                      14,
-                                      16,
-                                    ),
-                                    child: Text(
-                                      l.learningHint,
-                                      style: TextStyle(color: c.muted),
-                                    ),
-                                  )
-                                else
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      8,
-                                      0,
-                                      8,
-                                      6,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        for (final app in apps)
-                                          Expanded(
-                                            child: AppTile(
-                                              app: app,
-                                              showLabel: false,
-                                            ),
-                                          ),
-                                        for (var i = apps.length; i < 5; i++)
-                                          const Expanded(child: SizedBox()),
-                                      ],
-                                    ),
+                        appsCard: (FlatCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              CapsHeader(
+                                icon: spaceIcon(kind),
+                                label: l.nowAppsHeader,
+                              ),
+                              if (apps.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    14,
+                                    0,
+                                    14,
+                                    16,
                                   ),
-                              ],
-                            ),
+                                  child: Text(
+                                    l.learningHint,
+                                    style: TextStyle(color: c.muted),
+                                  ),
+                                )
+                              else
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    8,
+                                    0,
+                                    8,
+                                    6,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      for (final app in apps)
+                                        Expanded(
+                                          child: AppTile(
+                                            app: app,
+                                            showLabel: false,
+                                          ),
+                                        ),
+                                      for (var i = apps.length; i < 5; i++)
+                                        const Expanded(child: SizedBox()),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
-                        ),
+                        )),
                       ),
                       if (_isDefaultHome == false)
                         _padded(
@@ -177,43 +176,75 @@ class _SpacePageState extends State<SpacePage>
   }
 
   /// Azioni rapide dello Space (come in Glide: ognuno ha le sue).
+  /// Azioni rapide dello Space, dal suo profilo.
   List<(IconData, String, VoidCallback)> _actionsFor(SpaceKind kind) {
     final controller = AppScope.of(context).controller;
     final bridge = controller.bridge;
     final l = context.l10n;
-    final defaults = <(IconData, String, VoidCallback)>[
-      (Icons.alarm_rounded, l.actionAlarm, bridge.openAlarms),
-      (Icons.do_not_disturb_on_outlined, l.actionDnd, bridge.openDoNotDisturb),
+    final home = controller.places.home;
+    final work = controller.places.work;
+    final out = <(IconData, String, VoidCallback)>[
+      for (final a in profileFor(kind).actions)
+        ...switch (a) {
+          QuickAction.alarm => [
+            (Icons.alarm_rounded, l.actionAlarm, bridge.openAlarms),
+          ],
+          QuickAction.alarmTomorrow => [
+            (Icons.alarm_add_rounded, l.actionAlarmTomorrow, bridge.openAlarms),
+          ],
+          QuickAction.dnd => [
+            (
+              Icons.do_not_disturb_on_outlined,
+              l.actionDnd,
+              bridge.openDoNotDisturb,
+            ),
+          ],
+          QuickAction.newEvent => [
+            (Icons.event_rounded, l.newEvent, bridge.newEvent),
+          ],
+          QuickAction.email => [
+            (
+              Icons.mail_rounded,
+              l.actionEmail,
+              () => bridge.openUrl('mailto:'),
+            ),
+          ],
+          QuickAction.maps => [
+            (Icons.map_rounded, l.actionMaps, () => bridge.navigateTo('')),
+          ],
+          QuickAction.toHome => [
+            if (home != null)
+              (
+                Icons.home_rounded,
+                l.actionToHome,
+                () => bridge.navigateTo('${home.lat},${home.lon}'),
+              ),
+          ],
+          QuickAction.toWork => [
+            if (work != null)
+              (
+                Icons.work_rounded,
+                l.actionToWork,
+                () => bridge.navigateTo('${work.lat},${work.lon}'),
+              ),
+          ],
+          QuickAction.timer => [
+            (Icons.timer_outlined, l.actionTimer, bridge.openTimers),
+          ],
+          QuickAction.food => [
+            (
+              Icons.restaurant_rounded,
+              l.actionFood,
+              () => bridge.navigateTo(l.foodQuery),
+            ),
+          ],
+        },
     ];
-    switch (kind) {
-      case SpaceKind.work:
-        return [
-          (Icons.event_rounded, l.newEvent, bridge.newEvent),
-          (Icons.mail_rounded, l.actionEmail, () => bridge.openUrl('mailto:')),
-        ];
-      case SpaceKind.moving || SpaceKind.travel:
-        final home = controller.places.home;
-        final work = controller.places.work;
-        final actions = <(IconData, String, VoidCallback)>[
-          if (home != null)
-            (
-              Icons.home_rounded,
-              l.actionToHome,
-              () => bridge.navigateTo('${home.lat},${home.lon}'),
-            ),
-          if (work != null)
-            (
-              Icons.work_rounded,
-              l.actionToWork,
-              () => bridge.navigateTo('${work.lat},${work.lon}'),
-            ),
-        ];
-        return actions.isEmpty
-            ? [(Icons.map_rounded, l.actionMaps, () => bridge.navigateTo(''))]
-            : actions;
-      default:
-        return defaults;
+    // Senza luoghi noti, "Verso casa/lavoro" lasciano il posto alle mappe.
+    if (out.isEmpty) {
+      out.add((Icons.map_rounded, l.actionMaps, () => bridge.navigateTo('')));
     }
+    return out;
   }
 
   /// Di sera e di notte, la card Buonanotte prende il posto della sveglia.
@@ -224,10 +255,10 @@ class _SpacePageState extends State<SpacePage>
         (slot == Slot.evening || slot == Slot.night);
   }
 
-  /// Card dello Space in ordine di importanza per il contesto: prima ciò
-  /// che è urgente (auto, parcheggio), poi la card principale dello Space
-  /// corrente, poi le app del momento, poi le altre; in fondo le card solo
-  /// informative (tempo di utilizzo, agenda vuota, inviti).
+  /// Card dello Space: quelle che adesso hanno qualcosa da mostrare,
+  /// ordinate dal profilo del momento, dall'uso (le card che tocchi in
+  /// questo contesto salgono, e compaiono anche dove il profilo non le
+  /// prevede) e dalle scelte "Nascondi / Mostra sempre qui".
   List<Widget> _cards(
     BuildContext context,
     SpaceKind kind, {
@@ -237,6 +268,7 @@ class _SpacePageState extends State<SpacePage>
     final settings = scope.settings;
     final controller = scope.controller;
     final cards = controller.cards;
+    final profile = profileFor(kind);
     final headphones =
         controller.context.audio == 'headphones' ||
         controller.context.audio == 'bt';
@@ -251,59 +283,56 @@ class _SpacePageState extends State<SpacePage>
             (parking != null &&
                 DateTime.now().difference(parking.at) <
                     const Duration(hours: 24)));
-    final hasEvents = (cards.events ?? const []).any(
-      (e) => !e.end.isBefore(DateTime.now()),
-    );
     final driving = settings.carCard && controller.driving;
-    // Priorità: più bassa = più in alto. A parità resta l'ordine di inserimento.
-    final entries = <(int, Widget)>[
-      if (showParking) (1, const ParkingCard()),
-      if (driving) (0, CarCard(destination: destination)),
+    final agenda = cards.eventsLoaded ? cards.agenda() : null;
+    // Agenda vuota: solo dove il profilo la vuole (al mattino); senza
+    // permesso resta, per chiederlo.
+    final showAgenda =
+        settings.agendaCard &&
+        cards.eventsLoaded &&
+        (agenda == null || agenda.events.isNotEmpty || profile.agendaWhenEmpty);
+    final category = profile.category;
+
+    final available = <SpaceCard, Widget>{
+      if (driving) SpaceCard.car: CarCard(destination: destination),
+      if (showParking) SpaceCard.parking: const ParkingCard(),
       if (_evening(context))
-        (5, EveningCard(nextAlarm: _nextAlarm))
+        SpaceCard.evening: EveningCard(nextAlarm: _nextAlarm)
       else if (_nextAlarm != null)
-        (60, _AlarmCard(time: _nextAlarm!)),
+        SpaceCard.alarm: _AlarmCard(time: _nextAlarm!),
       if (settings.mediaCard)
         if (cards.media != null)
-          (kind == SpaceKind.listening ? 10 : 35, MediaCard(media: cards.media))
+          SpaceCard.media: MediaCard(media: cards.media)
         else if (!cards.mediaAccess && headphones)
-          (kind == SpaceKind.listening ? 10 : 65, const MediaCard(media: null)),
+          SpaceCard.media: const MediaCard(media: null),
       if (settings.travelCard && controller.travelling)
-        (kind == SpaceKind.travel ? 10 : 40, const TravelCard()),
+        SpaceCard.travel: const TravelCard(),
       if (destination != null && !driving)
-        (
-          kind == SpaceKind.work || kind == SpaceKind.moving ? 12 : 25,
-          NextPlaceCard(event: destination),
-        ),
-      if (settings.agendaCard && cards.eventsLoaded)
-        (
-          hasEvents
-              ? (kind == SpaceKind.work ||
-                        kind == SpaceKind.morning ||
-                        kind == SpaceKind.wakeUp
-                    ? 14
-                    : 30)
-              : 70,
-          const AgendaCard(),
-        ),
+        SpaceCard.nextPlace: NextPlaceCard(event: destination),
+      if (showAgenda) SpaceCard.agenda: const AgendaCard(),
       if (settings.weatherCard)
-        (
-          kind == SpaceKind.wakeUp || kind == SpaceKind.morning ? 13 : 45,
-          const WeatherCard(),
-        ),
-      (20, appsCard),
-      for (final w in settings.widgets) (50, AppWidgetCard(widget: w)),
+        SpaceCard.weather: WeatherCard(tomorrow: profile.weatherTomorrow),
+      SpaceCard.apps: appsCard,
+      if (category != null && CategoryAppsCard.hasApps(controller, category))
+        SpaceCard.category: CategoryAppsCard(category: category),
       if (settings.screenTime == ScreenTimePlace.space)
-        (75, const ScreenTimeCard()),
+        SpaceCard.screenTime: const ScreenTimeCard(),
       if (settings.placesEnabled && controller.places.permission == false)
-        (80, const PlacesInviteCard()),
-    ];
-    final ordered = [for (final (i, e) in entries.indexed) (e.$1, i, e.$2)]
-      ..sort((a, b) => a.$1 != b.$1 ? a.$1 - b.$1 : a.$2 - b.$2);
+        SpaceCard.placesInvite: const PlacesInviteCard(),
+    };
+    final order = arrangeCards(
+      profile: profile,
+      available: available.keys,
+      affinity: controller.cardScores(kind),
+      rules: settings.cardRulesFor(kind),
+    );
+    final invite = order.remove(SpaceCard.placesInvite);
     return [
-      for (final (_, _, w) in ordered)
-        // Le app del momento hanno già il loro margine.
-        identical(w, appsCard) ? w : _padded(w),
+      for (final card in order)
+        _padded(_CardShell(card: card, kind: kind, child: available[card]!)),
+      // I widget Android restano in fondo, nell'ordine scelto.
+      for (final w in settings.widgets) _padded(AppWidgetCard(widget: w)),
+      if (invite) _padded(available[SpaceCard.placesInvite]!),
     ];
   }
 
@@ -616,4 +645,122 @@ class _Banner extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Involucro di una card dello Space: conta i tocchi (per imparare quali
+/// card servono in quale momento) e, tenendola premuta, offre "Nascondi
+/// in questo Space" e "Mostra sempre in questo Space".
+class _CardShell extends StatefulWidget {
+  const _CardShell({
+    required this.card,
+    required this.kind,
+    required this.child,
+  });
+
+  final SpaceCard card;
+  final SpaceKind kind;
+  final Widget child;
+
+  @override
+  State<_CardShell> createState() => _CardShellState();
+}
+
+class _CardShellState extends State<_CardShell> {
+  Offset? _down;
+  DateTime? _downAt;
+
+  void _up(PointerUpEvent e) {
+    final down = _down;
+    final at = _downAt;
+    _down = null;
+    if (down == null || at == null) return;
+    // Un tocco, non uno scorrimento né una pressione lunga.
+    if ((e.position - down).distance > 18) return;
+    if (DateTime.now().difference(at) > const Duration(milliseconds: 600)) {
+      return;
+    }
+    AppScope.of(context).controller.recordCardUse(widget.card);
+  }
+
+  Future<void> _menu() {
+    final settings = AppScope.of(context).settings;
+    final l = context.l10n;
+    final rule = settings.cardRulesFor(widget.kind)[widget.card];
+    final space = spaceLabel(l, widget.kind, workLabel: settings.workLabel);
+    return showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      builder: (sheet) {
+        void set(CardRule? r) {
+          Navigator.pop(sheet);
+          settings.setCardRule(widget.kind, widget.card, r);
+        }
+
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+                child: Text(
+                  '${_cardLabel(context, widget.card)} · $space'.toUpperCase(),
+                  style: capsStyle(context),
+                ),
+              ),
+              if (rule != CardRule.show)
+                ListTile(
+                  leading: const Icon(Icons.push_pin_outlined),
+                  title: Text(l.cardShowHere),
+                  onTap: () => set(CardRule.show),
+                ),
+              if (rule != CardRule.hide)
+                ListTile(
+                  leading: const Icon(Icons.visibility_off_outlined),
+                  title: Text(l.cardHideHere),
+                  onTap: () => set(CardRule.hide),
+                ),
+              if (rule != null)
+                ListTile(
+                  leading: const Icon(Icons.auto_awesome_rounded),
+                  title: Text(l.cardAuto),
+                  onTap: () => set(null),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    onPointerDown: (e) {
+      _down = e.position;
+      _downAt = DateTime.now();
+    },
+    onPointerUp: _up,
+    onPointerCancel: (_) => _down = null,
+    child: GestureDetector(onLongPress: _menu, child: widget.child),
+  );
+}
+
+String _cardLabel(BuildContext context, SpaceCard card) {
+  final l = context.l10n;
+  return switch (card) {
+    SpaceCard.car => l.cardCar,
+    SpaceCard.parking => l.cardParking,
+    SpaceCard.evening => l.cardEvening,
+    SpaceCard.alarm => l.actionAlarm,
+    SpaceCard.media => l.cardMedia,
+    SpaceCard.travel => l.cardTravel,
+    SpaceCard.nextPlace => l.cardNextPlace,
+    SpaceCard.agenda => l.cardAgenda,
+    SpaceCard.weather => l.cardWeather,
+    SpaceCard.apps => l.nowAppsHeader,
+    SpaceCard.category => l.cardCategory,
+    SpaceCard.screenTime => l.screenTime,
+    SpaceCard.placesInvite => l.sectionPlaces,
+  };
 }

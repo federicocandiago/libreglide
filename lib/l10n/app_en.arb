@@ -394,5 +394,21 @@
   "dockTray": "Tray",
   "dockTransparent": "Transparent",
   "homeCorners": "Rounded corners on Home",
-  "homeCornersDesc": "The bar and dock frame the wallpaper with slightly rounded corners."
+  "homeCornersDesc": "The bar and dock frame the wallpaper with slightly rounded corners.",
+  "learnFromUsage": "Also learn from apps opened elsewhere",
+  "learnFromUsageDesc": "Uses Android's usage history (notifications, recents, links) to suggest the right apps right away. It stays on the phone; turning it off deletes it.",
+  "usageAccessNeeded": "Allow usage access",
+  "usageAccessNeededDesc": "Needed to read Android's usage history.",
+  "launchSourcesNote": "{usage} of them from Android history",
+  "weatherTomorrow": "Tomorrow",
+  "rainChance": "{percent}% chance of rain",
+  "actionAlarmTomorrow": "Tomorrow's alarm",
+  "actionTimer": "Timer",
+  "actionFood": "Places to eat",
+  "foodQuery": "restaurants",
+  "cardShowHere": "Always show in this Space",
+  "cardHideHere": "Hide in this Space",
+  "cardAuto": "Automatic (as before)",
+  "cardCategory": "Apps for the moment",
+  "diagnosticsCards": "Space cards"
 }

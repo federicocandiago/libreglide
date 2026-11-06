@@ -30,6 +30,8 @@ void main() {
       'daily': {
         'temperature_2m_max': [14.2, 15.0],
         'temperature_2m_min': [7.1, 6.0],
+        'weather_code': [3, 61],
+        'precipitation_probability_max': [10, 80],
       },
       'hourly': {
         'time': times,
@@ -46,5 +48,8 @@ void main() {
     expect([for (final h in w.hours) h.time.hour], [19, 21, 23, 1]);
     expect(w.hours[1].kind, WeatherKind.rain);
     expect(w.hours[1].rainChance, 21);
+    expect(w.tomorrow?.kind, WeatherKind.rain);
+    expect(w.tomorrow?.max, 15.0);
+    expect(w.tomorrow?.rainChance, 80);
   });
 }

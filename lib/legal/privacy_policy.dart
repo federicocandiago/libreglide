@@ -9,7 +9,7 @@ const String controllerName = 'Federico Candiago';
 const String controllerContact =
     'https://github.com/federicocandiago/libreglide/issues';
 
-const String policyVersion = '1.1';
+const String policyVersion = '1.2';
 const String policyDate = '6 novembre 2026';
 
 class PolicySection {
@@ -45,7 +45,7 @@ const List<PolicySection> _it = [
     'Posizione approssimativa (facoltativo): solo per la card Meteo. Le coordinate vengono arrotondate a circa 10 km prima dell\'invio e non vengono salvate.',
     'Dispositivi nelle vicinanze (facoltativo): per riconoscere quando sei collegato all\'autoradio Bluetooth e mostrare la card In auto. Non vengono salvati nomi né indirizzi dei dispositivi.',
     'Posizione in background (facoltativo, spento di default): solo per "Dove ho parcheggiato". Viene letta una volta, quando il telefono si scollega dall\'autoradio Bluetooth; il punto resta sul telefono, viene sostituito al parcheggio successivo e non viene mai inviato.',
-    'Accesso ai dati di utilizzo (facoltativo, spento di default): per mostrare il tempo di utilizzo di oggi, calcolato sul telefono e mai salvato né inviato.',
+    'Accesso ai dati di utilizzo (facoltativo, da concedere nelle impostazioni di Android): per mostrare il tempo di utilizzo di oggi e per imparare anche dalle app aperte fuori da libreGLIDE. Di queste aperture si salvano sul telefono solo l\'app, l\'ora, la fascia oraria e il tipo di giorno, come per le aperture fatte dal launcher; non vengono mai inviate e si possono escludere o cancellare in Impostazioni → Dati e privacy.',
     'Servizio di accessibilità (facoltativo, spento di default): solo per Digital detox. Riceve soltanto il nome dell\'app che passa in primo piano, per mostrare la schermata di blocco se è tra quelle scelte; non può leggere il contenuto dello schermo e non registra nulla. Il PIN è salvato solo come hash, sul telefono.',
     'Widget: se aggiungi widget di altre app, sono quelle app a fornirne il contenuto, secondo le loro informative.',
     'Internet: usato soltanto per lo sfondo Unsplash e per la card Meteo, se li attivi.',
@@ -96,7 +96,7 @@ const List<PolicySection> _en = [
     'Approximate location (optional): only for the Weather card. Coordinates are rounded to about 10 km before being sent and are not stored.',
     'Nearby devices (optional): to recognize when you are connected to a Bluetooth car stereo and show the In the car card. No device names or addresses are stored.',
     'Background location (optional, off by default): only for "Where I parked". It is read once, when the phone disconnects from the Bluetooth car stereo; the spot stays on the phone, is replaced at the next parking and is never sent.',
-    'Usage access (optional, off by default): to show today\'s screen time, computed on the phone and never stored or sent.',
+    'Usage access (optional, granted in Android settings): to show today\'s screen time and to learn also from apps opened outside libreGLIDE. For these openings only the app, the time, the time slot and the type of day are stored on the phone, as for openings made from the launcher; they are never sent and can be excluded or deleted in Settings → Data & privacy.',
     'Accessibility service (optional, off by default): only for Digital detox. It receives just the name of the app coming to the foreground, to show the lock screen if it is one you chose; it cannot read the content of the screen and records nothing. The PIN is stored only as a hash, on the phone.',
     'Widgets: if you add widgets from other apps, those apps provide their content under their own policies.',
     'Internet: used only for the Unsplash wallpaper and the Weather card, if you turn them on.',

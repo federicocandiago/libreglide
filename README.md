@@ -4,7 +4,7 @@ Launcher Android **contestuale**, open source e **local-only**, scritto in Flutt
 
 *English summary below.*
 
-> Versione **1.0**. Provato su Pixel 7 con Android 17; funziona da Android 12 in su.
+> Versione **1.0.1**. Provato su Pixel 7 con Android 17; funziona da Android 12 in su.
 
 ## Cosa fa
 
@@ -15,12 +15,12 @@ Launcher Android **contestuale**, open source e **local-only**, scritto in Flutt
   - In viaggio, Meteo, Buonanotte, Tempo di utilizzo;
   - widget Android.
 
-  Il cassetto laterale permette di scegliere uno Space a mano.
+  Ogni momento ha il suo contenuto: azioni rapide (Sveglia, Nuovo evento, Timer, Dove mangiare…), card in primo piano e una riga di app di una categoria (Notizie al risveglio, Cibo a pranzo, Video la sera). La sera il meteo mostra domani. Le card che tocchi spesso in un contesto salgono e compaiono anche dove non erano previste; tenendo premuta una card si sceglie "Mostra sempre" o "Nascondi" in quello Space. Il cassetto laterale permette di scegliere uno Space a mano.
 - **Home:** lo sfondo incorniciato da barra e dock, fino a 3 widget Android a tutta larghezza e un dock da 4 posti. Le app del dock si riordinano tenendole premute e trascinandole. Il dock può essere un vassoio pieno o trasparente, e gli angoli della cornice si possono spegnere. Pressione lunga sullo sfondo per aggiungere e modificare i widget.
 - **Collections:** una card per categoria con le app più probabili *adesso*, espandibile. Le card si possono fissare o nascondere.
 - **A-Z:** griglia o lista, ricerca senza accenti, barra delle lettere.
 - **Ricerca globale** (swipe in su) con 4 o 8 app suggerite e apertura automatica se c'è un solo risultato. **Contatti** (swipe in giù): un tocco apre il compositore con il numero, una pressione lunga dà chiama, messaggio e scheda. I gesti sono configurabili.
-- **Previsione locale:** Naive Bayes con contatori che decadono nel tempo (abitudine su 30 giorni, slancio su 6 ore). Usa come segnali fascia oraria, tipo di giorno, rete, uscita audio, luogo e movimento. Una schermata di diagnostica spiega le scelte.
+- **Previsione locale:** Naive Bayes con contatori che decadono nel tempo (abitudine su 30 giorni, slancio su 6 ore). Usa come segnali fascia oraria, tipo di giorno, rete, uscita audio, luogo e movimento. Con l'accesso ai dati di utilizzo impara anche dalle app aperte fuori da libreGLIDE (notifiche, recenti, link), a partire dalle ultime due settimane; si può spegnere. Una schermata di diagnostica spiega le scelte.
 - **Luoghi senza nomi da inserire:** casa e lavoro vengono riconosciuti in automatico (sonno, permanenza nei giorni feriali, Wi-Fi in hash) e si possono correggere.
 - **Digital detox:** blocca le app che scegli, tutto il giorno o in una fascia oraria:
   - un PIN da 8 a 16 caratteri, salvato solo come hash;

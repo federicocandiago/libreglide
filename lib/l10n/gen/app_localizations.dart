@@ -2472,6 +2472,102 @@ abstract class L10n {
   /// In it, this message translates to:
   /// **'Barra e dock incorniciano lo sfondo con angoli appena arrotondati.'**
   String get homeCornersDesc;
+
+  /// No description provided for @learnFromUsage.
+  ///
+  /// In it, this message translates to:
+  /// **'Impara anche dalle app aperte altrove'**
+  String get learnFromUsage;
+
+  /// No description provided for @learnFromUsageDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Usa la cronologia di utilizzo di Android (notifiche, recenti, link) per suggerire le app giuste da subito. Resta sul telefono; spegnendo si cancella.'**
+  String get learnFromUsageDesc;
+
+  /// No description provided for @usageAccessNeeded.
+  ///
+  /// In it, this message translates to:
+  /// **'Consenti l\'accesso ai dati di utilizzo'**
+  String get usageAccessNeeded;
+
+  /// No description provided for @usageAccessNeededDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Serve per leggere la cronologia di utilizzo di Android.'**
+  String get usageAccessNeededDesc;
+
+  /// No description provided for @launchSourcesNote.
+  ///
+  /// In it, this message translates to:
+  /// **'di cui {usage} dalla cronologia di Android'**
+  String launchSourcesNote(int usage);
+
+  /// No description provided for @weatherTomorrow.
+  ///
+  /// In it, this message translates to:
+  /// **'Domani'**
+  String get weatherTomorrow;
+
+  /// No description provided for @rainChance.
+  ///
+  /// In it, this message translates to:
+  /// **'Probabilità di pioggia {percent}%'**
+  String rainChance(int percent);
+
+  /// No description provided for @actionAlarmTomorrow.
+  ///
+  /// In it, this message translates to:
+  /// **'Sveglia di domani'**
+  String get actionAlarmTomorrow;
+
+  /// No description provided for @actionTimer.
+  ///
+  /// In it, this message translates to:
+  /// **'Timer'**
+  String get actionTimer;
+
+  /// No description provided for @actionFood.
+  ///
+  /// In it, this message translates to:
+  /// **'Dove mangiare'**
+  String get actionFood;
+
+  /// No description provided for @foodQuery.
+  ///
+  /// In it, this message translates to:
+  /// **'ristoranti'**
+  String get foodQuery;
+
+  /// No description provided for @cardShowHere.
+  ///
+  /// In it, this message translates to:
+  /// **'Mostra sempre in questo Space'**
+  String get cardShowHere;
+
+  /// No description provided for @cardHideHere.
+  ///
+  /// In it, this message translates to:
+  /// **'Nascondi in questo Space'**
+  String get cardHideHere;
+
+  /// No description provided for @cardAuto.
+  ///
+  /// In it, this message translates to:
+  /// **'Automatico (come prima)'**
+  String get cardAuto;
+
+  /// No description provided for @cardCategory.
+  ///
+  /// In it, this message translates to:
+  /// **'App del momento'**
+  String get cardCategory;
+
+  /// No description provided for @diagnosticsCards.
+  ///
+  /// In it, this message translates to:
+  /// **'Card dello Space'**
+  String get diagnosticsCards;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

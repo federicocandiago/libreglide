@@ -176,6 +176,13 @@ class _LauncherShellState extends State<LauncherShell> {
       case final String t when t.startsWith('settings:'):
         final page = settingsSubPageFor(context, t.substring(9));
         if (page != null) push(page);
+      case final String t when t.startsWith('space:'):
+        // Come scegliere uno Space dal cassetto ("auto" = automatico).
+        final name = t.substring(6);
+        AppScope.of(context).controller.chooseSpace(
+          SpaceKind.values.where((k) => k.name == name).firstOrNull,
+        );
+        goTo(LauncherTab.space);
       case final String t when t.startsWith('lang:'):
         final code = t.substring(5);
         AppScope.of(context).settings

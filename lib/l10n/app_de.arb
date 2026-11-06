@@ -394,5 +394,21 @@
   "dockTray": "Fläche",
   "dockTransparent": "Transparent",
   "homeCorners": "Abgerundete Ecken auf Home",
-  "homeCornersDesc": "Leiste und Dock rahmen den Hintergrund mit leicht abgerundeten Ecken ein."
+  "homeCornersDesc": "Leiste und Dock rahmen den Hintergrund mit leicht abgerundeten Ecken ein.",
+  "learnFromUsage": "Auch aus anderswo geöffneten Apps lernen",
+  "learnFromUsageDesc": "Nutzt den Android-Nutzungsverlauf (Benachrichtigungen, zuletzt verwendet, Links), um sofort passende Apps vorzuschlagen. Bleibt auf dem Gerät; beim Ausschalten wird er gelöscht.",
+  "usageAccessNeeded": "Zugriff auf Nutzungsdaten erlauben",
+  "usageAccessNeededDesc": "Wird benötigt, um den Android-Nutzungsverlauf zu lesen.",
+  "launchSourcesNote": "davon {usage} aus dem Android-Verlauf",
+  "weatherTomorrow": "Morgen",
+  "rainChance": "Regenwahrscheinlichkeit {percent} %",
+  "actionAlarmTomorrow": "Wecker für morgen",
+  "actionTimer": "Timer",
+  "actionFood": "Essen gehen",
+  "foodQuery": "Restaurants",
+  "cardShowHere": "In diesem Space immer zeigen",
+  "cardHideHere": "In diesem Space ausblenden",
+  "cardAuto": "Automatisch (wie vorher)",
+  "cardCategory": "Apps für den Moment",
+  "diagnosticsCards": "Space-Karten"
 }

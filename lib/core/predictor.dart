@@ -241,11 +241,25 @@ class AppPredictor {
         final vocab = vocabularySizes[f];
         if (lambda == null || vocab == null) return;
         final hf = (_featHabit[app]?[f]?[v] ?? 0) * nh;
-        s += lambda * math.log((hf + alpha) / (h + alpha * vocab));
+        // Il confronto è con le sole aperture in cui il segnale era noto:
+        // quelle importate dalla cronologia di Android non hanno rete,
+        // luogo né audio e non devono penalizzare l'app.
+        final hTot = _observed(_featHabit[app]?[f]) * nh;
+        s += lambda * math.log((hf + alpha) / (hTot + alpha * vocab));
       });
       out[app] = s;
     }
     return out;
+  }
+
+  /// Peso delle aperture in cui una feature era nota.
+  static double _observed(Map<String, double>? values) {
+    if (values == null) return 0;
+    var sum = 0.0;
+    for (final w in values.values) {
+      sum += w;
+    }
+    return sum;
   }
 
   /// Le [n] app più probabili nel contesto, dalla più probabile.
@@ -284,7 +298,6 @@ class AppPredictor {
     if (stored == null || _totalHabit <= 0) return const [];
     final h = stored * nh;
     final m = (_appMomentum[app] ?? 0) * nm;
-    final totalH = _totalHabit * nh;
     final out = <FeatureContribution>[
       if (h > 0)
         FeatureContribution(
@@ -300,8 +313,10 @@ class AppPredictor {
       if (vocab == null || lambda == null) return;
       final hf = (_featHabit[app]?[f]?[v] ?? 0) * nh;
       final gf = (_globalFeatHabit[f]?[v] ?? 0) * nh;
-      final pGivenApp = (hf + alpha) / (h + alpha * vocab);
-      final pGlobal = (gf + alpha) / (totalH + alpha * vocab);
+      final hTot = _observed(_featHabit[app]?[f]) * nh;
+      final gTot = _observed(_globalFeatHabit[f]) * nh;
+      final pGivenApp = (hf + alpha) / (hTot + alpha * vocab);
+      final pGlobal = (gf + alpha) / (gTot + alpha * vocab);
       out.add(
         FeatureContribution(f, v, lambda * math.log(pGivenApp / pGlobal)),
       );

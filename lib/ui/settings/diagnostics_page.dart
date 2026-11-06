@@ -44,6 +44,17 @@ class DiagnosticsPage extends StatelessWidget {
                     l.launchesCount(controller.predictor.totalLaunches),
                     style: TextStyle(color: c.muted),
                   ),
+                  FutureBuilder<Map<String, int>>(
+                    future: controller.launchSources(),
+                    builder: (context, snap) {
+                      final usage = snap.data?['usage'] ?? 0;
+                      if (usage == 0) return const SizedBox();
+                      return Text(
+                        l.launchSourcesNote(usage),
+                        style: TextStyle(color: c.muted, fontSize: 13),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -75,6 +86,37 @@ class DiagnosticsPage extends StatelessWidget {
                       style: mono,
                     ),
                 ],
+              ),
+            ),
+          ],
+        ),
+        SettingsSection(
+          icon: Icons.dashboard_customize_outlined,
+          title: l.diagnosticsCards,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Builder(
+                builder: (context) {
+                  final kind = controller.currentSpace;
+                  final scores = controller.cardScores(kind).entries.toList()
+                    ..sort((a, b) => b.value.compareTo(a.value));
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'space: ${kind.name} · '
+                        '${controller.cardAffinity.length} tocchi',
+                        style: mono,
+                      ),
+                      for (final e in scores)
+                        Text(
+                          '${e.key.name}: ${e.value.toStringAsFixed(1)}',
+                          style: mono,
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
           ],

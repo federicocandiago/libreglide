@@ -13,6 +13,7 @@ import '../core/collections.dart';
 import '../core/places.dart';
 import '../core/predictor.dart';
 import '../core/space.dart';
+import '../core/space_profile.dart';
 import '../core/time_context.dart';
 import '../data/launch_store.dart';
 import '../data/settings.dart';
@@ -111,6 +112,7 @@ class LauncherController extends ChangeNotifier {
 
   Future<void> init() async {
     predictor.addAll(await store.loadAndPrune(now: _clock()));
+    await _loadCardEvents();
     _boosts = await store.loadBoosts();
     await places.load();
     places.addListener(updateContext);
@@ -127,6 +129,7 @@ class LauncherController extends ChangeNotifier {
         bridge.resumed.listen((_) {
           _updateDetox();
           refreshContext();
+          importUsage();
         }),
       );
     _contextTimer = Timer.periodic(
@@ -136,7 +139,138 @@ class LauncherController extends ChangeNotifier {
     settings.addListener(_onSettingsChanged);
     _lastSettingsRevision = settings.collectionsRevision;
     _updateDetox();
+    _learnFromUsage = settings.learnFromUsage;
+    unawaited(importUsage(force: true));
   }
+
+  // region Card dello Space
+  final CardAffinity cardAffinity = CardAffinity();
+  String? _cardKey;
+  Map<SpaceCard, double> _cardScores = const {};
+
+  /// Un tocco su una card: la ricorda con il contesto attuale.
+  void recordCardUse(SpaceCard card) {
+    final now = _clock();
+    final features = _contextNow().toMap();
+    cardAffinity.add(card, now, features);
+    unawaited(
+      store.insert(
+        LaunchRecord(ts: now, package: card.name, features: features),
+        source: 'card',
+      ),
+    );
+  }
+
+  /// Affinità delle card nel contesto attuale. Si ricalcola solo quando il
+  /// contesto (o lo Space) cambia: toccare una card non sposta le altre
+  /// mentre guardi la pagina.
+  Map<SpaceCard, double> cardScores(SpaceKind kind) {
+    final key = '${context.key}|${kind.name}';
+    if (key == _cardKey) return _cardScores;
+    _cardKey = key;
+    final now = _clock();
+    final ctx = context.toMap();
+    return _cardScores = {
+      for (final c in SpaceCard.values)
+        if (cardAffinity.affinity(c, now, ctx) case final a when a > 0) c: a,
+    };
+  }
+
+  Future<void> _loadCardEvents() async {
+    try {
+      for (final r in await store.loadCardEvents()) {
+        final card = SpaceCard.values
+            .where((c) => c.name == r.package)
+            .firstOrNull;
+        if (card != null) cardAffinity.add(card, r.ts, r.features);
+      }
+    } catch (e) {
+      debugPrint('libreglide: tocchi sulle card non disponibili: $e');
+    }
+  }
+  // endregion
+
+  // region Cronologia di utilizzo di Android
+  static const _usageMarker = 'usageImportedUntil';
+  bool _importing = false;
+  bool _learnFromUsage = true;
+  DateTime? _lastImport;
+
+  /// Accesso ai dati di utilizzo (null = non ancora controllato).
+  bool? usageAccess;
+
+  /// Aggiunge al predittore le app aperte fuori da libreGLIDE (notifiche,
+  /// recenti, link…), lette dalla cronologia di Android: la prima volta le
+  /// ultime 2 settimane, poi solo le nuove. Le aperture fatte da libreGLIDE
+  /// non vengono contate due volte. Di queste si conoscono solo ora e
+  /// giorno: rete, luogo e audio restano sconosciuti.
+  Future<void> importUsage({bool force = false}) async {
+    if (_importing || !settings.learnFromUsage) return;
+    final now = _clock();
+    if (!force &&
+        _lastImport != null &&
+        now.difference(_lastImport!) < const Duration(minutes: 2)) {
+      return;
+    }
+    _importing = true;
+    try {
+      usageAccess = await bridge.hasUsageAccess();
+      if (!usageAccess!) return;
+      final stored = int.tryParse(await store.readKv(_usageMarker) ?? '');
+      final since = stored != null
+          ? DateTime.fromMillisecondsSinceEpoch(stored)
+          : now.subtract(const Duration(days: 14));
+      final openings = await bridge.usageOpenings(since);
+      final own = await store.launcherTimes(
+        since.subtract(const Duration(minutes: 1)),
+      );
+      final records = <LaunchRecord>[];
+      var until = since;
+      for (final (package, ts) in openings) {
+        if (!ts.isAfter(since)) continue;
+        if (ts.isAfter(until)) until = ts;
+        final t = ts.millisecondsSinceEpoch;
+        final mine = own[package];
+        if (mine != null && mine.any((m) => t - m > -3000 && t - m < 15000)) {
+          continue;
+        }
+        final f = ContextFeatures.at(ts);
+        records.add(
+          LaunchRecord(
+            ts: ts,
+            package: package,
+            features: {'slot': f.slot.name, 'daytype': f.dayType.name},
+          ),
+        );
+      }
+      _lastImport = now;
+      if (records.isNotEmpty) {
+        predictor.addAll(records);
+        await store.insertAll(records, 'usage');
+        notifyListeners();
+      }
+      await store.writeKv(_usageMarker, '${until.millisecondsSinceEpoch}');
+    } catch (e) {
+      debugPrint('libreglide: cronologia di utilizzo non disponibile: $e');
+    } finally {
+      _importing = false;
+    }
+  }
+
+  /// Dimentica le aperture importate dalla cronologia di Android.
+  Future<void> forgetUsage() async {
+    await store.deleteSource('usage');
+    await store.deleteKv(_usageMarker);
+    predictor
+      ..clear()
+      ..addAll(await store.loadAndPrune(now: _clock()));
+    _lastImport = null;
+    notifyListeners();
+  }
+
+  /// Aperture salvate per origine (`launcher`, `usage`).
+  Future<Map<String, int>> launchSources() => store.countBySource();
+  // endregion
 
   // region Digital detox
   /// Le app bloccate sono nascoste adesso (detox acceso, opzione attiva e
@@ -210,6 +344,10 @@ class LauncherController extends ChangeNotifier {
 
   void _onSettingsChanged() {
     _updateDetox();
+    if (settings.learnFromUsage != _learnFromUsage) {
+      _learnFromUsage = settings.learnFromUsage;
+      unawaited(_learnFromUsage ? importUsage(force: true) : forgetUsage());
+    }
     if (settings.parkingCard != cards.parkingWanted) {
       cards.parkingWanted = settings.parkingCard;
       bridge.setParkingEnabled(settings.parkingCard);
@@ -715,6 +853,8 @@ class LauncherController extends ChangeNotifier {
   Future<void> clearHistory() async {
     await store.clear();
     predictor.clear();
+    cardAffinity.clear();
+    _cardKey = null;
     notifyListeners();
   }
   // endregion

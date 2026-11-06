@@ -394,5 +394,21 @@
   "dockTray": "Plateau",
   "dockTransparent": "Transparent",
   "homeCorners": "Coins arrondis sur l’accueil",
-  "homeCornersDesc": "La barre et le dock encadrent le fond d’écran avec des coins légèrement arrondis."
+  "homeCornersDesc": "La barre et le dock encadrent le fond d’écran avec des coins légèrement arrondis.",
+  "learnFromUsage": "Apprendre aussi des apps ouvertes ailleurs",
+  "learnFromUsageDesc": "Utilise l’historique d’utilisation d’Android (notifications, récents, liens) pour suggérer tout de suite les bonnes apps. Il reste sur le téléphone ; le désactiver l’efface.",
+  "usageAccessNeeded": "Autoriser l’accès aux données d’utilisation",
+  "usageAccessNeededDesc": "Nécessaire pour lire l’historique d’utilisation d’Android.",
+  "launchSourcesNote": "dont {usage} depuis l’historique Android",
+  "weatherTomorrow": "Demain",
+  "rainChance": "Risque de pluie {percent} %",
+  "actionAlarmTomorrow": "Réveil de demain",
+  "actionTimer": "Minuteur",
+  "actionFood": "Où manger",
+  "foodQuery": "restaurants",
+  "cardShowHere": "Toujours afficher dans ce Space",
+  "cardHideHere": "Masquer dans ce Space",
+  "cardAuto": "Automatique (comme avant)",
+  "cardCategory": "Apps du moment",
+  "diagnosticsCards": "Cartes du Space"
 }

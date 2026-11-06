@@ -215,6 +215,10 @@ class LauncherBridge(
             }
             "requestCalendar" -> result.success(requestCalendar())
             "hasUsageAccess" -> result.success(hasUsageAccess())
+            "usageOpenings" -> {
+                val since = call.argument<Number>("since")?.toLong() ?: 0L
+                background(result) { usageOpenings(since) }
+            }
             "openUsageAccess" -> result.success(
                 startSafely(
                     Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:${context.packageName}")),
@@ -308,6 +312,10 @@ class LauncherBridge(
                 context.getSystemService(AlarmManager::class.java).nextAlarmClock?.triggerTime,
             )
             "openAlarms" -> result.success(startSafely(Intent(AlarmClock.ACTION_SHOW_ALARMS)))
+            "openTimers" -> result.success(
+                startSafely(Intent(AlarmClock.ACTION_SHOW_TIMERS)) ||
+                    startSafely(Intent(AlarmClock.ACTION_SHOW_ALARMS)),
+            )
             "openDoNotDisturb" -> result.success(
                 startSafely(Intent(Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS)) ||
                     startSafely(Intent(Settings.ACTION_SOUND_SETTINGS)),
@@ -872,6 +880,50 @@ class LauncherBridge(
      * eventi di utilizzo. Esclusi libreGLIDE e l'interfaccia di sistema.
      * Null senza l'accesso ai dati di utilizzo.
      */
+    /**
+     * Aperture di app dalla cronologia di utilizzo di Android, da [since]
+     * (al massimo 14 giorni fa): un'apertura è il passaggio in primo piano
+     * di un'app avviabile diversa dalla precedente. Launcher, SystemUI e
+     * tastiere non contano e non interrompono l'app in uso. Si leggono solo
+     * pacchetto e ora; nulla esce dal telefono.
+     */
+    private fun usageOpenings(since: Long): List<Map<String, Any>> {
+        if (!hasUsageAccess()) return emptyList()
+        val usm = context.getSystemService(UsageStatsManager::class.java)
+        val now = System.currentTimeMillis()
+        val from = maxOf(since, now - 14L * 24 * 60 * 60 * 1000)
+        val launchable = launcherApps.getActivityList(null, Process.myUserHandle())
+            .map { it.componentName.packageName }.toSet()
+        val homes = context.packageManager.queryIntentActivities(
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),
+            PackageManager.MATCH_ALL,
+        ).map { it.activityInfo.packageName }
+        val keyboards = try {
+            context.getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+                .enabledInputMethodList.map { it.packageName }
+        } catch (e: Exception) {
+            emptyList()
+        }
+        val passive = setOf(context.packageName, "com.android.systemui") + homes + keyboards
+        val out = ArrayList<Map<String, Any>>()
+        var current: String? = null
+        val events = usm.queryEvents(from, now)
+        val e = UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(e)
+            if (e.eventType != UsageEvents.Event.ACTIVITY_RESUMED) continue
+            val pkg = e.packageName
+            if (pkg in passive) {
+                // Tornare alla Home "chiude" l'app: riaprirla poi è una nuova apertura.
+                if (pkg != "com.android.systemui" && pkg !in keyboards) current = null
+                continue
+            }
+            if (pkg != current && pkg in launchable) out.add(mapOf("package" to pkg, "ts" to e.timeStamp))
+            current = pkg
+        }
+        return out
+    }
+
     private fun screenTimeToday(): Map<String, Any?>? {
         if (!hasUsageAccess()) return null
         val usm = context.getSystemService(UsageStatsManager::class.java)

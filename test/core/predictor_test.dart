@@ -148,4 +148,31 @@ void main() {
       expect(sa['y']!, closeTo(sb['y']!, 1e-6));
     });
   });
+
+  test('le aperture senza un segnale non penalizzano l\'app', () {
+    // "imported" viene dalla cronologia di Android (niente rete); "mobile"
+    // è sempre stata aperta con i dati mobili. Con il Wi-Fi, "imported" non
+    // deve finire sotto "mobile" solo perché la rete non è nota.
+    final p = AppPredictor()
+      ..addAll([
+        for (var i = 0; i < 10; i++)
+          LaunchRecord(
+            ts: now.subtract(Duration(days: i + 1)),
+            package: 'imported',
+            features: const {'slot': 'morning', 'daytype': 'workday'},
+          ),
+        for (var i = 0; i < 10; i++)
+          LaunchRecord(
+            ts: now.subtract(Duration(days: i + 1)),
+            package: 'mobile',
+            features: const {
+              'slot': 'morning',
+              'daytype': 'workday',
+              'network': 'mobile',
+            },
+          ),
+      ]);
+    final ctx = {'slot': 'morning', 'daytype': 'workday', 'network': 'wifi'};
+    expect(p.top(ctx, now: now).first, 'imported');
+  });
 }

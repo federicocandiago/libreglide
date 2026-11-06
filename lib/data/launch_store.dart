@@ -81,7 +81,11 @@ class LaunchStore {
         .subtract(const Duration(days: retentionDays))
         .millisecondsSinceEpoch;
     await _db.delete('launch_event', where: 'ts < ?', whereArgs: [cutoff]);
-    final rows = await _db.query('launch_event', orderBy: 'ts');
+    final rows = await _db.query(
+      'launch_event',
+      where: "source != 'card'",
+      orderBy: 'ts',
+    );
     return [
       for (final r in rows)
         LaunchRecord(
@@ -137,6 +141,76 @@ class LaunchStore {
       [for (final r in rows) r['place_id'] as int?],
     );
   }
+
+  /// Ore delle aperture fatte da libreGLIDE da [since], per pacchetto (per
+  /// non contare due volte quelle che la cronologia di Android registra).
+  Future<Map<String, List<int>>> launcherTimes(DateTime since) async {
+    final rows = await _db.query(
+      'launch_event',
+      columns: ['package', 'ts'],
+      where: "source = 'launcher' AND ts >= ?",
+      whereArgs: [since.millisecondsSinceEpoch],
+    );
+    final out = <String, List<int>>{};
+    for (final r in rows) {
+      out.putIfAbsent(r['package']! as String, () => []).add(r['ts']! as int);
+    }
+    return out;
+  }
+
+  /// Aperture salvate in blocco (importazione dalla cronologia).
+  Future<void> insertAll(List<LaunchRecord> records, String source) async {
+    final batch = _db.batch();
+    for (final r in records) {
+      batch.insert('launch_event', {
+        'ts': r.ts.millisecondsSinceEpoch,
+        'package': r.package,
+        'source': source,
+        'f_slot': r.features['slot'],
+        'f_daytype': r.features['daytype'],
+      });
+    }
+    await batch.commit(noResult: true);
+  }
+
+  /// Tocchi sulle card dello Space (origine `card`, pacchetto = nome della
+  /// card), con il loro contesto.
+  Future<List<LaunchRecord>> loadCardEvents() async {
+    final rows = await _db.query(
+      'launch_event',
+      where: "source = 'card'",
+      orderBy: 'ts',
+    );
+    return [
+      for (final r in rows)
+        LaunchRecord(
+          ts: DateTime.fromMillisecondsSinceEpoch(r['ts']! as int),
+          package: r['package']! as String,
+          features: {
+            'slot': r['f_slot'] as String?,
+            'daytype': r['f_daytype'] as String?,
+            'network': r['f_network'] as String?,
+            'place': r['f_place'] as String?,
+            'audio': r['f_audio'] as String?,
+            'motion': r['f_motion'] as String?,
+          },
+        ),
+    ];
+  }
+
+  Future<void> deleteSource(String source) =>
+      _db.delete('launch_event', where: 'source = ?', whereArgs: [source]);
+
+  /// Aperture per origine (`launcher`, `usage`), per la diagnostica.
+  Future<Map<String, int>> countBySource() async {
+    final rows = await _db.rawQuery(
+      'SELECT source, COUNT(*) AS n FROM launch_event GROUP BY source',
+    );
+    return {for (final r in rows) r['source']! as String: r['n']! as int};
+  }
+
+  Future<void> deleteKv(String key) =>
+      _db.delete('kv', where: 'key = ?', whereArgs: [key]);
 
   Future<void> clearSamples() => _db.delete('location_sample');
 

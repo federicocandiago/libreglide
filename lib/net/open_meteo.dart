@@ -23,7 +23,9 @@ class OpenMeteoClient {
       'longitude': roundCoordinate(lon).toStringAsFixed(1),
       'current': 'temperature_2m,weather_code,is_day',
       'hourly': 'temperature_2m,weather_code,precipitation_probability',
-      'daily': 'temperature_2m_max,temperature_2m_min',
+      'daily':
+          'temperature_2m_max,temperature_2m_min,weather_code,'
+          'precipitation_probability_max',
       'timezone': 'auto',
       'forecast_days': '2',
     });

@@ -48,6 +48,7 @@ class WeatherNow {
     required this.max,
     required this.min,
     required this.hours,
+    this.tomorrow,
   });
 
   /// Interpreta la risposta di Open-Meteo (`current`, `hourly`, `daily`,
@@ -85,6 +86,25 @@ class WeatherNow {
       max: ((daily['temperature_2m_max'] as List).first as num).toDouble(),
       min: ((daily['temperature_2m_min'] as List).first as num).toDouble(),
       hours: hours,
+      tomorrow: _tomorrow(daily),
+    );
+  }
+
+  static DayForecast? _tomorrow(Map<String, dynamic> daily) {
+    List<dynamic>? list(String k) => daily[k] as List<dynamic>?;
+    final max = list('temperature_2m_max');
+    final min = list('temperature_2m_min');
+    final codes = list('weather_code');
+    if (max == null || min == null || codes == null) return null;
+    if (max.length < 2 || min.length < 2 || codes.length < 2) return null;
+    final rain = list('precipitation_probability_max');
+    return DayForecast(
+      kind: weatherKindOf((codes[1] as num).toInt()),
+      max: (max[1] as num).toDouble(),
+      min: (min[1] as num).toDouble(),
+      rainChance: rain != null && rain.length > 1
+          ? ((rain[1] as num?) ?? 0).toInt()
+          : 0,
     );
   }
 
@@ -95,6 +115,25 @@ class WeatherNow {
   final double max;
   final double min;
   final List<HourForecast> hours;
+
+  /// Previsione di domani (null se il servizio non l'ha data).
+  final DayForecast? tomorrow;
+}
+
+class DayForecast {
+  const DayForecast({
+    required this.kind,
+    required this.max,
+    required this.min,
+    required this.rainChance,
+  });
+
+  final WeatherKind kind;
+  final double max;
+  final double min;
+
+  /// Probabilità massima di pioggia nel giorno, in percentuale.
+  final int rainChance;
 }
 
 /// Arrotonda una coordinata a 1 decimale (~10 km): al servizio meteo non

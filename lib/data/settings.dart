@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/categories.dart';
 import '../core/detox.dart';
+import '../core/space.dart';
+import '../core/space_profile.dart';
 import '../platform/launcher_bridge.dart';
 
 enum ColorSource { system, preset }
@@ -128,6 +130,26 @@ class SettingsController extends ChangeNotifier {
 
   /// Angoli appena arrotondati della finestra sullo sfondo della Home.
   bool homeCorners = true;
+
+  /// Impara anche dalle app aperte fuori da libreGLIDE (cronologia di
+  /// utilizzo di Android, se l'accesso c'è).
+  bool learnFromUsage = true;
+
+  /// Scelte per le card degli Space: "spazio/card" → mostra o nascondi.
+  Map<String, CardRule> cardRules = {};
+
+  Map<SpaceCard, CardRule> cardRulesFor(SpaceKind kind) {
+    final out = <SpaceCard, CardRule>{};
+    final prefix = '${kind.name}/';
+    cardRules.forEach((key, rule) {
+      if (!key.startsWith(prefix)) return;
+      final name = key.substring(prefix.length);
+      for (final c in SpaceCard.values) {
+        if (c.name == name) out[c] = rule;
+      }
+    });
+    return out;
+  }
 
   /// Digital detox (spento di default). Il PIN non sta qui: lo custodisce
   /// la parte nativa, solo come hash.
@@ -251,6 +273,15 @@ class SettingsController extends ChangeNotifier {
     parkingCard = p.getBool('parkingCard') ?? false;
     frostedGlass = p.getBool('frostedGlass') ?? false;
     homeCorners = p.getBool('homeCorners') ?? true;
+    learnFromUsage = p.getBool('learnFromUsage') ?? true;
+    cardRules = {};
+    for (final item in p.getStringList('cardRules') ?? const <String>[]) {
+      final parts = item.split('=');
+      if (parts.length != 2) continue;
+      for (final r in CardRule.values) {
+        if (r.name == parts[1]) cardRules[parts[0]] = r;
+      }
+    }
     dockStyle =
         DockStyle.values.elementAtOrNull(p.getInt('dockStyle') ?? 0) ??
         DockStyle.tray;
@@ -580,6 +611,23 @@ class SettingsController extends ChangeNotifier {
   void setWeatherCard(bool v) {
     weatherCard = v;
     _prefs.setBool('weatherCard', v);
+    _changed();
+  }
+
+  /// Mostra sempre o nasconde una card in uno Space (null = come deciso
+  /// dal profilo e dall'uso).
+  void setCardRule(SpaceKind kind, SpaceCard card, CardRule? rule) {
+    final key = '${kind.name}/${card.name}';
+    rule == null ? cardRules.remove(key) : cardRules[key] = rule;
+    _prefs.setStringList('cardRules', [
+      for (final e in cardRules.entries) '${e.key}=${e.value.name}',
+    ]);
+    _changed();
+  }
+
+  void setLearnFromUsage(bool v) {
+    learnFromUsage = v;
+    _prefs.setBool('learnFromUsage', v);
     _changed();
   }
 
