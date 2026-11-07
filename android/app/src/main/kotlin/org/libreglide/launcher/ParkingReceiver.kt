@@ -15,13 +15,13 @@ import android.os.Looper
 import java.util.concurrent.Executors
 
 /**
- * "Dove ho parcheggiato": quando il telefono si scollega da un'autoradio o
- * da un vivavoce Bluetooth, salva la posizione (solo sul telefono). Quando
- * si ricollega all'auto, il parcheggio viene dimenticato.
+ * "Where I parked": when the phone disconnects from a Bluetooth car stereo or
+ * hands-free kit, it saves the location (on the phone only). When it
+ * reconnects to the car, the parking spot is forgotten.
  *
- * Attivo solo se l'utente ha acceso la funzione (preferenza
- * `parking_enabled`). È l'unico punto di libreGLIDE che usa la posizione
- * in background, e serve il relativo permesso.
+ * Active only if the user turned the feature on (`parking_enabled`
+ * preference). It is the only place in libreGLIDE that uses background
+ * location, and it requires that permission.
  */
 class ParkingReceiver : BroadcastReceiver() {
 
@@ -31,9 +31,7 @@ class ParkingReceiver : BroadcastReceiver() {
         if (!isCar(context, intent)) return
 
         when (intent.action) {
-            BluetoothDevice.ACTION_ACL_CONNECTED -> prefs.edit()
-                .remove(KEY_LAT).remove(KEY_LON).remove(KEY_ACCURACY).remove(KEY_TS).remove(KEY_PRECISE)
-                .apply()
+            BluetoothDevice.ACTION_ACL_CONNECTED -> clear(context)
             BluetoothDevice.ACTION_ACL_DISCONNECTED -> saveLocation(context)
         }
     }
@@ -82,8 +80,8 @@ class ParkingReceiver : BroadcastReceiver() {
         val background = context.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
         if (!background) {
-            // Senza il permesso in background si prova con l'ultima posizione
-            // nota (spesso imprecisa).
+            // Without the background permission, fall back to the last known
+            // location (often inaccurate).
             store(try { lastKnown() } catch (e: Exception) { null }, false)
             return
         }
@@ -109,5 +107,12 @@ class ParkingReceiver : BroadcastReceiver() {
         const val KEY_ACCURACY = "parked_accuracy"
         const val KEY_TS = "parked_ts"
         const val KEY_PRECISE = "parked_precise"
+
+        /** Forgets the saved parking spot (every key, so nothing stale is left). */
+        fun clear(context: Context) {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .remove(KEY_LAT).remove(KEY_LON).remove(KEY_ACCURACY).remove(KEY_TS).remove(KEY_PRECISE)
+                .apply()
+        }
     }
 }

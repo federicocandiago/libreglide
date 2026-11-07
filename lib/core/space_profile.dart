@@ -1,7 +1,7 @@
-/// Cosa mostra ogni Space: azioni rapide, card in primo piano, una riga di
-/// app di una categoria. È la base; l'uso (le card toccate in un contesto)
-/// e le scelte dell'utente ("Nascondi qui", "Mostra sempre qui") la
-/// adattano (vedi [CardAffinity] e [arrangeCards]).
+/// What each Space shows: quick actions, featured cards, a row of apps from
+/// one category. This is the baseline; usage (cards tapped in a context) and
+/// the user's choices ("Hide here", "Always show here") adapt it (see
+/// [CardAffinity] and [arrangeCards]).
 library;
 
 import 'dart:math' as math;
@@ -9,7 +9,7 @@ import 'dart:math' as math;
 import 'categories.dart';
 import 'space.dart';
 
-/// Card di Glide dello Space (i widget Android non ne fanno parte).
+/// Glide cards of the Space (Android widgets are not part of this).
 enum SpaceCard {
   car,
   parking,
@@ -26,7 +26,7 @@ enum SpaceCard {
   placesInvite,
 }
 
-/// Azioni rapide della card in cima allo Space.
+/// Quick actions of the card at the top of the Space.
 enum QuickAction {
   alarm,
   alarmTomorrow,
@@ -52,20 +52,20 @@ class SpaceProfile {
 
   final List<QuickAction> actions;
 
-  /// Riga di app di questa categoria (null = nessuna).
+  /// Row of apps from this category (null = none).
   final AppCategory? category;
 
-  /// Priorità di base in questo Space (più bassa = più in alto); le card
-  /// assenti usano [defaultCardPriority].
+  /// Base priority in this Space (lower = higher up); cards not listed use
+  /// [defaultCardPriority].
   final Map<SpaceCard, int> priority;
 
-  /// Card che questo Space non mostra, se l'uso o l'utente non le chiedono.
+  /// Cards this Space doesn't show unless usage or the user asks for them.
   final Set<SpaceCard> hidden;
 
-  /// L'agenda vuota resta visibile ("giornata libera").
+  /// The empty agenda stays visible ("free day").
   final bool agendaWhenEmpty;
 
-  /// Il meteo mostra domani invece delle prossime ore.
+  /// Weather shows tomorrow instead of the next hours.
   final bool weatherTomorrow;
 }
 
@@ -162,23 +162,23 @@ SpaceProfile profileFor(SpaceKind kind) => switch (kind) {
   ),
 };
 
-/// Scelta dell'utente per una card in uno Space.
+/// The user's choice for a card in a Space.
 enum CardRule { show, hide }
 
-/// Interazioni con le card (tocchi), con il loro contesto. L'affinità di
-/// una card in un contesto è il numero di tocchi in quella fascia oraria o
-/// in quel luogo (o con le cuffie, in auto), pesati con un decadimento:
-/// conta di più ciò che hai fatto di recente.
+/// Card interactions (taps) with their context. A card's affinity in a
+/// context is the number of taps in that time slot or place (or with
+/// headphones, in the car), weighted with a decay: recent actions count
+/// more.
 class CardAffinity {
   CardAffinity({this.halfLife = const Duration(days: 21)});
 
   final Duration halfLife;
   final List<(SpaceCard, DateTime, Map<String, String?>)> _events = [];
 
-  /// Segnali che descrivono il contesto di un tocco.
+  /// Signals describing the context of a tap.
   static const _features = ['slot', 'place', 'audio', 'motion'];
 
-  /// Valori troppo generici per dire qualcosa.
+  /// Values too generic to tell anything.
   static const _ignored = {'other', 'speaker'};
 
   void add(SpaceCard card, DateTime t, Map<String, String?> features) =>
@@ -188,7 +188,7 @@ class CardAffinity {
 
   int get length => _events.length;
 
-  /// Affinità di [card] nel contesto [ctx] adesso.
+  /// Affinity of [card] in context [ctx] right now.
   double affinity(SpaceCard card, DateTime now, Map<String, String?> ctx) {
     var best = 0.0;
     for (final f in _features) {
@@ -206,13 +206,13 @@ class CardAffinity {
   }
 }
 
-/// Tocchi recenti nel contesto oltre cui una card nascosta dal profilo
-/// compare comunque.
+/// Recent taps in the context above which a card hidden by the profile
+/// shows up anyway.
 const double promoteAt = 3;
 
-/// Ordina le card disponibili per questo Space: priorità del profilo,
-/// spinta dell'uso, scelte dell'utente. [available] sono le card che adesso
-/// hanno qualcosa da mostrare.
+/// Orders the available cards for this Space: profile priority, usage
+/// boost, user choices. [available] are the cards that currently have
+/// something to show.
 List<SpaceCard> arrangeCards({
   required SpaceProfile profile,
   required Iterable<SpaceCard> available,
@@ -228,9 +228,9 @@ List<SpaceCard> arrangeCards({
     if (hiddenByProfile && rule != CardRule.show && a < promoteAt) continue;
     var p = (profile.priority[card] ?? defaultCardPriority[card] ?? 50)
         .toDouble();
-    // Più la usi qui, più sale (fino a 18 posizioni di priorità).
+    // The more you use it here, the higher it goes (up to 18 priority steps).
     p -= math.min(18, a * 3);
-    // "Mostra sempre qui": in alto, dopo le card urgenti (auto, parcheggio).
+    // "Always show here": near the top, after urgent cards (car, parking).
     if (rule == CardRule.show) p = math.min(p, 4);
     scored.add((card, p, i));
   }

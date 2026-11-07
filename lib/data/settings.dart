@@ -1,4 +1,4 @@
-/// Impostazioni dell'utente, salvate in shared_preferences
+/// User settings, stored in shared_preferences
 /// (spec-viste-app §6–§8).
 library;
 
@@ -17,16 +17,16 @@ enum ColorSource { system, preset }
 
 enum AllAppsLayout { grid, list }
 
-/// Dove mostrare il tempo di utilizzo.
+/// Where to show screen time.
 enum ScreenTimePlace { off, home, space }
 
-/// Azione di uno swipe verticale sulla Home.
+/// Action of a vertical swipe on the Home.
 enum GestureAction { search, contacts, none }
 
-/// Stile del dock della Home: vassoio pieno (default) o icone sullo sfondo.
+/// Home dock style: solid tray (default) or icons on the wallpaper.
 enum DockStyle { tray, transparent }
 
-/// Stili della palette esposti all'utente (sottoinsieme di
+/// Palette styles offered to the user (a subset of
 /// [DynamicSchemeVariant]).
 const List<DynamicSchemeVariant> paletteStyles = [
   DynamicSchemeVariant.tonalSpot,
@@ -46,7 +46,7 @@ class SettingsController extends ChangeNotifier {
 
   final SharedPreferences _prefs;
 
-  // Aspetto
+  // --- Appearance ---
   ThemeMode themeMode = ThemeMode.system;
   ColorSource colorSource = ColorSource.system;
   int presetIndex = 0;
@@ -54,7 +54,7 @@ class SettingsController extends ChangeNotifier {
   double contrast = 0;
   bool themedIcons = false;
 
-  // App
+  // --- Apps ---
   AllAppsLayout allAppsLayout = AllAppsLayout.grid;
   bool showSystemApps = true;
   bool fixedCollectionOrder = false;
@@ -64,78 +64,81 @@ class SettingsController extends ChangeNotifier {
   List<AppCategory> pinnedCategories = [];
   Set<AppCategory> hiddenCategories = {};
 
-  /// Sfondo contestuale (Unsplash). La chiave è dell'utente e resta sul
-  /// telefono.
+  /// Contextual wallpaper (Unsplash). The key is the user's own and stays on
+  /// the phone.
   bool contextWallpaper = false;
   String? unsplashKey;
 
-  /// Fuso orario di casa (es. "Europe/Rome"): se quello attuale è diverso
-  /// l'utente è considerato in viaggio.
+  /// Home time zone (e.g. "Europe/Rome"): if the current one differs, the
+  /// user is considered to be travelling.
   String? homeTimeZone;
 
-  /// "Cambia foto": scarto rispetto alla foto del giorno.
+  /// "Change photo": offset from the photo of the day.
   int wallpaperShuffle = 0;
   String? wallpaperShuffleDay;
 
-  /// Foto in uso (JSON), per non riscaricarla a ogni avvio.
+  /// Photo in use (JSON), so it isn't downloaded again on every start.
   String? wallpaperState;
 
-  /// Gesti sulla Home: di default ricerca in giù e contatti in su.
+  /// Home gestures: by default contacts on swipe down, search on swipe up.
   GestureAction swipeDown = GestureAction.contacts;
   GestureAction swipeUp = GestureAction.search;
 
-  /// Ricerca: con una sola app corrispondente la apre da sola.
+  /// Search: when only one app matches, launch it automatically.
   bool autoLaunchSingle = true;
 
-  /// Nomi sotto le icone nelle righe delle Collections (di default: no).
+  /// Labels under the icons in the Collections rows (off by default).
   bool collectionLabels = false;
 
-  /// Altre card dello Space.
+  /// Other Space cards.
   bool eveningCard = true;
   bool nextPlaceCard = true;
   bool travelCard = true;
   bool weatherCard = false;
 
-  /// Riconoscimento di casa e lavoro (serve la posizione precisa).
+  /// Home and work recognition (requires precise location).
   bool placesEnabled = true;
 
-  /// Etichetta del luogo di lavoro: auto ("Lavoro/Scuola"), lavoro, scuola.
+  /// Label of the work place: auto ("Work/School"), work, school.
   String workLabel = 'auto';
   ScreenTimePlace screenTime = ScreenTimePlace.off;
 
-  /// Widget Android nello Space, in ordine.
+  /// Android widgets in the Space, in order.
   List<PlacedWidget> widgets = [];
 
-  /// Widget Android sulla Home, sopra il dock (al massimo [maxHomeWidgets]).
+  /// Android widgets on the Home, above the dock (at most [maxHomeWidgets]).
   List<PlacedWidget> homeWidgets = [];
   static const maxHomeWidgets = 3;
 
-  /// Altezza di una riga della griglia della Home, in dp.
+  /// Height of a Home grid row, in dp.
   static const homeRowHeight = 88.0;
+
+  /// Height range of a Home widget, in rows.
+  static const minHomeRows = 1;
+  static const maxHomeRows = 4;
   bool carCard = true;
 
-  /// "Dove ho parcheggiato" (spento di default: usa la posizione in
-  /// background).
+  /// "Where I parked" (off by default: it uses background location).
   bool parkingCard = false;
 
-  /// Onboarding completato.
+  /// Onboarding completed.
   bool onboardingDone = false;
 
-  /// Vetro smerigliato: pagine semitrasparenti sullo sfondo sfocato
-  /// (spento di default).
+  /// Frosted glass: translucent pages over the blurred wallpaper (off by
+  /// default).
   bool frostedGlass = false;
 
-  /// Dock della Home: vassoio pieno che incornicia lo sfondo, o trasparente.
+  /// Home dock: solid tray framing the wallpaper, or transparent.
   DockStyle dockStyle = DockStyle.tray;
 
-  /// Angoli appena arrotondati della finestra sullo sfondo della Home.
+  /// Slightly rounded window corners over the Home wallpaper.
   bool homeCorners = true;
 
-  /// Impara anche dalle app aperte fuori da libreGLIDE (cronologia di
-  /// utilizzo di Android, se l'accesso c'è).
+  /// Also learn from apps opened outside libreGLIDE (Android usage history,
+  /// if access is granted).
   bool learnFromUsage = true;
 
-  /// Scelte per le card degli Space: "spazio/card" → mostra o nascondi.
+  /// Choices for the Space cards: "space/card" → show or hide.
   Map<String, CardRule> cardRules = {};
 
   Map<SpaceCard, CardRule> cardRulesFor(SpaceKind kind) {
@@ -151,47 +154,47 @@ class SettingsController extends ChangeNotifier {
     return out;
   }
 
-  /// Digital detox (spento di default). Il PIN non sta qui: lo custodisce
-  /// la parte nativa, solo come hash.
+  /// Digital detox (off by default). The PIN isn't stored here: the native
+  /// side keeps it, only as a hash.
   bool detoxEnabled = false;
   bool detoxAllDay = true;
   int detoxStart = 22 * 60;
   int detoxEnd = 7 * 60;
 
-  /// Le app bloccate si possono sbloccare con il PIN (altrimenti mai).
+  /// Blocked apps can be unlocked with the PIN (otherwise never).
   bool detoxUnlockable = true;
 
-  /// Pacchetti bloccati. Separati dalle app nascoste: spegnendo il detox
-  /// tutto torna come prima.
+  /// Blocked packages. Kept separate from hidden apps: turning detox off
+  /// restores everything as it was.
   Set<String> detoxApps = {};
 
-  /// Durante il detox le app bloccate spariscono dal launcher.
+  /// During detox, blocked apps disappear from the launcher.
   bool detoxHideApps = false;
 
   DetoxSchedule get detoxSchedule =>
       DetoxSchedule(allDay: detoxAllDay, start: detoxStart, end: detoxEnd);
 
-  /// Card dinamiche dello Space.
+  /// Dynamic Space cards.
   bool agendaCard = true;
   bool mediaCard = true;
 
-  /// App suggerite sopra la barra della ricerca globale: 4 o 8.
+  /// Suggested apps above the global search bar: 4 or 8.
   int searchTopApps = 8;
 
-  /// Il banner informativo dello Space è stato chiuso.
+  /// The Space info banner has been dismissed.
   bool infoBannerDismissed = false;
 
-  // Lingua: null = lingua di sistema.
+  /// Language: null = system language.
   Locale? locale;
 
-  /// Avviso dedicato all'aspetto (tema, colori, contrasto, lingua, icone a
-  /// tema): solo questo ricostruisce la MaterialApp.
+  /// Notifier dedicated to appearance (theme, colors, contrast, language,
+  /// themed icons): only this one rebuilds the MaterialApp.
   final ValueNotifier<int> appearance = ValueNotifier(0);
 
-  /// Incrementato a ogni modifica che cambia le Collections.
+  /// Incremented on every change that affects the Collections.
   int collectionsRevision = 0;
 
-  /// Posti del dock: una riga da 4, come chiesto (sempre 4 posti).
+  /// Dock slots: a single row of 4 (always 4 slots).
   static const maxFavorites = 4;
 
   void _load() {
@@ -311,7 +314,7 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // region Aspetto
+  // region Appearance
   void setThemeMode(ThemeMode v) {
     themeMode = v;
     _prefs.setInt('themeMode', v.index);
@@ -352,7 +355,7 @@ class SettingsController extends ChangeNotifier {
   }
   // endregion
 
-  // region App
+  // region Apps
   void setAllAppsLayout(AllAppsLayout v) {
     allAppsLayout = v;
     _prefs.setInt('allAppsLayout', v.index);
@@ -384,7 +387,7 @@ class SettingsController extends ChangeNotifier {
 
   bool get favoritesFull => favorites.length >= maxFavorites;
 
-  /// Sposta un'app del dock nel posto [index] (trascinamento).
+  /// Moves a dock app to slot [index] (drag and drop).
   void moveFavorite(String appId, int index) {
     final from = favorites.indexOf(appId);
     if (from < 0) return;
@@ -485,7 +488,7 @@ class SettingsController extends ChangeNotifier {
     _prefs.setString('homeTimeZone', tz);
   }
 
-  /// Passa alla foto successiva per oggi.
+  /// Switches to the next photo for today.
   void nextWallpaper(String today) {
     wallpaperShuffle = wallpaperShuffleDay == today ? wallpaperShuffle + 1 : 1;
     wallpaperShuffleDay = today;
@@ -495,7 +498,7 @@ class SettingsController extends ChangeNotifier {
     _changed();
   }
 
-  /// Scarto della foto per [today] (0 se "Cambia foto" non è stato usato oggi).
+  /// Photo offset for [today] (0 if "Change photo" wasn't used today).
   int shuffleFor(String today) =>
       wallpaperShuffleDay == today ? wallpaperShuffle : 0;
 
@@ -544,7 +547,7 @@ class SettingsController extends ChangeNotifier {
     _changed();
   }
 
-  /// Widget della Home (sopra il dock) o dello Space.
+  /// Widgets of the Home (above the dock) or of the Space.
   List<PlacedWidget> widgetsFor({required bool home}) =>
       home ? homeWidgets : widgets;
 
@@ -614,8 +617,8 @@ class SettingsController extends ChangeNotifier {
     _changed();
   }
 
-  /// Mostra sempre o nasconde una card in uno Space (null = come deciso
-  /// dal profilo e dall'uso).
+  /// Always shows or hides a card in a Space (null = as decided by the
+  /// profile and usage).
   void setCardRule(SpaceKind kind, SpaceCard card, CardRule? rule) {
     final key = '${kind.name}/${card.name}';
     rule == null ? cardRules.remove(key) : cardRules[key] = rule;
@@ -678,7 +681,7 @@ class SettingsController extends ChangeNotifier {
     _changed();
   }
 
-  /// Blocca o sblocca più app insieme (un gruppo intero).
+  /// Blocks or unblocks several apps at once (a whole group).
   void setDetoxApps(Iterable<String> packages, bool locked) {
     locked ? detoxApps.addAll(packages) : detoxApps.removeAll(packages);
     _prefs.setStringList('detoxApps', detoxApps.toList());

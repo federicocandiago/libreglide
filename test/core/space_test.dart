@@ -4,7 +4,7 @@ import 'package:libreglide/core/space.dart';
 import 'package:libreglide/core/time_context.dart';
 
 void main() {
-  test('priorità: auto, cuffie, viaggio, lavoro, casa, ora', () {
+  test('priority: car, headphones, travel, work, home, time', () {
     expect(
       selectSpace(slot: Slot.morning, driving: true, audio: 'bt'),
       SpaceKind.moving,
@@ -28,7 +28,7 @@ void main() {
     expect(selectSpace(slot: Slot.lunch), SpaceKind.lunch);
   });
 
-  test('a casa: risveglio e sera restano Space dell\'ora', () {
+  test('at home: wake-up and evening stay time-based Spaces', () {
     expect(
       selectSpace(slot: Slot.wakeUp, place: PlaceRole.home),
       SpaceKind.wakeUp,
@@ -39,7 +39,7 @@ void main() {
     );
   });
 
-  test('Space e fasce orarie', () {
+  test('Spaces and time slots', () {
     for (final s in Slot.values) {
       expect(SpaceKind.ofSlot(s).slot, s);
     }

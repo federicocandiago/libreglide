@@ -62,11 +62,11 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 /**
- * Ponte tra Flutter e il sistema per tutto ciò che riguarda le app:
- * elenco, icone, avvio, informazioni, disinstallazione, ruolo Home.
+ * Bridge between Flutter and the system for everything app-related:
+ * list, icons, launch, info, uninstall, Home role.
  *
- * Non prende decisioni: legge il sistema e restituisce dati normalizzati.
- * Canali: `libreglide/launcher` (metodi) e `libreglide/launcher/events`.
+ * It makes no decisions: it reads the system and returns normalized data.
+ * Channels: `libreglide/launcher` (methods) and `libreglide/launcher/events`.
  */
 class LauncherBridge(
     private val activity: Activity,
@@ -83,12 +83,12 @@ class LauncherBridge(
     private val events = EventChannel(messenger, EVENT_CHANNEL)
     private var sink: EventChannel.EventSink? = null
 
-    /** Musica in riproduzione: avvisa Flutter quando cambia. */
+    /** Music being played: notifies Flutter when it changes. */
     private val media = MediaWatcher(context) {
         main.post { sink?.success(mapOf("type" to "media_changed")) }
     }
 
-    /** Ultimo elenco letto, per risolvere velocemente le icone. */
+    /** Last list read, to resolve icons quickly. */
     private val infoById = ConcurrentHashMap<String, LauncherActivityInfo>()
 
     private val packageCallback = object : LauncherApps.Callback() {
@@ -125,12 +125,12 @@ class LauncherBridge(
     }
 
     fun notifyResumed() {
-        // L'utente potrebbe aver appena concesso l'accesso ai media.
+        // The user may have just granted media access.
         media.startIfPossible()
         methods.invokeMethod("onResumed", null)
     }
 
-    /** Apre una schermata (comando di sviluppo, vedi MainActivity). */
+    /** Opens a screen (development command, see MainActivity). */
     fun notifyOpen(target: String) {
         methods.invokeMethod("onOpen", target)
     }
@@ -158,7 +158,7 @@ class LauncherBridge(
                 background(result) { getIcons(ids, size) }
             }
             "launch" -> result.success(launch(call.argument<String>("id")!!, call.argument<List<Int>>("bounds")))
-            // Vetro smerigliato
+            // Frosted glass
             "setGlass" -> result.success(glass.setEnabled(call.argument<Boolean>("enabled") == true))
             "setWindowBlur" -> {
                 glass.blurTo(((call.argument<Number>("dp")?.toFloat() ?: 0f) * context.resources.displayMetrics.density).toInt())
@@ -174,7 +174,7 @@ class LauncherBridge(
             "detoxSetPin" -> background(result) { Detox.setPin(context, call.argument<String>("pin")!!); true }
             "detoxCheckPin" -> background(result) { Detox.checkPin(context, call.argument<String>("pin") ?: "") }
             "detoxServiceEnabled" -> result.success(Detox.serviceEnabled(context))
-            // Comando di sviluppo: mostra la schermata di blocco (per Impostazioni).
+            // Development command: shows the lock screen (for Settings).
             "detoxPreview" -> {
                 Detox.showLock(context, "com.android.settings")
                 result.success(true)
@@ -233,9 +233,7 @@ class LauncherBridge(
             }
             "getParking" -> result.success(parking())
             "clearParking" -> {
-                context.getSharedPreferences(ParkingReceiver.PREFS, Context.MODE_PRIVATE).edit()
-                    .remove(ParkingReceiver.KEY_LAT).remove(ParkingReceiver.KEY_LON)
-                    .remove(ParkingReceiver.KEY_TS).apply()
+                ParkingReceiver.clear(context)
                 result.success(true)
             }
             "setParkingEnabled" -> {
@@ -250,8 +248,8 @@ class LauncherBridge(
             "requestBackgroundLocation" -> result.success(
                 requestOnce(Manifest.permission.ACCESS_BACKGROUND_LOCATION, "background_asked", REQUEST_BACKGROUND),
             )
-            // Negata in modo definitivo: Android non mostra più la richiesta,
-            // si può concedere solo dalle impostazioni dell'app.
+            // Permanently denied: Android no longer shows the prompt, it can
+            // only be granted from the app's settings.
             "backgroundLocationBlocked" -> result.success(
                 context.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) !=
                     PackageManager.PERMISSION_GRANTED &&
@@ -374,8 +372,8 @@ class LauncherBridge(
 
     private fun launch(id: String, bounds: List<Int>?): Boolean {
         val info = resolve(id) ?: return false
-        // Digital detox: un'app bloccata aperta dal launcher mostra subito il
-        // blocco, senza passare dall'app.
+        // Digital detox: a blocked app opened from the launcher shows the lock
+        // screen right away, without going through the app.
         val pkg = info.componentName.packageName
         if (Detox.unlockedPackage != pkg && Detox.isLockedNow(context, pkg)) {
             Detox.showLock(context, pkg, info.componentName)
@@ -402,7 +400,7 @@ class LauncherBridge(
         }
     }
 
-    /** Apre la scheda del servizio di Digital detox nelle impostazioni di accessibilità. */
+    /** Opens the Digital detox service page in the accessibility settings. */
     private fun openDetoxService(): Boolean {
         if (Build.VERSION.SDK_INT >= 33) {
             val details = Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS")
@@ -433,10 +431,10 @@ class LauncherBridge(
     }
     // endregion
 
-    // region Icone
+    // region Icons
     /**
-     * Per ogni id restituisce l'icona normale e, se esiste (Android 13+),
-     * il layer monocromo come maschera bianca per le icone a tema.
+     * For each id returns the regular icon and, if present (Android 13+),
+     * the monochrome layer as a white mask for themed icons.
      */
     private fun getIcons(ids: List<String>, size: Int): Map<String, Map<String, ByteArray?>> {
         val density = context.resources.displayMetrics.densityDpi
@@ -468,8 +466,8 @@ class LauncherBridge(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
         val adaptive = d as? AdaptiveIconDrawable ?: return null
         val mono = adaptive.monochrome?.mutate() ?: return null
-        // I layer adattivi sono 108 unità, la zona visibile 72: si allarga
-        // di 1/4 per lato così il glifo riempie l'icona come nel sistema.
+        // Adaptive layers are 108 units, the visible area 72: enlarge by 1/4
+        // per side so the glyph fills the icon as the system does.
         val inset = size / 4
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -487,10 +485,10 @@ class LauncherBridge(
     }
     // endregion
 
-    // region Contesto
+    // region Context
     /**
-     * Segnali di contesto che non richiedono permessi: tipo di rete, uscita
-     * audio, ricarica. Nessun nome di rete o dispositivo esce da qui.
+     * Context signals that need no permissions: network type, audio output,
+     * charging. No network or device name leaves this method.
      */
     private fun contextSnapshot(): Map<String, Any?> {
         val connectivity = context.getSystemService(ConnectivityManager::class.java)
@@ -499,7 +497,7 @@ class LauncherBridge(
             caps == null -> "offline"
             caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "wifi"
             caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "mobile"
-            else -> "wifi" // ethernet, VPN su Wi-Fi: trattati come rete fissa
+            else -> "wifi" // ethernet, VPN over Wi-Fi: treated as a fixed network
         }
 
         val audio = context.getSystemService(AudioManager::class.java)
@@ -531,8 +529,8 @@ class LauncherBridge(
             "network" to network,
             "audio" to route,
             "charging" to battery.isCharging,
-            // Fuso orario (es. "Europe/Rome") e roaming: servono a capire
-            // se l'utente è in viaggio, senza posizione.
+            // Time zone (e.g. "Europe/Rome") and roaming: used to tell
+            // whether the user is travelling, without location.
             "tz" to TimeZone.getDefault().id,
             "roaming" to roaming,
             "car" to inCar(devices),
@@ -545,13 +543,13 @@ class LauncherBridge(
     }
     // endregion
 
-    // region Calendario
+    // region Calendar
     private fun hasCalendar(): Boolean =
         context.checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
 
     /**
-     * Eventi tra [from] e [to] (ms) dai calendari visibili, esclusi quelli
-     * rifiutati. Null se manca il permesso.
+     * Events between [from] and [to] (ms) from visible calendars, excluding
+     * declined ones. Null without the permission.
      */
     private fun readEvents(from: Long, to: Long): List<Map<String, Any?>>? {
         if (!hasCalendar()) return null
@@ -591,8 +589,8 @@ class LauncherBridge(
     }
 
     /**
-     * Chiede il permesso calendario. Se l'utente l'ha già negato in modo
-     * definitivo, apre le informazioni dell'app dove si può concedere a mano.
+     * Requests the calendar permission. If the user already denied it
+     * permanently, opens the app info page where it can be granted manually.
      */
     private fun requestCalendar(): Boolean {
         if (hasCalendar()) return true
@@ -616,7 +614,7 @@ class LauncherBridge(
     )
     // endregion
 
-    // region Contatti
+    // region Contacts
     private fun hasContacts(): Boolean =
         context.checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
 
@@ -643,7 +641,7 @@ class LauncherBridge(
         ContactsContract.Contacts.HAS_PHONE_NUMBER,
     )
 
-    /** Righe di contatto con numero principale e miniatura (solo in memoria). */
+    /** Contact rows with primary number and thumbnail (in memory only). */
     private fun readContacts(uri: Uri, selection: String?, args: Array<String>?, limit: Int): List<Map<String, Any?>> {
         if (!hasContacts()) return emptyList()
         val out = ArrayList<Map<String, Any?>>()
@@ -710,7 +708,7 @@ class LauncherBridge(
     }
     // endregion
 
-    // region Luoghi: posizione precisa e impronta del Wi-Fi
+    // region Places: precise location and Wi-Fi fingerprint
     private fun hasPreciseLocation(): Boolean =
         context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
@@ -732,7 +730,7 @@ class LauncherBridge(
         }
     }
 
-    /** Ultima rete Wi-Fi vista (con il permesso di posizione precisa). */
+    /** Last Wi-Fi network seen (requires the precise location permission). */
     @Volatile private var wifiSsid: String? = null
     @Volatile private var wifiMetered = true
 
@@ -757,7 +755,7 @@ class LauncherBridge(
         }
     }
 
-    // Dopo la dichiarazione della callback: i blocchi init girano in ordine.
+    // After the callback declaration: init blocks run in order.
     init {
         registerWifiCallback()
     }
@@ -770,9 +768,9 @@ class LauncherBridge(
     }
 
     /**
-     * Impronta del Wi-Fi: SHA-256 del nome con una chiave casuale che esiste
-     * solo su questo telefono. Il nome della rete non esce mai da qui.
-     * Le reti a consumo (hotspot) sono escluse: si spostano con te.
+     * Wi-Fi fingerprint: SHA-256 of the name with a random key that exists
+     * only on this phone. The network name never leaves this method.
+     * Metered networks (hotspots) are excluded: they move with you.
      */
     private fun wifiHash(): String? {
         val ssid = wifiSsid ?: return null
@@ -788,7 +786,7 @@ class LauncherBridge(
         return digest.take(16).joinToString("") { "%02x".format(it) }
     }
 
-    /** Parcheggio salvato da [ParkingReceiver], o null. */
+    /** Parking spot saved by [ParkingReceiver], or null. */
     private fun parking(): Map<String, Any?>? {
         val prefs = context.getSharedPreferences(ParkingReceiver.PREFS, Context.MODE_PRIVATE)
         val lat = prefs.getString(ParkingReceiver.KEY_LAT, null)?.toDoubleOrNull() ?: return null
@@ -802,7 +800,7 @@ class LauncherBridge(
         )
     }
 
-    /** Un campione per i luoghi: posizione precisa, impronta Wi-Fi, ricarica. */
+    /** One sample for places: precise location, Wi-Fi fingerprint, charging. */
     private fun placeSample(result: MethodChannel.Result, withLocation: Boolean) {
         if (!hasPreciseLocation()) {
             result.success(null)
@@ -829,7 +827,7 @@ class LauncherBridge(
             }
         }
         if (!withLocation) {
-            // Solo Wi-Fi e ricarica: la localizzazione resta spenta.
+            // Wi-Fi and charging only: location stays off.
             reply(null)
             return
         }
@@ -868,7 +866,7 @@ class LauncherBridge(
     }
     // endregion
 
-    // region Tempo di utilizzo
+    // region Usage time
     private fun hasUsageAccess(): Boolean {
         val ops = context.getSystemService(AppOpsManager::class.java)
         val mode = ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName)
@@ -876,16 +874,11 @@ class LauncherBridge(
     }
 
     /**
-     * Tempo in primo piano di oggi (da mezzanotte), per app, calcolato dagli
-     * eventi di utilizzo. Esclusi libreGLIDE e l'interfaccia di sistema.
-     * Null senza l'accesso ai dati di utilizzo.
-     */
-    /**
-     * Aperture di app dalla cronologia di utilizzo di Android, da [since]
-     * (al massimo 14 giorni fa): un'apertura è il passaggio in primo piano
-     * di un'app avviabile diversa dalla precedente. Launcher, SystemUI e
-     * tastiere non contano e non interrompono l'app in uso. Si leggono solo
-     * pacchetto e ora; nulla esce dal telefono.
+     * App openings from Android's usage history, since [since] (at most 14
+     * days ago): an opening is a launchable app coming to the foreground that
+     * differs from the previous one. Launchers, SystemUI and keyboards don't
+     * count and don't interrupt the app in use. Only package and time are
+     * read; nothing leaves the phone.
      */
     private fun usageOpenings(since: Long): List<Map<String, Any>> {
         if (!hasUsageAccess()) return emptyList()
@@ -914,7 +907,7 @@ class LauncherBridge(
             if (e.eventType != UsageEvents.Event.ACTIVITY_RESUMED) continue
             val pkg = e.packageName
             if (pkg in passive) {
-                // Tornare alla Home "chiude" l'app: riaprirla poi è una nuova apertura.
+                // Going back Home "closes" the app: reopening it counts as a new opening.
                 if (pkg != "com.android.systemui" && pkg !in keyboards) current = null
                 continue
             }
@@ -924,6 +917,11 @@ class LauncherBridge(
         return out
     }
 
+    /**
+     * Today's foreground time (since midnight) per app, computed from usage
+     * events. libreGLIDE and System UI are excluded. Null without usage
+     * access.
+     */
     private fun screenTimeToday(): Map<String, Any?>? {
         if (!hasUsageAccess()) return null
         val usm = context.getSystemService(UsageStatsManager::class.java)
@@ -969,7 +967,7 @@ class LauncherBridge(
     }
     // endregion
 
-    // region Widget Android
+    // region Android widgets
     private val widgetHost = (activity.application as LibreGlideApplication).widgetHost
     private val widgetManager = AppWidgetManager.getInstance(context)
     private var pendingWidgetId: Int? = null
@@ -977,7 +975,7 @@ class LauncherBridge(
 
     private fun pxToDp(px: Int): Int = (px / context.resources.displayMetrics.density).toInt()
 
-    /** Widget installati, dall'app al nome. */
+    /** Installed widgets, sorted by app then name. */
     private fun widgetProviders(): List<Map<String, Any?>> {
         val pm = context.packageManager
         return widgetManager.installedProviders.map { info ->
@@ -992,9 +990,9 @@ class LauncherBridge(
     }
 
     /**
-     * Aggiunge un widget: alloca l'id, chiede il permesso di collegarlo se
-     * serve, poi apre la sua configurazione se la richiede. Il risultato
-     * (id, nome, dimensioni minime) arriva alla fine del flusso, o null.
+     * Adds a widget: allocates the id, asks for permission to bind it if
+     * needed, then opens its configuration if it requires one. The result
+     * (id, name, minimum size) arrives at the end of the flow, or null.
      */
     private fun addWidget(flattened: String, result: MethodChannel.Result) {
         val provider = ComponentName.unflattenFromString(flattened)
@@ -1054,7 +1052,7 @@ class LauncherBridge(
         )
     }
 
-    /** Risultati dei dialoghi di sistema (collegamento, configurazione). */
+    /** Results of the system dialogs (binding, configuration). */
     fun onActivityResult(requestCode: Int, resultCode: Int) {
         when (requestCode) {
             REQUEST_BIND_WIDGET ->
@@ -1064,7 +1062,7 @@ class LauncherBridge(
     }
     // endregion
 
-    // region Posizione approssimativa (meteo) e Bluetooth (auto)
+    // region Coarse location (weather) and Bluetooth (car)
     private fun hasLocation(): Boolean =
         context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
@@ -1078,8 +1076,8 @@ class LauncherBridge(
         requestOnce(Manifest.permission.BLUETOOTH_CONNECT, "bluetooth_asked", REQUEST_BLUETOOTH)
 
     /**
-     * Chiede un permesso; se l'utente l'ha già negato in modo definitivo apre
-     * le informazioni dell'app, dove si può concedere a mano.
+     * Requests a permission; if the user already denied it permanently, opens
+     * the app info page, where it can be granted manually.
      */
     private fun requestOnce(permission: String, key: String, code: Int): Boolean {
         if (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) return true
@@ -1097,8 +1095,8 @@ class LauncherBridge(
     }
 
     /**
-     * Posizione approssimativa (rete/fused), solo con il permesso concesso.
-     * Prima prova una lettura fresca, poi l'ultima nota. Null se non c'è.
+     * Coarse location (network/fused), only with the permission granted.
+     * Tries a fresh reading first, then the last known one. Null if none.
      */
     private fun coarseLocation(result: MethodChannel.Result) {
         if (!hasLocation()) {
@@ -1153,8 +1151,9 @@ class LauncherBridge(
     }
 
     /**
-     * In auto: Android Auto attivo (nessun permesso) oppure, con il permesso
-     * Bluetooth, un'autoradio o un vivavoce collegato come uscita audio.
+     * In the car: Android Auto active (no permission needed) or, with the
+     * Bluetooth permission, a car stereo or hands-free kit connected as audio
+     * output.
      */
     private fun inCar(outputs: List<AudioDeviceInfo>): Boolean {
         val ui = context.getSystemService(UiModeManager::class.java)
@@ -1184,7 +1183,7 @@ class LauncherBridge(
     }
     // endregion
 
-    // region Ruolo Home
+    // region Home role
     private fun isDefaultHome(): Boolean {
         val roleManager = context.getSystemService(RoleManager::class.java)
         return roleManager.isRoleAvailable(RoleManager.ROLE_HOME) && roleManager.isRoleHeld(RoleManager.ROLE_HOME)

@@ -1,27 +1,27 @@
-/// Spinta iniziale delle raccolte preferite scelte nell'onboarding.
+/// Initial boost for the favorite collections picked during onboarding.
 ///
-/// Per le prime settimane le preferite restano in cima ("plateau"), poi la
-/// spinta si dimezza a intervalli regolari e lascia spazio all'uso reale.
-/// È più lunga dell'abitudine normale di proposito: all'inizio il launcher
-/// non conosce ancora l'utente.
+/// For the first weeks the favorites stay on top (the "plateau"), then the
+/// boost halves at regular intervals and gives way to real usage. It is
+/// deliberately longer than the normal habit decay: at first the launcher
+/// doesn't know the user yet.
 library;
 
 import 'dart:math' as math;
 
 import 'categories.dart';
 
-/// Spinta in unità logaritmiche durante il plateau: ~e^8 ≈ 3000 volte,
-/// abbastanza da tenere le preferite in cima finché i dati sono pochi.
+/// Boost in log units during the plateau: ~e^8 ≈ 3000x, enough to keep the
+/// favorites on top while there is little data.
 const double initialBoost = 8;
 
 const Duration boostPlateau = Duration(days: 21);
 const Duration boostHalfLife = Duration(days: 21);
 
-/// Sotto questa soglia la spinta si considera esaurita.
+/// Below this threshold the boost is considered spent.
 const double boostEpsilon = 0.05;
 
-/// Fattore (0–1) della spinta dopo [age]: 1 durante il plateau, poi si
-/// dimezza ogni [boostHalfLife].
+/// Boost factor (0–1) after [age]: 1 during the plateau, then it halves
+/// every [boostHalfLife].
 double boostFactor(Duration age) {
   if (age <= boostPlateau) return 1;
   final over = (age - boostPlateau).inMinutes / boostHalfLife.inMinutes;
@@ -39,11 +39,11 @@ class CategoryBoost {
   final DateTime created;
   final double weight;
 
-  /// Spinta attuale in unità logaritmiche.
+  /// Current boost in log units.
   double at(DateTime now) => weight * boostFactor(now.difference(created));
 }
 
-/// Spinte attive a [now], per categoria.
+/// Boosts active at [now], per category.
 Map<AppCategory, double> activeBoosts(
   Iterable<CategoryBoost> boosts,
   DateTime now,

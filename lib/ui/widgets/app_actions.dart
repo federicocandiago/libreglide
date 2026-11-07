@@ -7,7 +7,7 @@ import '../labels.dart';
 import '../scope.dart';
 import 'app_icon.dart';
 
-/// Azioni su un'app (spec-viste-app §5).
+/// Actions on an app (spec-viste-app §5).
 Future<void> showAppActions(BuildContext context, AppEntry app) {
   final scope = AppScope.of(context);
   final controller = scope.controller;

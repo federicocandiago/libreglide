@@ -7,10 +7,10 @@ import '../labels.dart';
 import '../scope.dart';
 import 'settings_widgets.dart';
 
-/// Card per Space: per ogni Space, quali card mostrare. Automatico segue
-/// il profilo del momento e l'uso; Sempre e Mai vincono su entrambi. Da qui
-/// si recuperano anche le card che il profilo nasconde (e che quindi non si
-/// possono tenere premute sullo Space).
+/// Cards per Space: which cards to show in each Space. Automatic follows the
+/// current profile and usage; Always and Never override both. This is also
+/// where cards hidden by the profile can be brought back (they can't be
+/// long-pressed on the Space, since they aren't shown there).
 class SpaceCardsListPage extends StatelessWidget {
   const SpaceCardsListPage({super.key});
 
@@ -80,13 +80,13 @@ class SpaceCardsListPage extends StatelessWidget {
   }
 }
 
-/// Le card di uno Space, ciascuna con Automatico / Sempre / Mai.
+/// The cards of one Space, each with Automatic / Always / Never.
 class SpaceCardsPage extends StatelessWidget {
   const SpaceCardsPage({super.key, required this.kind});
 
   final SpaceKind kind;
 
-  /// Card che si possono scegliere (l'invito ai luoghi non è una card).
+  /// Selectable cards (the places prompt is not a card).
   static const cards = [
     SpaceCard.apps,
     SpaceCard.agenda,

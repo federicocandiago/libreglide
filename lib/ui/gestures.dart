@@ -4,7 +4,7 @@ import '../data/settings.dart';
 import 'contacts_page.dart';
 import 'search_page.dart';
 
-/// Esegue l'azione associata a uno swipe (Impostazioni → Ricerca e gesti).
+/// Runs the action bound to a swipe (Settings → Search and gestures).
 void runGesture(BuildContext context, GestureAction action) {
   switch (action) {
     case GestureAction.search:

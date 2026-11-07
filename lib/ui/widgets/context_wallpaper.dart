@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../scope.dart';
 
-/// Foto dello sfondo contestuale, se attiva; altrimenti niente, e dietro si
-/// vede lo sfondo del telefono.
+/// Contextual wallpaper photo, when enabled; otherwise nothing, so the
+/// phone's own wallpaper shows through.
 class ContextWallpaper extends StatelessWidget {
   const ContextWallpaper({super.key, this.alignment = Alignment.center});
 
@@ -42,7 +42,7 @@ class ContextWallpaper extends StatelessWidget {
   }
 }
 
-/// Credito richiesto da Unsplash: "Foto di Nome · Unsplash", con link.
+/// Attribution required by Unsplash ("Photo by Name · Unsplash"), with link.
 class WallpaperCredit extends StatelessWidget {
   const WallpaperCredit({super.key});
 

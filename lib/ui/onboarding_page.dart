@@ -8,8 +8,8 @@ import 'scope.dart';
 import 'settings/legal_pages.dart';
 import 'widgets/logo.dart';
 
-/// Mostra la presentazione in una modale quasi a tutto schermo: intorno si
-/// vede la Home con lo sfondo.
+/// Shows the onboarding in a near-fullscreen modal, with Home and its
+/// wallpaper visible around it.
 Future<void> showOnboarding(BuildContext context, {bool dismissible = true}) {
   return showGeneralDialog<void>(
     context: context,
@@ -45,8 +45,8 @@ Future<void> showOnboarding(BuildContext context, {bool dismissible = true}) {
   );
 }
 
-/// Presentazione al primo avvio: benvenuto, come funziona, privacy, raccolte
-/// preferite (spinta iniziale), ultimi ritocchi.
+/// First-run onboarding: welcome, how it works, privacy, favorite
+/// collections (initial boost), final touches.
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({
     super.key,
@@ -56,7 +56,7 @@ class OnboardingPage extends StatefulWidget {
 
   final VoidCallback onDone;
 
-  /// Si può chiudere con "indietro" (no al primo avvio).
+  /// Can be dismissed with "back" (not on first run).
   final bool dismissible;
 
   @override
@@ -70,16 +70,31 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final List<AppCategory> _chosen = [];
   bool _prefillDock = true;
   bool? _isDefaultHome;
+  bool _initialized = false;
+
+  /// Re-checks the default Home when the user comes back from the system
+  /// dialog or settings.
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: _checkDefault);
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final controller = AppScope.of(context).controller;
-    if (_chosen.isEmpty) _chosen.addAll(controller.favoriteCategories);
+    // Runs once: AppScope notifies often, and re-running would refill the
+    // categories the user deselected and query the bridge every time.
+    if (_initialized) return;
+    _initialized = true;
+    _chosen.addAll(AppScope.of(context).controller.favoriteCategories);
     _checkDefault();
   }
 
   Future<void> _checkDefault() async {
+    if (!mounted) return;
     final bridge = AppScope.of(context).controller.bridge;
     try {
       final v = await bridge.isDefaultHome();
@@ -89,6 +104,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   void dispose() {
+    _lifecycle.dispose();
     _pages.dispose();
     super.dispose();
   }
@@ -121,7 +137,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final l = context.l10n;
     final last = _step == _steps - 1;
 
-    // Al primo avvio non si chiude con "indietro"; dalle impostazioni sì.
+    // On first run "back" doesn't close it; from settings it does.
     return PopScope(
       canPop: widget.dismissible,
       child: Material(
@@ -131,7 +147,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           bottom: false,
           child: Column(
             children: [
-              // Barra in alto, come le altre schermate: logo, nome, passo.
+              // Top bar, like the other screens: logo, name, step.
               Container(
                 color: c.card,
                 padding: const EdgeInsets.fromLTRB(cardPadding, 14, 20, 14),
@@ -176,6 +192,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       onSetDefault: () async {
                         await AppScope.of(context).controller.bridge
                             .requestDefaultHome();
+                        await _checkDefault();
                       },
                     ),
                   ],
@@ -227,7 +244,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 }
 
-/// Impaginazione comune: titolo, testo, card.
+/// Shared layout: title, text, card.
 class _Step extends StatelessWidget {
   const _Step({required this.title, this.text, required this.child});
 
@@ -277,8 +294,8 @@ class _Welcome extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = GlideColors.of(context);
     final l = context.l10n;
-    // Gli Space disegnati come nella pagina dello Space: strisce arrotondate
-    // con icona, separatore e nome.
+    // Spaces drawn as on the Space page: rounded strips with icon, separator
+    // and name.
     return _Step(
       title: l.obWelcomeTitle,
       text: l.obWelcomeText,
@@ -348,7 +365,7 @@ class _Bullet extends StatelessWidget {
   }
 }
 
-/// Come funziona e privacy, in un solo passo.
+/// How it works and privacy, in a single step.
 class _Intro extends StatelessWidget {
   const _Intro();
 
@@ -439,7 +456,8 @@ class _Collections extends StatelessWidget {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {
-        // Le 8 categorie più popolate sul telefono (Sistema e Altro esclusi).
+        // The 8 most populated categories on the phone (excluding System and
+        // Other).
         final counts = <AppCategory, int>{};
         for (final a in controller.visibleApps) {
           final cat = controller.categoryOf(a);
@@ -507,7 +525,7 @@ class _CategoryChoice extends StatelessWidget {
   final AppCategory category;
   final int count;
 
-  /// Posizione nella scelta (0 = prima), -1 se non scelta.
+  /// Position in the selection (0 = first), -1 if not selected.
   final int order;
   final VoidCallback onTap;
 

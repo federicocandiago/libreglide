@@ -6,7 +6,7 @@ import '../glide_style.dart';
 import '../labels.dart';
 import 'settings_widgets.dart';
 
-/// Informativa sulla privacy, divisa in card.
+/// Privacy policy, split into cards.
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
 
@@ -62,7 +62,7 @@ class PrivacyPolicyPage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text(
-            context.l10n.version('$policyVersion · $policyDate'),
+            context.l10n.version('$policyVersion · ${policyDate(lang)}'),
             style: TextStyle(color: c.muted, fontSize: 12),
           ),
         ),
@@ -71,7 +71,7 @@ class PrivacyPolicyPage extends StatelessWidget {
   }
 }
 
-/// Librerie open source: l'elenco raccolto da Flutter (LicenseRegistry).
+/// Open source libraries: the list collected by Flutter (LicenseRegistry).
 class OpenSourcePage extends StatefulWidget {
   const OpenSourcePage({super.key});
 

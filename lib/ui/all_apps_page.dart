@@ -10,8 +10,8 @@ import 'search_page.dart';
 import 'widgets/app_actions.dart';
 import 'widgets/app_icon.dart';
 
-/// A-Z: barra "A-Z APP", gruppi per lettera con la lettera grande e sottile
-/// nella prima cella, divisori sottili, alfabeto completo a destra.
+/// A-Z: "A-Z APPS" bar, groups by letter with a large, thin letter in the
+/// first cell, thin dividers, full alphabet on the right.
 class AllAppsPage extends StatefulWidget {
   const AllAppsPage({super.key, required this.homeSignal});
 
@@ -76,13 +76,13 @@ class _AllAppsPageState extends State<AllAppsPage>
     final settings = scope.settings;
 
     return ListenableBuilder(
-      // Solo elenco delle app e impostazioni: i cambi di contesto non
-      // toccano la pagina A-Z.
+      // Only the app list and settings: context changes don't affect the
+      // A-Z page.
       listenable: Listenable.merge([controller.appsVersion, settings]),
       builder: (context, _) {
         final grid = settings.allAppsLayout == AllAppsLayout.grid;
-        // Altezza di una riga della griglia: icona + etichetta su 2 righe,
-        // con il testo che cresce al massimo del 115%.
+        // Height of a grid row: icon + two-line label, with text scaling
+        // capped at 115%.
         final scale = MediaQuery.textScalerOf(context)
             .clamp(maxScaleFactor: maxLabelScale)
             .scale(1);
@@ -108,8 +108,8 @@ class _AllAppsPageState extends State<AllAppsPage>
   }
 }
 
-/// Intestazione sottile in maiuscoletto ("A-Z APP · 87") con ricerca e
-/// cambio griglia/lista. Fa parte della lista: scorrendo sparisce.
+/// Thin small-caps header ("A-Z APPS · 87") with search and a grid/list
+/// toggle. It is part of the list, so it scrolls away.
 class _Header extends StatelessWidget {
   const _Header({
     required this.count,
@@ -166,7 +166,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Elenco a gruppi con barra delle lettere.
+/// Grouped list with a letter rail.
 class _Sections extends StatelessWidget {
   const _Sections({
     required this.header,
@@ -228,7 +228,7 @@ class _Sections extends StatelessWidget {
             available: offsets.keys.toSet(),
             onLetter: (letter) {
               if (!controller.hasClients) return;
-              // Lettera senza app: la prima disponibile dopo di lei.
+              // Letter without apps: jump to the first available one after it.
               final start = _alphabet.indexOf(letter);
               double? target;
               for (var i = start; i < _alphabet.length && target == null; i++) {
@@ -373,8 +373,8 @@ class _AppListRow extends StatelessWidget {
   );
 }
 
-/// Alfabeto completo a destra, grigio chiaro; la lettera toccata si
-/// colora d'accento.
+/// Full alphabet on the right, in light grey; the touched letter takes the
+/// accent color.
 class _LetterRail extends StatefulWidget {
   const _LetterRail({required this.available, required this.onLetter});
 

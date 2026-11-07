@@ -5,7 +5,7 @@ import '../glide_style.dart';
 import '../scope.dart';
 import 'app_actions.dart';
 
-/// Icona di un'app: originale, a tema (layer monocromo) o segnaposto.
+/// App icon: original, themed (monochrome layer) or placeholder.
 class AppIconView extends StatelessWidget {
   const AppIconView({super.key, required this.app, this.size = 52});
 
@@ -17,7 +17,7 @@ class AppIconView extends StatelessWidget {
     final scope = AppScope.of(context);
     final cache = scope.controller.icons;
     final scheme = Theme.of(context).colorScheme;
-    // Decodifica alla dimensione mostrata, non a quella del PNG.
+    // Decode at the displayed size, not the PNG's native size.
     final decodeSize = (size * MediaQuery.devicePixelRatioOf(context)).round();
 
     return ListenableBuilder(
@@ -99,7 +99,7 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
-/// Rettangolo del widget in pixel fisici, per l'animazione di apertura.
+/// The widget's rectangle in physical pixels, for the launch animation.
 List<int>? boundsOf(BuildContext context) {
   final box = context.findRenderObject();
   if (box is! RenderBox || !box.hasSize) return null;
@@ -115,7 +115,7 @@ List<int>? boundsOf(BuildContext context) {
   ];
 }
 
-/// Icona con etichetta: tocco per aprire, pressione lunga per le azioni.
+/// Icon with label: tap to open, long press for actions.
 class AppTile extends StatelessWidget {
   const AppTile({
     super.key,
@@ -129,7 +129,7 @@ class AppTile extends StatelessWidget {
   final double iconSize;
   final bool showLabel;
 
-  /// Righe dell'etichetta (2 nella griglia A-Z, come in Glide).
+  /// Label lines (2 in the A-Z grid, as in Glide).
   final int labelLines;
 
   @override
@@ -159,7 +159,7 @@ class AppTile extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   app.label,
-                  // Una parola sola non va a capo a metà: resta su una riga.
+                  // A single word must not wrap mid-word: keep it on one line.
                   maxLines: app.label.trim().contains(' ') ? labelLines : 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -176,7 +176,7 @@ class AppTile extends StatelessWidget {
   }
 }
 
-/// Apre l'app animando l'apertura dal widget di [context].
+/// Opens the app, animating the launch from the widget of [context].
 void launchFrom(BuildContext context, AppEntry app) {
   AppScope.of(context).controller.launch(app, bounds: boundsOf(context));
 }

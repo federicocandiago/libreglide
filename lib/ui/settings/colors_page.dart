@@ -8,7 +8,7 @@ import '../labels.dart';
 import '../scope.dart';
 import 'settings_widgets.dart';
 
-/// Colori: anteprima dal vivo, origine, stile, contrasto, icone a tema
+/// Colors: live preview, source, style, contrast, themed icons
 /// (spec-viste-app §6.2).
 class ColorsPage extends StatelessWidget {
   const ColorsPage({super.key});
@@ -120,7 +120,7 @@ class _Swatch extends StatelessWidget {
 
   final String label;
 
-  /// null = colori di sistema.
+  /// Null means system colors.
   final Color? color;
   final bool selected;
   final VoidCallback onTap;
@@ -129,7 +129,7 @@ class _Swatch extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
-    // Anteprima del seed: tre toni della palette generata.
+    // Seed preview: three tones of the generated palette.
     final seeded = color == null
         ? null
         : ColorScheme.fromSeed(seedColor: color!, brightness: brightness);
@@ -219,8 +219,8 @@ class _Swatch extends StatelessWidget {
   }
 }
 
-/// Anteprima dal vivo: una card delle Collections, la barra delle schede e
-/// un banner, con i colori correnti.
+/// Live preview: a Collections card, the tab bar and a banner, using the
+/// current colors.
 class _Preview extends StatelessWidget {
   const _Preview();
 
@@ -243,7 +243,7 @@ class _Preview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Barra delle schede in miniatura.
+          // Miniature tab bar.
           Container(
             height: 44,
             color: c.card,

@@ -1,7 +1,7 @@
-/// Linguaggio visivo di libreGLIDE: l'impostazione di Glide (barre e card
-/// piatte, maiuscoletto spaziato, caratteri sottili, colore per Space) con
-/// piccoli tocchi Material You (accento dinamico, grigi tinti, colori degli
-/// Space armonizzati con la palette, angoli 12 dp).
+/// libreGLIDE's visual language: Glide's layout (flat bars and cards, spaced
+/// small caps, thin type, a color per Space) with small Material You touches
+/// (dynamic accent, tinted greys, Space colors harmonized with the palette,
+/// 12 dp corners).
 library;
 
 import 'package:dynamic_color/dynamic_color.dart';
@@ -11,41 +11,40 @@ import 'package:flutter/services.dart';
 import '../core/space.dart';
 import '../core/time_context.dart';
 
-/// Linguaggio comune (v0.4): impostazione Glide, forme e toni di Android 17.
+/// Shared language (v0.4): Glide layout, Android 17 shapes and tones.
 ///
-/// - card senza bordo, separate dal tono della pagina;
-/// - angoli: 24 card, 28 fogli e dialoghi, 16 elementi interni, pillola per
-///   campi di ricerca e pulsanti;
-/// - spazi: 10 tra le card e dai bordi, 16 dentro le card.
+/// - borderless cards, set apart by the page tone;
+/// - corners: 24 cards, 28 sheets and dialogs, 16 inner elements, pill for
+///   search fields and buttons;
+/// - spacing: 10 between cards and from the edges, 16 inside cards.
 const double cardRadius = 24;
 
-/// Raggio degli elementi dentro le card (riquadri, scelte, icone quadrate).
+/// Radius of elements inside cards (boxes, choices, square icons).
 const double innerRadius = 16;
 
-/// Raggio di fogli dal basso e dialoghi.
+/// Radius of bottom sheets and dialogs.
 const double sheetRadius = 28;
 
-/// Spazio interno orizzontale delle card.
+/// Horizontal inner padding of cards.
 const double cardPadding = 16;
 
-/// Spazio tra le card e dai bordi.
+/// Gap between cards and from the edges.
 const double cardGap = 10;
 
-/// Altezza della barra delle schede.
+/// Height of the tab bar.
 const double tabBarHeight = 56;
 
-/// Fattore massimo per il testo delle etichette delle icone, come nel
-/// Pixel Launcher: con caratteri di sistema grandi le etichette restano
-/// leggibili senza troncarsi del tutto.
+/// Maximum text scale for icon labels, as in the Pixel Launcher: with large
+/// system fonts labels stay readable without being fully truncated.
 const double maxLabelScale = 1.15;
 
-/// Vetro smerigliato attivo per le pagine sotto questo widget: fondi e card
-/// diventano semitrasparenti sopra lo sfondo sfocato.
+/// Enables frosted glass for the pages below this widget: backgrounds and
+/// cards become translucent over the blurred wallpaper.
 class Glass extends InheritedWidget {
   const Glass({super.key, required this.level, required super.child});
 
-  /// 0 = spento, 1 = sfocatura attiva, 2 = sfocatura non disponibile
-  /// (risparmio energetico): fondi quasi pieni, per restare leggibili.
+  /// 0 = off, 1 = blur active, 2 = blur unavailable (battery saver): nearly
+  /// opaque backgrounds, to stay readable.
   final int level;
 
   @override
@@ -65,7 +64,7 @@ class GlideColors {
 
   bool get _dark => scheme.brightness == Brightness.dark;
 
-  /// Fondo delle pagine (il grigio chiaro di Glide, tinto dalla palette).
+  /// Page background (Glide's light grey, tinted by the palette).
   Color get page {
     final base = _dark ? scheme.surface : scheme.surfaceContainerHigh;
     return switch (_glass) {
@@ -75,11 +74,11 @@ class GlideColors {
     };
   }
 
-  /// Card e barre (il "bianco" di Glide, appena tinto: le icone con il
-  /// fondo bianco restano riconoscibili anche nel tema chiaro).
+  /// Cards and bars (Glide's "white", slightly tinted, so icons with a white
+  /// background stay recognizable in the light theme too).
   Color get card => glassCard(scheme, _glass);
 
-  /// Colore delle card per un livello di vetro (0 = pieno).
+  /// Card color for a given glass level (0 = opaque).
   static Color glassCard(ColorScheme scheme, int glass) {
     final dark = scheme.brightness == Brightness.dark;
     final base = dark
@@ -92,31 +91,31 @@ class GlideColors {
     };
   }
 
-  /// Elementi in rilievo dentro le card o sopra la pagina (campi di ricerca,
-  /// scelte non selezionate).
+  /// Raised elements inside cards or over the page (search fields,
+  /// unselected choices).
   Color get raised =>
       _dark ? scheme.surfaceContainerHighest : scheme.surfaceContainerHigh;
 
-  /// Linee sottili tra le righe di una card (le card non hanno bordo).
+  /// Thin lines between a card's rows (cards have no border).
   Color get hairline =>
       scheme.outlineVariant.withValues(alpha: _dark ? 0.35 : 0.6);
 
-  /// Testo secondario e maiuscoletti.
+  /// Secondary text and small caps.
   Color get muted => scheme.onSurfaceVariant;
 
-  /// Accento: lettere A-Z, indicatore, banner.
+  /// Accent: A-Z letters, indicator, banners.
   Color get accent => scheme.primary;
 
-  /// Cassetto degli Space: quasi nero, leggermente tinto.
+  /// Spaces drawer: almost black, slightly tinted.
   Color get drawer => Color.alphaBlend(
     scheme.primary.withValues(alpha: 0.06),
     const Color(0xFF101010),
   );
 
-  /// Colore di uno Space, armonizzato con la palette corrente.
+  /// Color of a Space, harmonized with the current palette.
   Color space(Slot slot) => spaceBaseColor(slot).harmonizeWith(scheme.primary);
 
-  /// Colore di uno Space (di contesto o dell'ora), armonizzato.
+  /// Color of a Space (context or time-of-day), harmonized.
   Color spaceKind(SpaceKind k) => switch (k) {
     SpaceKind.home => const Color(0xFFF28C38),
     SpaceKind.work => const Color(0xFF3B7DD8),
@@ -127,7 +126,7 @@ class GlideColors {
   }.harmonizeWith(scheme.primary);
 }
 
-/// Colori di base degli Space (ognuno ha il suo, come in Glide).
+/// Base colors of the Spaces (each has its own, as in Glide).
 Color spaceBaseColor(Slot slot) => switch (slot) {
   Slot.wakeUp => const Color(0xFFF5A623),
   Slot.morning => const Color(0xFFF2C12E),
@@ -137,7 +136,7 @@ Color spaceBaseColor(Slot slot) => switch (slot) {
   Slot.night => const Color(0xFF2F4F9F),
 };
 
-/// Maiuscoletto spaziato delle intestazioni ("SOCIAL", "A-Z APP").
+/// Spaced small caps for headers ("SOCIAL", "A-Z APPS").
 TextStyle capsStyle(BuildContext context, {Color? color, double size = 12.5}) =>
     TextStyle(
       fontSize: size,
@@ -146,7 +145,7 @@ TextStyle capsStyle(BuildContext context, {Color? color, double size = 12.5}) =>
       color: color ?? GlideColors.of(context).muted,
     );
 
-/// Titolo sottile maiuscolo (nome dello Space nella striscia colorata).
+/// Thin uppercase title (Space name in the colored strip).
 TextStyle thinTitleStyle({required Color color, double size = 24}) => TextStyle(
   fontSize: size,
   fontWeight: FontWeight.w300,
@@ -154,7 +153,8 @@ TextStyle thinTitleStyle({required Color color, double size = 24}) => TextStyle(
   color: color,
 );
 
-/// Card piatta di Glide: fondo bianco, bordo sottile, nessuna ombra.
+/// Glide's flat card: card-coloured background, rounded corners, no border
+/// and no shadow.
 class FlatCard extends StatelessWidget {
   const FlatCard({super.key, required this.child, this.padding, this.color});
 
@@ -176,7 +176,7 @@ class FlatCard extends StatelessWidget {
   }
 }
 
-/// Intestazione di una card: piccola icona grigia, maiuscoletto, freccia.
+/// Card header: small grey icon, small caps, chevron.
 class CapsHeader extends StatelessWidget {
   const CapsHeader({
     super.key,
@@ -226,7 +226,7 @@ class CapsHeader extends StatelessWidget {
   }
 }
 
-/// Freccia sottile ∨ che ruota quando la card è aperta.
+/// Thin ∨ chevron that rotates when the card is expanded.
 class Chevron extends StatelessWidget {
   const Chevron({super.key, required this.open});
 
@@ -245,7 +245,7 @@ class Chevron extends StatelessWidget {
   );
 }
 
-/// Barra di ricerca a pillola (stile Android 17), per ricerca e contatti.
+/// Pill-shaped search bar (Android 17 style), for search and contacts.
 class PillSearchField extends StatefulWidget {
   const PillSearchField({
     super.key,
@@ -261,7 +261,7 @@ class PillSearchField extends StatefulWidget {
   final bool autofocus;
   final VoidCallback? onSubmitted;
 
-  /// Toccata la X con il campo vuoto (di solito chiude la pagina).
+  /// Called when X is tapped with an empty field (usually closes the page).
   final VoidCallback? onClose;
 
   @override
@@ -276,9 +276,9 @@ class _PillSearchFieldState extends State<PillSearchField> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!widget.autofocus || _route != null) return;
-    // L'autofocus da solo a volte non apre la tastiera (la finestra non ha
-    // ancora il focus mentre la pagina entra): a transizione finita si
-    // richiede il focus e si mostra la tastiera esplicitamente.
+    // Autofocus alone sometimes doesn't open the keyboard (the window isn't
+    // focused yet while the page animates in): once the transition ends,
+    // request focus and show the keyboard explicitly.
     _route = ModalRoute.of(context)?.animation;
     if (_route == null || _route!.isCompleted) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showKeyboard());
@@ -351,13 +351,13 @@ class _PillSearchFieldState extends State<PillSearchField> {
   }
 }
 
-/// Colore pieno della barra delle schede e del vassoio del dock (anche con
-/// il vetro attivo: sulla Home restano pieni).
+/// Opaque color of the tab bar and dock tray (even with glass enabled: they
+/// stay opaque on Home).
 Color solidBarColor(BuildContext context) =>
     GlideColors.glassCard(Theme.of(context).colorScheme, 0);
 
-/// Angoli appena arrotondati della "finestra" sullo sfondo della Home:
-/// spicchi del colore della barra in alto e del vassoio in basso.
+/// Slightly rounded corners of the "window" over the Home wallpaper: corner
+/// wedges in the bar color at the top and the tray color at the bottom.
 class FrameCornersPainter extends CustomPainter {
   const FrameCornersPainter({this.top, this.bottom});
 

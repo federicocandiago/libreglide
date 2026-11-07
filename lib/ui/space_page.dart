@@ -16,8 +16,8 @@ import 'space_cards.dart';
 import 'widgets/app_icon.dart';
 import 'widgets/context_wallpaper.dart';
 
-/// Space corrente: data sopra lo sfondo, striscia
-/// colorata con il nome dello Space, card di azioni e di app.
+/// Current Space: date over the wallpaper, colored strip with the Space name,
+/// action and app cards.
 class SpacePage extends StatefulWidget {
   const SpacePage({super.key});
 
@@ -176,8 +176,8 @@ class _SpacePageState extends State<SpacePage>
     );
   }
 
-  /// Azioni rapide dello Space (come in Glide: ognuno ha le sue).
-  /// Azioni rapide dello Space, dal suo profilo.
+  /// The Space's quick actions, from its profile (as in Glide, each Space has
+  /// its own).
   List<(IconData, String, VoidCallback)> _actionsFor(SpaceKind kind) {
     final controller = AppScope.of(context).controller;
     final bridge = controller.bridge;
@@ -241,14 +241,14 @@ class _SpacePageState extends State<SpacePage>
           ],
         },
     ];
-    // Senza luoghi noti, "Verso casa/lavoro" lasciano il posto alle mappe.
+    // Without known places, "To home/work" give way to maps.
     if (out.isEmpty) {
       out.add((Icons.map_rounded, l.actionMaps, () => bridge.navigateTo('')));
     }
     return out;
   }
 
-  /// Di sera e di notte, la card Buonanotte prende il posto della sveglia.
+  /// In the evening and at night, the Good night card replaces the alarm.
   bool _evening(BuildContext context) {
     final scope = AppScope.of(context);
     final slot = scope.controller.currentSlot;
@@ -256,10 +256,10 @@ class _SpacePageState extends State<SpacePage>
         (slot == Slot.evening || slot == Slot.night);
   }
 
-  /// Card dello Space: quelle che adesso hanno qualcosa da mostrare,
-  /// ordinate dal profilo del momento, dall'uso (le card che tocchi in
-  /// questo contesto salgono, e compaiono anche dove il profilo non le
-  /// prevede) e dalle scelte "Nascondi / Mostra sempre qui".
+  /// The Space's cards: those that currently have something to show, ordered
+  /// by the moment's profile, by usage (cards tapped in this context move up,
+  /// and appear even where the profile doesn't include them) and by the
+  /// "Hide / Always show here" choices.
   List<Widget> _cards(
     BuildContext context,
     SpaceKind kind, {
@@ -286,8 +286,8 @@ class _SpacePageState extends State<SpacePage>
                     const Duration(hours: 24)));
     final driving = settings.carCard && controller.driving;
     final agenda = cards.eventsLoaded ? cards.agenda() : null;
-    // Agenda vuota: solo dove il profilo la vuole (al mattino); senza
-    // permesso resta, per chiederlo.
+    // Empty agenda: only where the profile wants it (in the morning); without
+    // permission it stays, to ask for it.
     final showAgenda =
         settings.agendaCard &&
         cards.eventsLoaded &&
@@ -331,7 +331,7 @@ class _SpacePageState extends State<SpacePage>
     return [
       for (final card in order)
         _padded(_CardShell(card: card, kind: kind, child: available[card]!)),
-      // I widget Android restano in fondo, nell'ordine scelto.
+      // Android widgets stay at the bottom, in the chosen order.
       for (final w in settings.widgets) _padded(AppWidgetCard(widget: w)),
       if (invite) _padded(available[SpaceCard.placesInvite]!),
     ];
@@ -343,11 +343,11 @@ class _SpacePageState extends State<SpacePage>
   );
 }
 
-/// Giorno e data, centrati sopra lo sfondo del telefono.
+/// Day and date, centered over the phone's wallpaper.
 class _DateHeader extends StatelessWidget {
   const _DateHeader({required this.kind});
 
-  /// Space corrente, mostrato in una pillola sopra il giorno.
+  /// Current Space, shown in a pill above the day.
   final SpaceKind kind;
 
   static const double cardHeight = 168;
@@ -358,9 +358,9 @@ class _DateHeader extends StatelessWidget {
     final now = DateTime.now();
     final c = GlideColors.of(context);
     const shadow = [Shadow(blurRadius: 10, color: Colors.black54)];
-    // La pagina è opaca intorno alla card: lo sfondo (o la foto) si vede
-    // solo dentro, così la data resta staccata quando si scorre o si gira
-    // pagina.
+    // The page is opaque around the card: the wallpaper (or photo) shows only
+    // inside it, so the date stays distinct while scrolling or changing
+    // page.
     return CustomPaint(
       painter: _HolePainter(color: c.page),
       child: Padding(
@@ -372,7 +372,7 @@ class _DateHeader extends StatelessWidget {
             child: Stack(
               children: [
                 const Positioned.fill(child: ContextWallpaper()),
-                // Velo leggero per leggere la data su qualsiasi sfondo.
+                // Light scrim to keep the date readable on any wallpaper.
                 const Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(color: Color(0x22000000)),
@@ -417,8 +417,8 @@ class _DateHeader extends StatelessWidget {
   }
 }
 
-/// Dipinge [color] su tutta l'area tranne un rettangolo arrotondato (la card
-/// della data), da cui si vede lo sfondo del telefono.
+/// Paints [color] over the whole area except a rounded rectangle (the date
+/// card), through which the phone's wallpaper shows.
 class _HolePainter extends CustomPainter {
   const _HolePainter({required this.color});
 
@@ -444,8 +444,8 @@ class _HolePainter extends CustomPainter {
   bool shouldRepaint(_HolePainter old) => old.color != color;
 }
 
-/// Pillola con il colore, l'icona e il nome dello Space corrente; al
-/// cambio di Space colore e testo sfumano.
+/// Pill with the current Space's color, icon and name; color and text
+/// cross-fade when the Space changes.
 class _SpacePill extends StatelessWidget {
   const _SpacePill({required this.kind});
 
@@ -501,7 +501,7 @@ class _SpacePill extends StatelessWidget {
 class _ActionsCard extends StatelessWidget {
   const _ActionsCard({required this.actions});
 
-  /// (icona, etichetta, azione), affiancate e separate da linee sottili.
+  /// (icon, label, action), side by side and separated by thin lines.
   final List<(IconData, String, VoidCallback)> actions;
 
   @override
@@ -589,7 +589,7 @@ class _AlarmCard extends StatelessWidget {
   }
 }
 
-/// Banner in colore d'accento con un pulsante (spunta o azione testuale).
+/// Accent-colored banner with a button (check mark or text action).
 class _Banner extends StatelessWidget {
   const _Banner({
     required this.text,
@@ -648,9 +648,9 @@ class _Banner extends StatelessWidget {
   }
 }
 
-/// Involucro di una card dello Space: conta i tocchi (per imparare quali
-/// card servono in quale momento) e, tenendola premuta, offre "Nascondi
-/// in questo Space" e "Mostra sempre in questo Space".
+/// Wrapper for a Space card: counts taps (to learn which cards are useful at
+/// which moment) and, on long press, offers "Hide in this Space" and "Always
+/// show in this Space".
 class _CardShell extends StatefulWidget {
   const _CardShell({
     required this.card,
@@ -675,7 +675,7 @@ class _CardShellState extends State<_CardShell> {
     final at = _downAt;
     _down = null;
     if (down == null || at == null) return;
-    // Un tocco, non uno scorrimento né una pressione lunga.
+    // A tap, not a scroll or a long press.
     if ((e.position - down).distance > 18) return;
     if (DateTime.now().difference(at) > const Duration(milliseconds: 600)) {
       return;

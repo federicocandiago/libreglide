@@ -1,4 +1,4 @@
-/// Un'app avviabile (un'activity con categoria LAUNCHER).
+/// A launchable app (an activity with the LAUNCHER category).
 library;
 
 class AppEntry {
@@ -24,10 +24,10 @@ class AppEntry {
   final bool isSystem;
   final int? manifestCategory;
 
-  /// Identificatore univoco: un pacchetto può avere più activity avviabili.
+  /// Unique identifier: a package can have several launchable activities.
   String get id => '$packageName/$activityName';
 
-  /// Chiave per l'ordinamento alfabetico: minuscole e senza accenti.
+  /// Key for alphabetical sorting: lowercase and without accents.
   String get sortKey => normalizeForSearch(label);
 
   @override
@@ -69,7 +69,7 @@ const _accents = {
   'ß': 'ss',
 };
 
-/// Minuscole e senza accenti, per ricerca e ordinamento.
+/// Lowercases and strips accents, for search and sorting.
 String normalizeForSearch(String s) {
   final lower = s.toLowerCase().trim();
   final b = StringBuffer();
@@ -79,7 +79,7 @@ String normalizeForSearch(String s) {
   return b.toString();
 }
 
-/// Lettera di sezione per la vista A-Z: A–Z, oppure `#`.
+/// Section letter for the A-Z view: A–Z, or `#`.
 String sectionLetter(String label) {
   final n = normalizeForSearch(label);
   if (n.isEmpty) return '#';

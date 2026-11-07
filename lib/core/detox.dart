@@ -1,8 +1,8 @@
-/// Digital detox: quando il blocco delle app è attivo.
+/// Digital detox: when app blocking is active.
 library;
 
-/// Orario del detox: tutto il giorno oppure una fascia (anche a cavallo
-/// della mezzanotte). I minuti partono dalla mezzanotte.
+/// Detox schedule: all day or a time window (possibly spanning midnight).
+/// Minutes are counted from midnight.
 class DetoxSchedule {
   const DetoxSchedule({
     required this.allDay,
@@ -20,7 +20,7 @@ class DetoxSchedule {
     return start < end ? now >= start && now < end : now >= start || now < end;
   }
 
-  /// Il prossimo istante in cui lo stato cambia (null se non cambia mai).
+  /// The next instant the state changes (null if it never changes).
   DateTime? nextChange(DateTime t) {
     if (allDay || start == end) return null;
     final midnight = DateTime(t.year, t.month, t.day);
@@ -34,5 +34,5 @@ class DetoxSchedule {
   }
 }
 
-/// Un PIN valido: da 8 a 16 caratteri.
+/// A valid PIN: 8 to 16 characters.
 bool validDetoxPin(String pin) => pin.length >= 8 && pin.length <= 16;

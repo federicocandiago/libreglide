@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Il launcher mostra lo sfondo di sistema dietro la UI Flutter:
-         finestra trasparente con windowShowWallpaper e barre di sistema trasparenti. -->
+    <!-- The launcher shows the system wallpaper behind the Flutter UI:
+         transparent window with windowShowWallpaper and transparent system bars. -->
     <style name="LauncherTheme" parent="@android:style/Theme.DeviceDefault.Wallpaper.NoTitleBar">
         <item name="android:windowShowWallpaper">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
@@ -13,7 +13,7 @@
         <item name="android:windowLayoutInDisplayCutoutMode">always</item>
     </style>
 
-    <!-- Schermata di blocco di Digital detox: nera, a tutto schermo. -->
+    <!-- Digital detox lock screen: black, full screen. -->
     <style name="DetoxLockTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar">
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:statusBarColor">@android:color/black</item>

@@ -1,14 +1,15 @@
-/// Client Unsplash: l'UNICO punto dell'app che usa la rete.
+/// Unsplash client: one of the only two places in the app that use the
+/// network (the other is `open_meteo.dart`).
 ///
-/// Viene chiamato solo se l'utente ha inserito una propria chiave e attivato
-/// lo sfondo contestuale. Invia soltanto parole chiave generiche ("sunset
-/// autumn"), la chiave e i normali dati tecnici della connessione: nessuna
-/// posizione e nessun dato d'uso del telefono (vedi informativa privacy).
+/// Called only if the user has entered their own key and enabled the
+/// contextual wallpaper. Sends only generic keywords ("sunset autumn"), the
+/// key and the usual technical connection data: no location and no phone
+/// usage data (see the privacy policy).
 ///
-/// Regole Unsplash rispettate:
-/// - le foto si scaricano dagli URL restituiti dall'API (hotlink);
-/// - quando una foto viene usata si chiama il suo `download_location`;
-/// - autore e Unsplash sono citati con link e parametri UTM.
+/// Unsplash guidelines followed:
+/// - photos are loaded from the URLs returned by the API (hotlinking);
+/// - when a photo is used, its `download_location` is called;
+/// - the author and Unsplash are credited with links and UTM parameters.
 library;
 
 import 'dart:convert';
@@ -56,12 +57,12 @@ class UnsplashPhoto {
   final String photoUrl;
   final String downloadLocation;
 
-  /// URL dell'immagine ridimensionata da Unsplash per lo schermo.
+  /// URL of the image resized by Unsplash for the screen.
   String imageUrl(int width) =>
       '$rawUrl${rawUrl.contains('?') ? '&' : '?'}w=$width&q=80&fm=jpg&fit=max';
 }
 
-/// Parametri UTM richiesti per i link di attribuzione.
+/// UTM parameters required for attribution links.
 String withUtm(String url) =>
     '$url${url.contains('?') ? '&' : '?'}utm_source=libreglide&utm_medium=referral';
 
@@ -81,14 +82,14 @@ class UnsplashClient {
 
   void _check(http.Response r) {
     if (r.statusCode == 401 || r.statusCode == 403) {
-      throw UnsplashException('chiave non valida', invalidKey: true);
+      throw UnsplashException('invalid key', invalidKey: true);
     }
     if (r.statusCode != 200) {
-      throw UnsplashException('risposta ${r.statusCode}');
+      throw UnsplashException('response ${r.statusCode}');
     }
   }
 
-  /// Prime [perPage] foto verticali per [query], filtro contenuti alto.
+  /// First [perPage] portrait photos for [query], with a high content filter.
   Future<List<UnsplashPhoto>> search(String query, {int perPage = 10}) async {
     final uri = Uri.https(_api, '/search/photos', {
       'query': query,
@@ -107,7 +108,7 @@ class UnsplashClient {
     ];
   }
 
-  /// Verifica la chiave con una ricerca minima.
+  /// Checks the key with a minimal search.
   Future<bool> validate() async {
     try {
       await search('nature', perPage: 1);
@@ -126,14 +127,14 @@ class UnsplashClient {
     return r.bodyBytes;
   }
 
-  /// Segnala a Unsplash che la foto è stata usata (obbligatorio).
+  /// Tells Unsplash the photo was used (required).
   Future<void> trackDownload(UnsplashPhoto photo) async {
     try {
       await _http
           .get(Uri.parse(photo.downloadLocation), headers: _headers)
           .timeout(const Duration(seconds: 15));
     } catch (_) {
-      // Non blocca lo sfondo se la segnalazione fallisce.
+      // A failed report must not block the wallpaper.
     }
   }
 

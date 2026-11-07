@@ -1,8 +1,8 @@
-/// Pannello contatti: preferiti (stella) e più usati da libreGLIDE.
+/// Contacts panel: favorites (starred) and libreGLIDE's most used.
 ///
-/// Android non tiene più il conteggio dei contatti "frequenti" (da
-/// Android 10): il "più usati" lo calcola libreGLIDE, in locale, dai
-/// contatti aperti dal pannello.
+/// Android no longer tracks "frequent" contacts (since Android 10), so
+/// libreGLIDE computes "most used" itself, locally, from the contacts opened
+/// from the panel.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -22,8 +22,8 @@ class ContactsController extends ChangeNotifier {
   bool? permission;
   bool loading = false;
 
-  /// Prima i più usati, poi i preferiti non ancora usati (in ordine
-  /// alfabetico). Al massimo [maxShown].
+  /// Most used first, then starred contacts not used yet (alphabetically).
+  /// At most [maxShown].
   List<Contact> favorites = const [];
   static const maxShown = 12;
 
@@ -47,7 +47,7 @@ class ContactsController extends ChangeNotifier {
         favorites = out;
       }
     } catch (e) {
-      debugPrint('libreglide: contatti non disponibili: $e');
+      debugPrint('libreglide: contacts unavailable: $e');
     }
     loading = false;
     notifyListeners();

@@ -8,9 +8,9 @@ import 'labels.dart';
 import 'scope.dart';
 import 'widgets/app_icon.dart';
 
-/// Collections: card bianche a tutta larghezza su fondo grigio, con
-/// intestazione in maiuscoletto e una riga di icone senza nomi.
-/// Toccando l'intestazione la card si apre e mostra tutte le app.
+/// Collections: full-width white cards on a grey background, with a
+/// small-caps header and a row of unlabeled icons. Tapping the header expands
+/// the card to show all its apps.
 class CollectionsPage extends StatefulWidget {
   const CollectionsPage({super.key, required this.homeSignal});
 
@@ -64,7 +64,7 @@ class _CollectionsPageState extends State<CollectionsPage>
         }
         return LayoutBuilder(
           builder: (context, constraints) {
-            // Icone per riga: una ogni ~72 dp della larghezza utile.
+            // Icons per row: one per ~72 dp of usable width.
             final usable = constraints.maxWidth - 2 * cardGap - 2 * 8;
             final rowSize = (usable / 72).floor().clamp(4, 6);
             return ListView.builder(
@@ -125,7 +125,7 @@ class CollectionCard extends StatelessWidget {
           CapsHeader(
             icon: categoryIcon(group.category),
             label: categoryLabel(l, group.category),
-            // Si apre solo se ci sono app oltre la riga visibile.
+            // Expands only if there are apps beyond the visible row.
             onTap: rest.isEmpty ? null : onToggle,
             onLongPress: () => _showCategoryActions(context, group),
             trailing: Row(

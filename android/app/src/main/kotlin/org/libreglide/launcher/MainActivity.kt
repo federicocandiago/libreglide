@@ -16,21 +16,21 @@ class MainActivity : FlutterActivity() {
 
     private var bridge: LauncherBridge? = null
 
-    /** Usa l'engine creato da [LibreGlideApplication]. */
+    /** Uses the engine created by [LibreGlideApplication]. */
     override fun getCachedEngineId(): String = LibreGlideApplication.ENGINE_ID
 
-    /** L'engine sopravvive all'activity. */
+    /** The engine outlives the activity. */
     override fun shouldDestroyEngineWithHost(): Boolean = false
 
-    /** Trasparente, così si vede lo sfondo di sistema. */
+    /** Transparent, so the system wallpaper shows through. */
     override fun getBackgroundMode(): BackgroundMode = BackgroundMode.transparent
 
     /**
-     * Con lo sfondo trasparente FlutterActivity sceglierebbe da sola
-     * [RenderMode.texture] (TextureView), molto più lento: ogni frame passa
-     * per una copia in più sulla GPU. Usiamo invece un SurfaceView
-     * trasparente. Per i confronti si può forzare la TextureView avviando
-     * l'activity con l'extra `render=texture`.
+     * With a transparent background FlutterActivity would pick
+     * [RenderMode.texture] (TextureView) on its own, which is much slower:
+     * every frame goes through an extra GPU copy. We use a transparent
+     * SurfaceView instead. For comparisons, TextureView can be forced by
+     * starting the activity with the extra `render=texture`.
      */
     override fun getRenderMode(): RenderMode =
         if (intent?.getStringExtra("render") == "texture") RenderMode.texture else RenderMode.surface
@@ -48,11 +48,11 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * Di norma la superficie di Flutter viene distrutta quando il launcher
-     * va in background e ricreata al ritorno: tornando alla Home da un'app
-     * si vedrebbe un frame vuoto (sfondo nero, poi tutto di colpo). Da
-     * Android 14 la si può tenere finché la vista è agganciata: al ritorno
-     * l'ultimo frame è già pronto.
+     * Normally the Flutter surface is destroyed when the launcher goes to the
+     * background and recreated on return: going back Home from an app would
+     * show an empty frame (black background, then everything at once). Since
+     * Android 14 it can be kept while the view is attached, so the last frame
+     * is already there on return.
      */
     private fun keepSurfaceAlive(view: View) {
         if (Build.VERSION.SDK_INT < 34) return
@@ -75,7 +75,7 @@ class MainActivity : FlutterActivity() {
         super.cleanUpFlutterEngine(flutterEngine)
     }
 
-    /** Tasto o gesto Home mentre il launcher è già in primo piano. */
+    /** Home button or gesture while the launcher is already in the foreground. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -91,14 +91,14 @@ class MainActivity : FlutterActivity() {
 
     override fun onStop() {
         super.onStop()
-        // Su alcuni dispositivi stopListening lancia se l'host non ascolta.
+        // On some devices stopListening throws if the host isn't listening.
         try {
             (application as LibreGlideApplication).widgetHost.stopListening()
         } catch (e: Exception) {
         }
     }
 
-    @Deprecated("Usato per i flussi di sistema dei widget (collegamento e configurazione).")
+    @Deprecated("Used for the system widget flows (binding and configuration).")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         bridge?.onActivityResult(requestCode, resultCode)
@@ -107,8 +107,8 @@ class MainActivity : FlutterActivity() {
     override fun onResume() {
         super.onResume()
         bridge?.notifyResumed()
-        // Comando di sviluppo: `adb shell am start -n org.libreglide.launcher/.MainActivity
-        // --es open settings` apre una schermata senza toccare il telefono.
+        // Development command: `adb shell am start -n org.libreglide.launcher/.MainActivity
+        // --es open settings` opens a screen without touching the phone.
         intent?.getStringExtra(EXTRA_OPEN)?.let { target ->
             intent.removeExtra(EXTRA_OPEN)
             bridge?.notifyOpen(target)

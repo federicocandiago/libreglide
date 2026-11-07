@@ -4,7 +4,7 @@ import '../data/settings.dart';
 import '../state/launcher_controller.dart';
 import '../state/wallpaper_controller.dart';
 
-/// Rende controller e impostazioni disponibili a tutta la UI.
+/// Makes the controllers and settings available to the whole UI.
 class AppScope extends InheritedWidget {
   const AppScope({
     super.key,
@@ -20,7 +20,7 @@ class AppScope extends InheritedWidget {
 
   static AppScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();
-    assert(scope != null, 'AppScope mancante');
+    assert(scope != null, 'AppScope missing');
     return scope!;
   }
 

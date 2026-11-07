@@ -25,7 +25,7 @@ void main() {
       rec('rare', 'morning'),
     ]);
 
-  test("l'ordine dipende dal contesto", () {
+  test('the order depends on the context', () {
     final p = trained();
     expect(
       p.top({'slot': 'morning', 'daytype': 'workday'}, now: now).first,
@@ -37,20 +37,20 @@ void main() {
     );
   });
 
-  test('servono almeno 3 aperture', () {
+  test('at least 3 launches are required', () {
     final s = trained().scores({'slot': 'morning'}, now: now);
     expect(s.containsKey('rare'), isFalse);
     expect(s.containsKey('mail'), isTrue);
   });
 
-  test('le feature sconosciute vengono ignorate', () {
+  test('unknown features are ignored', () {
     final p = trained();
     final withNull = p.scores({'slot': 'morning', 'place': null}, now: now);
     final without = p.scores({'slot': 'morning'}, now: now);
     expect(withNull['mail'], closeTo(without['mail']!, 1e-9));
   });
 
-  test('il decadimento pesa meno le aperture vecchie', () {
+  test('decay weighs old launches less', () {
     final p = AppPredictor()
       ..addAll([
         for (var i = 0; i < 10; i++) rec('old', 'morning', daysAgo: 200 + i),
@@ -59,7 +59,7 @@ void main() {
     expect(p.top({'slot': 'morning'}, now: now).first, 'new');
   });
 
-  test('candidati filtrati', () {
+  test('filtered candidates', () {
     final s = trained().scores(
       {'slot': 'morning'},
       now: now,
@@ -68,7 +68,7 @@ void main() {
     expect(s.keys, ['music']);
   });
 
-  test('la spiegazione indica la direzione', () {
+  test('the explanation shows the direction', () {
     final p = trained();
     FeatureContribution slot(List<FeatureContribution> e) =>
         e.firstWhere((c) => c.feature == 'slot');
@@ -82,14 +82,14 @@ void main() {
     );
   });
 
-  group('frequenza e recentezza', () {
+  group('frequency and recency', () {
     LaunchRecord at(String pkg, Duration ago) => LaunchRecord(
       ts: now.subtract(ago),
       package: pkg,
       features: const {'slot': 'morning'},
     );
 
-    test("un'app appena usata sale, e l'effetto svanisce in poche ore", () {
+    test('a just-used app rises, and the effect fades within hours', () {
       final p = AppPredictor(epoch: now)
         ..addAll([
           for (var i = 0; i < 20; i++) at('abituale', Duration(days: 2 + i)),
@@ -98,16 +98,16 @@ void main() {
         ]);
       const ctx = {'slot': 'morning'};
       final adesso = p.scores(ctx, now: now);
-      // La frequenza resta più forte di un uso recente isolato...
+      // Frequency still beats a single recent use...
       expect(adesso['abituale']!, greaterThan(adesso['nuova']!));
-      // ...ma l'app appena usata supera quella usata tanto tempo fa.
+      // ...but the just-used app beats one used long ago.
       expect(adesso['nuova']!, greaterThan(adesso['vecchia']!));
-      // Dopo due giorni lo slancio è svanito.
+      // After two days the momentum has faded.
       final dopo = p.scores(ctx, now: now.add(const Duration(days: 2)));
       expect(adesso['nuova']! - dopo['nuova']!, greaterThan(1.0));
     });
 
-    test('ammessa con 1 apertura recente, esclusa se vecchia', () {
+    test('admitted with 1 recent launch, excluded if old', () {
       final p = AppPredictor(epoch: now)
         ..add(at('recente', const Duration(minutes: 10)))
         ..add(at('dimenticata', const Duration(days: 3)));
@@ -116,7 +116,7 @@ void main() {
       expect(s.containsKey('dimenticata'), isFalse);
     });
 
-    test('la recentezza compare nella spiegazione', () {
+    test('recency appears in the explanation', () {
       final p = AppPredictor(epoch: now)
         ..addAll([for (var i = 0; i < 3; i++) at('x', Duration(minutes: i))]);
       final r = p
@@ -125,14 +125,14 @@ void main() {
       expect(r.delta, greaterThan(1));
     });
 
-    test('rimuovere un pacchetto non lascia tracce', () {
+    test('removing a package leaves no trace', () {
       final p = trained()..removePackage('music');
       final s = p.scores({'slot': 'evening'}, now: now);
       expect(s.containsKey('music'), isFalse);
       expect(p.top({'slot': 'evening'}, now: now).first, 'mail');
     });
 
-    test('lo spostamento di t0 non cambia i punteggi', () {
+    test('shifting t0 does not change the scores', () {
       final far = now.add(const Duration(days: 200));
       final a = AppPredictor(epoch: now);
       final b = AppPredictor(epoch: far.subtract(const Duration(days: 1)));
@@ -149,10 +149,10 @@ void main() {
     });
   });
 
-  test('le aperture senza un segnale non penalizzano l\'app', () {
-    // "imported" viene dalla cronologia di Android (niente rete); "mobile"
-    // è sempre stata aperta con i dati mobili. Con il Wi-Fi, "imported" non
-    // deve finire sotto "mobile" solo perché la rete non è nota.
+  test('launches without a signal do not penalize the app', () {
+    // "imported" comes from Android's usage history (no network info);
+    // "mobile" was always opened on mobile data. On Wi-Fi, "imported" must
+    // not rank below "mobile" just because its network is unknown.
     final p = AppPredictor()
       ..addAll([
         for (var i = 0; i < 10; i++)

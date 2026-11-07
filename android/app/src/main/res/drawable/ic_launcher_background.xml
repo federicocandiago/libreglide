@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Fondo dell'icona: bianco caldo, come il disegno originale. -->
+<!-- Icon background: warm white, as in the original artwork. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <solid android:color="#FFFFFCF6" />
 </shape>

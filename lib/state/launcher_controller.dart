@@ -1,5 +1,5 @@
-/// Stato centrale del launcher: app installate, categorie, icone,
-/// contesto corrente, previsioni e Collections.
+/// Central launcher state: installed apps, categories, icons, current
+/// context, predictions and Collections.
 library;
 
 import 'dart:async';
@@ -23,8 +23,8 @@ import 'contacts_controller.dart';
 import 'places_controller.dart';
 import 'weather_controller.dart';
 
-/// Cache delle icone, separata dal controller così solo le icone si
-/// ridisegnano quando arrivano.
+/// Icon cache, kept separate from the controller so that only the icons
+/// repaint when they arrive.
 class IconCache extends ChangeNotifier {
   IconCache(this._bridge);
 
@@ -35,7 +35,7 @@ class IconCache extends ChangeNotifier {
 
   AppIcon? operator [](String id) => _icons[id];
 
-  /// Carica le icone mancanti a blocchi, senza bloccare la UI.
+  /// Loads missing icons in chunks, without blocking the UI.
   Future<void> ensure(Iterable<String> ids) async {
     final missing = ids
         .where((id) => !_icons.containsKey(id) && !_pending.contains(id))
@@ -51,7 +51,7 @@ class IconCache extends ChangeNotifier {
       try {
         _icons.addAll(await _bridge.getIcons(part, sizePx));
       } catch (e) {
-        debugPrint('libreglide: icone non caricate: $e');
+        debugPrint('libreglide: icons not loaded: $e');
       } finally {
         _pending.removeAll(part);
       }
@@ -59,7 +59,7 @@ class IconCache extends ChangeNotifier {
     }
   }
 
-  /// Dimentica le icone di un pacchetto (dopo un aggiornamento).
+  /// Forgets a package's icons (after an update).
   void evictPackage(String package) {
     _icons.removeWhere((id, _) => id.startsWith('$package/'));
   }
@@ -83,16 +83,16 @@ class LauncherController extends ChangeNotifier {
   final SettingsController settings;
   final IconCache icons;
 
-  /// Card dinamiche dello Space (Agenda, In ascolto).
+  /// The Space's dynamic cards (Agenda, Now playing).
   final CardsController cards;
 
-  /// Pannello contatti (swipe verso l'alto).
+  /// Contacts panel (swipe up).
   final ContactsController contacts;
 
-  /// Card Meteo (facoltativa).
+  /// Weather card (optional).
   final WeatherController weather;
 
-  /// Luoghi: casa, lavoro, frequenti (facoltativo, posizione precisa).
+  /// Places: home, work, frequent (optional, precise location).
   final PlacesController places;
   final DateTime Function() _clock;
 
@@ -143,12 +143,13 @@ class LauncherController extends ChangeNotifier {
     unawaited(importUsage(force: true));
   }
 
-  // region Card dello Space
+  // --- Space cards ---
+
   final CardAffinity cardAffinity = CardAffinity();
   String? _cardKey;
   Map<SpaceCard, double> _cardScores = const {};
 
-  /// Un tocco su una card: la ricorda con il contesto attuale.
+  /// A tap on a card: records it along with the current context.
   void recordCardUse(SpaceCard card) {
     final now = _clock();
     final features = _contextNow().toMap();
@@ -161,9 +162,9 @@ class LauncherController extends ChangeNotifier {
     );
   }
 
-  /// Affinità delle card nel contesto attuale. Si ricalcola solo quando il
-  /// contesto (o lo Space) cambia: toccare una card non sposta le altre
-  /// mentre guardi la pagina.
+  /// Card affinity in the current context. Recomputed only when the context
+  /// (or the Space) changes, so tapping a card doesn't move the others while
+  /// the user is looking at the page.
   Map<SpaceCard, double> cardScores(SpaceKind kind) {
     final key = '${context.key}|${kind.name}';
     if (key == _cardKey) return _cardScores;
@@ -185,25 +186,25 @@ class LauncherController extends ChangeNotifier {
         if (card != null) cardAffinity.add(card, r.ts, r.features);
       }
     } catch (e) {
-      debugPrint('libreglide: tocchi sulle card non disponibili: $e');
+      debugPrint('libreglide: card taps unavailable: $e');
     }
   }
-  // endregion
 
-  // region Cronologia di utilizzo di Android
+  // --- Android usage history ---
+
   static const _usageMarker = 'usageImportedUntil';
   bool _importing = false;
   bool _learnFromUsage = true;
   DateTime? _lastImport;
 
-  /// Accesso ai dati di utilizzo (null = non ancora controllato).
+  /// Access to usage data (null = not checked yet).
   bool? usageAccess;
 
-  /// Aggiunge al predittore le app aperte fuori da libreGLIDE (notifiche,
-  /// recenti, link…), lette dalla cronologia di Android: la prima volta le
-  /// ultime 2 settimane, poi solo le nuove. Le aperture fatte da libreGLIDE
-  /// non vengono contate due volte. Di queste si conoscono solo ora e
-  /// giorno: rete, luogo e audio restano sconosciuti.
+  /// Feeds the predictor with apps opened outside libreGLIDE (notifications,
+  /// recents, links…), read from Android's usage history: the last 2 weeks
+  /// the first time, then only new ones. Launches made from libreGLIDE are
+  /// not counted twice. For these only time and day are known: network,
+  /// place and audio stay unknown.
   Future<void> importUsage({bool force = false}) async {
     if (_importing || !settings.learnFromUsage) return;
     final now = _clock();
@@ -251,13 +252,13 @@ class LauncherController extends ChangeNotifier {
       }
       await store.writeKv(_usageMarker, '${until.millisecondsSinceEpoch}');
     } catch (e) {
-      debugPrint('libreglide: cronologia di utilizzo non disponibile: $e');
+      debugPrint('libreglide: usage history unavailable: $e');
     } finally {
       _importing = false;
     }
   }
 
-  /// Dimentica le aperture importate dalla cronologia di Android.
+  /// Forgets the launches imported from Android's usage history.
   Future<void> forgetUsage() async {
     await store.deleteSource('usage');
     await store.deleteKv(_usageMarker);
@@ -268,19 +269,20 @@ class LauncherController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Aperture salvate per origine (`launcher`, `usage`).
+  /// Stored launches by source (`launcher`, `usage`).
   Future<Map<String, int>> launchSources() => store.countBySource();
-  // endregion
 
-  // region Digital detox
-  /// Le app bloccate sono nascoste adesso (detox acceso, opzione attiva e
-  /// dentro l'orario).
+  // --- Digital detox ---
+
+  /// Blocked apps are currently hidden (detox on, option enabled and within
+  /// the schedule).
   bool detoxHiding = false;
   Timer? _detoxTimer;
   String? _detoxSyncKey;
 
-  /// Allinea la parte nativa (che fa il blocco vero e proprio) e decide se
-  /// nascondere le app bloccate; si ripete al prossimo cambio di orario.
+  /// Syncs the native side (which does the actual blocking) and decides
+  /// whether to hide blocked apps; reschedules itself for the next schedule
+  /// change.
   void _updateDetox() {
     final apps = settings.detoxApps.toList()..sort();
     final key = [
@@ -324,7 +326,6 @@ class LauncherController extends ChangeNotifier {
 
   bool _detoxHidden(AppEntry a) =>
       detoxHiding && settings.detoxApps.contains(a.packageName);
-  // endregion
 
   @override
   void dispose() {
@@ -389,7 +390,7 @@ class LauncherController extends ChangeNotifier {
       _appsRevision++;
       appsVersion.value++;
     } catch (e) {
-      debugPrint('libreglide: elenco app non disponibile: $e');
+      debugPrint('libreglide: app list unavailable: $e');
     }
     loaded = true;
     notifyListeners();
@@ -407,7 +408,7 @@ class LauncherController extends ChangeNotifier {
       ),
   };
 
-  /// Ultimi segnali letti dal sistema (rete, cuffie, ricarica).
+  /// Latest signals read from the system (network, headphones, charging).
   Map<String, Object?> _snapshot = const {};
 
   ContextFeatures _contextNow() => ContextFeatures.at(
@@ -418,7 +419,7 @@ class LauncherController extends ChangeNotifier {
     place: _placeFeature(),
   );
 
-  /// Luogo per il predittore: `home`, `work`, `frequent:ID`, `other`, `travel`.
+  /// Place for the predictor: `home`, `work`, `frequent:ID`, `other`, `travel`.
   String? _placeFeature() {
     if (travelling) return 'travel';
     final p = places.current;
@@ -431,32 +432,32 @@ class LauncherController extends ChangeNotifier {
     };
   }
 
-  /// In auto: Android Auto o autoradio Bluetooth (con il permesso).
+  /// Driving: Android Auto or a Bluetooth car stereo (with the permission).
   bool get driving => _snapshot['car'] == true;
 
-  /// Livello della batteria (0–100), se noto.
+  /// Battery level (0–100), if known.
   int? get batteryLevel => (_snapshot['battery'] as num?)?.toInt();
   bool get charging => _snapshot['charging'] == true;
 
-  /// Non disturbare attivo.
+  /// Do Not Disturb is on.
   bool get doNotDisturb => _snapshot['dnd'] == true;
 
-  /// Fuso orario attuale (es. "Europe/Rome").
+  /// Current time zone (e.g. "Europe/Rome").
   String? get timeZone => _snapshot['tz'] as String?;
 
-  /// Scarto dall'UTC del fuso di casa, letto quando si è in viaggio.
+  /// UTC offset of the home time zone, read while travelling.
   Duration? homeOffset;
 
-  /// Ora di casa, se si è in un altro fuso.
+  /// Home time, when in a different time zone.
   DateTime? get homeTime {
     final offset = homeOffset;
     if (offset == null) return null;
     final t = _clock().toUtc().add(offset);
-    // Ora "di parete" di casa, da mostrare così com'è.
+    // Home wall-clock time, to be shown as is.
     return DateTime(t.year, t.month, t.day, t.hour, t.minute);
   }
 
-  /// "Ora vivo qui": il fuso attuale diventa quello di casa.
+  /// "I live here now": the current time zone becomes the home one.
   void setHomeHere() {
     final tz = timeZone;
     if (tz == null) return;
@@ -465,8 +466,9 @@ class LauncherController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// In viaggio: roaming, o fuso orario diverso da quello di casa (il
-  /// primo visto). In futuro anche la città, con i luoghi (M1).
+  /// Travelling: roaming, far from home, or a time zone different from the
+  /// home one (the first one seen). In the future also the city, via places
+  /// (M1).
   bool get travelling {
     if (_snapshot['roaming'] == true) return true;
     if (places.farFromHome) return true;
@@ -475,7 +477,7 @@ class LauncherController extends ChangeNotifier {
     return tz != null && home != null && tz != home;
   }
 
-  /// Rilegge i segnali dal sistema e aggiorna il contesto.
+  /// Re-reads the system signals and updates the context.
   Future<void> refreshContext() async {
     final before = _signature();
     try {
@@ -489,13 +491,13 @@ class LauncherController extends ChangeNotifier {
           ? await bridge.timeZoneOffset(home)
           : null;
     } catch (e) {
-      debugPrint('libreglide: segnali di contesto non disponibili: $e');
+      debugPrint('libreglide: context signals unavailable: $e');
     }
     unawaited(places.sample());
     final contextBefore = context.key;
     updateContext();
-    // Batteria, Non disturbare, fuso e roaming non cambiano il contesto ma
-    // servono alle card dello Space.
+    // Battery, Do Not Disturb, time zone and roaming don't change the
+    // context, but the Space cards need them.
     if (context.key == contextBefore && _signature() != before) {
       notifyListeners();
     }
@@ -513,8 +515,8 @@ class LauncherController extends ChangeNotifier {
     ].join('|');
   }
 
-  /// Ricalcola il contesto; se è cambiato le Collections possono riordinarsi
-  /// e la scelta manuale dello Space decade.
+  /// Recomputes the context; if it changed, Collections may reorder and the
+  /// manual Space choice is dropped.
   void updateContext() {
     final next = _contextNow();
     if (next.key != context.key) {
@@ -527,14 +529,14 @@ class LauncherController extends ChangeNotifier {
   List<CategoryBoost> _boosts = const [];
   bool _forceCollections = false;
 
-  /// Spinte iniziali attive adesso, per categoria.
+  /// Initial boosts active right now, per category.
   Map<AppCategory, double> get boosts => activeBoosts(_boosts, _clock());
 
-  /// Raccolte preferite scelte nell'onboarding: partono in cima e ci restano
-  /// per le prime settimane, poi lasciano spazio all'uso reale.
+  /// Favorite collections picked during onboarding: they start at the top
+  /// and stay there for the first weeks, then give way to actual usage.
   Future<void> setFavoriteCategories(List<AppCategory> categories) async {
     final now = _clock();
-    // La prima scelta pesa un filo di più, per mantenere l'ordine scelto.
+    // Earlier picks weigh slightly more, to preserve the chosen order.
     _boosts = [
       for (final (i, c) in categories.indexed)
         CategoryBoost(
@@ -548,8 +550,8 @@ class LauncherController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Dock proposto all'inizio: telefono, messaggi, fotocamera, browser
-  /// (i primi installati tra i pacchetti noti).
+  /// Initially suggested dock: phone, messages, camera, browser (the first
+  /// installed among the known packages).
   List<AppEntry> suggestedDock() {
     const groups = [
       [
@@ -586,13 +588,13 @@ class LauncherController extends ChangeNotifier {
     ];
   }
 
-  /// Categorie preferite scelte (anche se la spinta è esaurita).
+  /// Chosen favorite categories (even if their boost has expired).
   List<AppCategory> get favoriteCategories => [
     for (final b in _boosts) b.category,
   ];
 
-  /// Completa [packages] fino a [n] con le app delle raccolte spinte, per i
-  /// primi giorni in cui le previsioni sono poche.
+  /// Fills [packages] up to [n] with apps from the boosted collections, for
+  /// the first days when predictions are scarce.
   List<String> _fillFromBoosted(
     List<String> packages,
     int n,
@@ -625,10 +627,10 @@ class LauncherController extends ChangeNotifier {
     return out;
   }
 
-  /// Space scelto a mano dal cassetto; null = quello del contesto.
+  /// Space picked manually from the drawer; null = the context one.
   SpaceKind? spaceOverride;
 
-  /// Space del contesto: auto, cuffie, viaggio, lavoro, casa, ora.
+  /// Context Space: car, headphones, travel, work, home, time of day.
   SpaceKind get contextSpace => selectSpace(
     slot: context.slot,
     place: places.currentRole,
@@ -637,10 +639,10 @@ class LauncherController extends ChangeNotifier {
     travelling: travelling,
   );
 
-  /// Space mostrato: quello scelto a mano o quello del contesto.
+  /// Displayed Space: the manually picked one or the context one.
   SpaceKind get currentSpace => spaceOverride ?? contextSpace;
 
-  /// Fascia oraria da usare per le card legate all'ora (Buonanotte…).
+  /// Time slot to use for time-bound cards (Good night…).
   Slot get currentSlot => spaceOverride?.slot ?? context.slot;
 
   void chooseSpace(SpaceKind? kind) {
@@ -648,12 +650,12 @@ class LauncherController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // region Lettura
+  // --- Queries ---
+
   List<AppEntry> get allApps => _all;
 
-  /// App mostrate: senza le nascoste e, se richiesto, senza quelle di sistema.
-  /// App mostrate: senza le nascoste e, se richiesto, senza quelle di
-  /// sistema. In cache finché non cambiano app o impostazioni delle app.
+  /// Displayed apps: without hidden ones and, if requested, without system
+  /// apps. Cached until the apps or app settings change.
   List<AppEntry> get visibleApps {
     final key =
         (_appsRevision * 100000 + settings.collectionsRevision) * 2 +
@@ -683,11 +685,11 @@ class LauncherController extends ChangeNotifier {
   Map<String, AppEntry> _byId = const {};
   Map<String, AppEntry> _byPackage = {};
 
-  /// Avviso dedicato all'elenco delle app (installate, nascoste, categorie):
-  /// la pagina A-Z ascolta solo questo, non i cambi di contesto.
+  /// Notifier dedicated to the app list (installed, hidden, categories): the
+  /// A-Z page listens only to this, not to context changes.
   final ValueNotifier<int> appsVersion = ValueNotifier(0);
 
-  /// Previsioni dello Space in cache, per chiave di contesto.
+  /// Cached Space predictions, keyed by context.
   String? _suggestionsKey;
   List<AppEntry> _suggestions = const [];
 
@@ -712,15 +714,16 @@ class LauncherController extends ChangeNotifier {
     );
   }
 
-  /// L'app di un pacchetto (la prima activity avviabile), se visibile.
+  /// The app for a package (its first launchable activity), hidden apps
+  /// included: callers use it for labels and icons of any installed package.
   AppEntry? byPackage(String package) => _byPackage[package];
 
-  /// Le [n] app più probabili nello Space corrente (una sola activity per
-  /// pacchetto).
+  /// The [n] most likely apps in the current Space (one activity per
+  /// package).
   List<AppEntry> suggestions({int n = 5}) {
-    visibleApps; // aggiorna le cache
+    visibleApps; // refreshes the caches
     final byPackage = _visibleByPackage;
-    // Stesso contesto, stesse aperture, stessa ora: stessa risposta.
+    // Same context, same launches, same hour: same answer.
     final key = [
       context.key,
       spaceOverride?.name,
@@ -732,7 +735,7 @@ class LauncherController extends ChangeNotifier {
     ].join('|');
     if (key == _suggestionsKey) return _suggestions;
     final features = context.toMap();
-    // Space scelto a mano: le previsioni seguono quello Space.
+    // Manually picked Space: predictions follow that Space.
     switch (spaceOverride) {
       case null:
         break;
@@ -762,9 +765,9 @@ class LauncherController extends ChangeNotifier {
     return _suggestions = [for (final p in filled) byPackage[p]!];
   }
 
-  /// Le [n] app più usate nel contesto reale (non nello Space scelto a
-  /// mano), per la ricerca globale. Se le previsioni non bastano completa
-  /// con le più usate in assoluto e poi con il dock.
+  /// The [n] most used apps in the actual context (not the manually picked
+  /// Space), for global search. If predictions fall short, fills up with the
+  /// overall most used apps, then the boosted collections, then the dock.
   List<AppEntry> topForSearch(int n) {
     final byPackage = <String, AppEntry>{};
     for (final a in visibleApps) {
@@ -800,7 +803,7 @@ class LauncherController extends ChangeNotifier {
     return [for (final p in out.take(n)) ?byPackage[p]];
   }
 
-  /// Punteggi del contesto reale per ordinare i risultati di ricerca.
+  /// Scores for the actual context, used to rank search results.
   Map<String, double> searchScores() =>
       predictor.scores(context.toMap(), now: _clock());
 
@@ -829,9 +832,9 @@ class LauncherController extends ChangeNotifier {
 
   List<FeatureContribution> explain(AppEntry app) =>
       predictor.explain(app.packageName, context.toMap(), now: _clock());
-  // endregion
 
-  // region Azioni
+  // --- Actions ---
+
   Future<void> launch(AppEntry app, {List<int>? bounds}) async {
     final now = _clock();
     final ctx = _contextNow();
@@ -857,5 +860,4 @@ class LauncherController extends ChangeNotifier {
     _cardKey = null;
     notifyListeners();
   }
-  // endregion
 }

@@ -1,4 +1,4 @@
-/// Dati delle card dinamiche dello Space: Agenda e In ascolto.
+/// Data for the Space's dynamic cards: Agenda and Now playing.
 library;
 
 import 'dart:async';
@@ -15,18 +15,19 @@ class CardsController extends ChangeNotifier {
   final LauncherBridge _bridge;
   final DateTime Function() _clock;
 
-  /// Eventi da oggi a dopodomani; null = permesso calendario mancante.
+  /// Events from today to the day after tomorrow; null = calendar permission
+  /// missing.
   List<CalendarEvent>? events;
   bool eventsLoaded = false;
 
-  /// Dove è stata lasciata l'auto (solo se la funzione è attiva).
+  /// Where the car was parked (only if the feature is enabled).
   Parking? parking;
 
-  /// Permessi che mancano per il parcheggio, nell'ordine in cui chiederli.
+  /// Permissions still missing for parking, in the order to request them.
   List<String> parkingMissing = const [];
   bool parkingWanted = false;
 
-  /// La posizione in background è negata in modo definitivo.
+  /// Background location has been permanently denied.
   bool parkingBlocked = false;
 
   Future<void> refreshParking() async {
@@ -45,12 +46,13 @@ class CardsController extends ChangeNotifier {
           parkingMissing.firstOrNull == 'background' &&
           await _bridge.backgroundLocationBlocked();
     } catch (e) {
-      debugPrint('libreglide: parcheggio non disponibile: $e');
+      debugPrint('libreglide: parking unavailable: $e');
     }
     _notify();
   }
 
-  /// Chiede il primo permesso mancante (uno alla volta, come vuole Android).
+  /// Requests the first missing permission (one at a time, as Android
+  /// requires).
   Future<void> requestNextParkingPermission() async {
     switch (parkingMissing.firstOrNull) {
       case 'bluetooth':
@@ -68,11 +70,11 @@ class CardsController extends ChangeNotifier {
     _notify();
   }
 
-  /// Tempo di utilizzo di oggi; null senza accesso (o non richiesto).
+  /// Today's screen time; null without access (or when not requested).
   ScreenTime? screenTime;
   bool? usageAccess;
 
-  /// Lo si legge solo se l'utente l'ha attivato nelle impostazioni.
+  /// Only read if the user enabled it in settings.
   bool screenTimeWanted = false;
 
   Future<void> refreshScreenTime() async {
@@ -81,12 +83,12 @@ class CardsController extends ChangeNotifier {
       usageAccess = await _bridge.hasUsageAccess();
       screenTime = usageAccess! ? await _bridge.screenTimeToday() : null;
     } catch (e) {
-      debugPrint('libreglide: tempo di utilizzo non disponibile: $e');
+      debugPrint('libreglide: screen time unavailable: $e');
     }
     _notify();
   }
 
-  /// Accesso alle sessioni multimediali concesso.
+  /// Whether access to media sessions has been granted.
   bool mediaAccess = false;
   MediaInfo? media;
 
@@ -100,7 +102,7 @@ class CardsController extends ChangeNotifier {
       ..add(_bridge.resumed.listen((_) => refresh()))
       ..add(
         _bridge.mediaChanged.listen((_) {
-          // Gli eventi del player arrivano a raffica: se ne aspetta la fine.
+          // Player events arrive in bursts: wait for them to settle.
           _mediaDebounce?.cancel();
           _mediaDebounce = Timer(
             const Duration(milliseconds: 250),
@@ -122,8 +124,8 @@ class CardsController extends ChangeNotifier {
     super.dispose();
   }
 
-  /// Durante un aggiornamento complessivo si avvisa una volta sola, alla
-  /// fine, invece che una volta per card.
+  /// During a full refresh listeners are notified once, at the end, instead
+  /// of once per card.
   int _batch = 0;
   bool _pending = false;
 
@@ -159,7 +161,7 @@ class CardsController extends ChangeNotifier {
     try {
       events = await _bridge.events(from, from.add(const Duration(days: 2)));
     } catch (e) {
-      debugPrint('libreglide: calendario non disponibile: $e');
+      debugPrint('libreglide: calendar unavailable: $e');
     }
     eventsLoaded = true;
     _notify();
@@ -169,12 +171,12 @@ class CardsController extends ChangeNotifier {
     try {
       final (access, info) = await _bridge.media(artSizePx: artSizePx);
       mediaAccess = access;
-      // Copertina invariata: si riusa quella già decodificata.
+      // Artwork unchanged: reuse the already decoded one.
       media = info != null && info.artUnchanged
           ? info.withArt(media?.art)
           : info;
     } catch (e) {
-      debugPrint('libreglide: media non disponibili: $e');
+      debugPrint('libreglide: media unavailable: $e');
     }
     _notify();
   }
@@ -186,7 +188,7 @@ class CardsController extends ChangeNotifier {
 
   Future<void> mediaCommand(String command) async {
     await _bridge.mediaCommand(command);
-    // Lo stato arriva dal callback nativo; questo copre i player lenti.
+    // State arrives via the native callback; this covers slow players.
     Future<void>.delayed(const Duration(milliseconds: 400), refreshMedia);
   }
 }

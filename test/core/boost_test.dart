@@ -9,17 +9,17 @@ AppEntry app(String pkg) =>
 
 void main() {
   group('boostFactor', () {
-    test('pieno per le prime 3 settimane', () {
+    test('full for the first 3 weeks', () {
       expect(boostFactor(Duration.zero), 1);
       expect(boostFactor(const Duration(days: 21)), 1);
     });
 
-    test('poi si dimezza ogni 3 settimane', () {
+    test('then halves every 3 weeks', () {
       expect(boostFactor(const Duration(days: 42)), closeTo(0.5, 1e-9));
       expect(boostFactor(const Duration(days: 63)), closeTo(0.25, 1e-9));
     });
 
-    test('le spinte esaurite spariscono', () {
+    test('expired boosts are removed', () {
       final created = DateTime(2026, 1, 1);
       final b = CategoryBoost(category: AppCategory.music, created: created);
       expect(activeBoosts([b], created).keys, [AppCategory.music]);
@@ -30,7 +30,7 @@ void main() {
     });
   });
 
-  group('Raccolte con spinta', () {
+  group('Boosted Collections', () {
     final music = [app('m.a'), app('m.b'), app('m.c')];
     final chat = [app('c.a'), app('c.b'), app('c.c')];
     final games = [app('g.a'), app('g.b'), app('g.c')];
@@ -44,7 +44,7 @@ void main() {
       for (final x in g) x.category,
     ];
 
-    test('pochi dati: le preferite prima dell\'ordine predefinito', () {
+    test('little data: favorites before the default order', () {
       final g = CollectionsBuilder().build(
         apps: apps,
         categoryOf: categoryOf,
@@ -61,7 +61,7 @@ void main() {
       ]);
     });
 
-    test('con dati: la preferita senza aperture resta in cima nel plateau', () {
+    test('with data: an unlaunched favorite stays on top in the plateau', () {
       final g = CollectionsBuilder().build(
         apps: apps,
         categoryOf: categoryOf,
@@ -74,7 +74,7 @@ void main() {
       expect(order(g).first, AppCategory.games);
     });
 
-    test('a spinta esaurita torna a contare solo l\'uso', () {
+    test('once the boost expires, only usage counts again', () {
       final g = CollectionsBuilder().build(
         apps: apps,
         categoryOf: categoryOf,
@@ -91,7 +91,7 @@ void main() {
       ]);
     });
 
-    test('una preferita piccola non finisce in Altro', () {
+    test('a small favorite does not end up in Other', () {
       final solo = app('f.a');
       final g = CollectionsBuilder().build(
         apps: [...apps, solo],

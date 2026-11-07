@@ -1,5 +1,5 @@
-/// Card Meteo: posizione approssimativa → Open-Meteo, al massimo ogni 30
-/// minuti, solo se l'utente l'ha attivata nelle impostazioni.
+/// Weather card: coarse location → Open-Meteo, at most every 30 minutes, and
+/// only if the user enabled it in settings.
 library;
 
 import 'dart:async';
@@ -21,7 +21,7 @@ class WeatherController extends ChangeNotifier {
 
   WeatherNow? weather;
 
-  /// Permesso di posizione approssimativa concesso.
+  /// Whether coarse location permission has been granted.
   bool? permission;
   bool _busy = false;
   DateTime? _lastAttempt;
@@ -80,7 +80,7 @@ class WeatherController extends ChangeNotifier {
         weather = await client.forecast(position.$1, position.$2, now);
       }
     } catch (e) {
-      debugPrint('libreglide: meteo non disponibile: $e');
+      debugPrint('libreglide: weather unavailable: $e');
     } finally {
       client.close();
       _busy = false;

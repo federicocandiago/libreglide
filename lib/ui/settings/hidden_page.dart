@@ -6,7 +6,7 @@ import '../scope.dart';
 import '../widgets/app_icon.dart';
 import 'settings_widgets.dart';
 
-/// App e categorie nascoste, con ripristino.
+/// Hidden apps and categories, with restore.
 class HiddenPage extends StatelessWidget {
   const HiddenPage({super.key});
 

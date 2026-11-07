@@ -1,18 +1,18 @@
-/// Scelta dello Space (spec-motore-contesto §8.2): prima il contesto
-/// (auto, cuffie, viaggio, lavoro, casa), poi l'ora del giorno.
+/// Space selection (spec-motore-contesto §8.2): context first (car,
+/// headphones, travel, work, home), then the time of day.
 library;
 
 import 'places.dart';
 import 'time_context.dart';
 
 enum SpaceKind {
-  // Space di contesto.
+  // Context Spaces.
   moving,
   listening,
   travel,
   work,
   home,
-  // Space dell'ora del giorno.
+  // Time-of-day Spaces.
   wakeUp,
   morning,
   lunch,
@@ -20,7 +20,7 @@ enum SpaceKind {
   evening,
   night;
 
-  /// Lo Space che corrisponde a una fascia oraria.
+  /// The Space matching a time slot.
   static SpaceKind ofSlot(Slot s) => switch (s) {
     Slot.wakeUp => wakeUp,
     Slot.morning => morning,
@@ -30,7 +30,7 @@ enum SpaceKind {
     Slot.night => night,
   };
 
-  /// La fascia oraria, per gli Space dell'ora; null per quelli di contesto.
+  /// The time slot for time-of-day Spaces; null for context Spaces.
   Slot? get slot => switch (this) {
     wakeUp => Slot.wakeUp,
     morning => Slot.morning,
@@ -44,7 +44,7 @@ enum SpaceKind {
   bool get contextual => slot == null;
 }
 
-/// Regole in ordine di priorità: la prima vera vince.
+/// Rules in priority order: the first one that holds wins.
 SpaceKind selectSpace({
   required Slot slot,
   PlaceRole? place,
@@ -57,8 +57,8 @@ SpaceKind selectSpace({
   if (travelling) return SpaceKind.travel;
   if (place == PlaceRole.work) return SpaceKind.work;
   if (place == PlaceRole.home) {
-    // A casa la mattina presto resta il Risveglio, la sera la Sera/Notte:
-    // sono le routine di casa più riconoscibili.
+    // At home, early morning stays Wake-up and the evening stays
+    // Evening/Night: they are the most recognizable home routines.
     if (slot == Slot.wakeUp || slot == Slot.evening || slot == Slot.night) {
       return SpaceKind.ofSlot(slot);
     }

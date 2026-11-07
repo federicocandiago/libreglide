@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app_info.dart';
 import '../../core/places.dart';
 import '../../data/settings.dart';
 import '../../net/unsplash.dart';
@@ -18,9 +19,7 @@ import 'space_cards_page.dart';
 import 'widgets_page.dart';
 import '../widgets/logo.dart';
 
-const String appVersion = '1.1.0';
-
-/// Lingue dell'interfaccia, ciascuna nel proprio nome.
+/// UI languages, each written in its own language.
 const Map<String, String> languageNames = {
   'it': 'Italiano',
   'en': 'English',
@@ -29,7 +28,7 @@ const Map<String, String> languageNames = {
   'fr': 'Français',
 };
 
-/// Sottopagine delle impostazioni, nell'ordine di [_sections].
+/// Settings sub-pages, in the order of [_sections].
 enum _Section {
   appearance,
   wallpaper,
@@ -42,8 +41,8 @@ enum _Section {
   data,
 }
 
-/// Impostazioni (spec-viste-app §6–§7): una pagina principale con le voci
-/// raggruppate, come in Android 17; ogni voce apre la sua sottopagina.
+/// Settings (spec-viste-app §6–§7): a main page with grouped entries, as in
+/// Android 17; each entry opens its own sub-page.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -198,14 +197,14 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-/// Comando di sviluppo: la sottopagina con quel nome (es. `places`).
+/// Developer command: the sub-page with the given name (e.g. `places`).
 Widget? settingsSubPageFor(BuildContext context, String name) {
   final section = _Section.values.where((e) => e.name == name).firstOrNull;
   if (section == null) return null;
   return _SettingsSubPage(section: section, title: name.toUpperCase());
 }
 
-/// Una sottopagina: la sezione corrispondente delle impostazioni.
+/// A sub-page: the matching settings section.
 class _SettingsSubPage extends StatelessWidget {
   const _SettingsSubPage({required this.section, required this.title});
 
@@ -225,8 +224,8 @@ class _SettingsSubPage extends StatelessWidget {
   }
 }
 
-/// Informazioni: logo in bianco e nero, versione, informativa, licenze,
-/// presentazione.
+/// About: black-and-white logo, version, privacy policy, licenses,
+/// introduction.
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
@@ -305,7 +304,7 @@ class AboutPage extends StatelessWidget {
   }
 }
 
-/// Le sezioni delle impostazioni, nell'ordine di [_Section].
+/// The settings sections, in the order of [_Section].
 List<Widget> _sections(BuildContext context) {
   final scope = AppScope.of(context);
   final settings = scope.settings;
@@ -584,7 +583,7 @@ List<Widget> _sections(BuildContext context) {
       icon: Icons.translate_rounded,
       title: l.sectionLanguage,
       children: [
-        // Ogni lingua nel suo nome; la spunta indica quella scelta.
+        // Each language in its own name; the check mark shows the selected one.
         for (final (code, label) in [
           ('', l.languageSystemShort),
           for (final e in languageNames.entries) (e.key, e.value),
@@ -723,7 +722,7 @@ class _DefaultHomeTileState extends State<_DefaultHomeTile> {
   }
 }
 
-/// Sezione Sfondo: sfondo contestuale Unsplash.
+/// Wallpaper section: contextual Unsplash wallpaper.
 class _WallpaperSection extends StatelessWidget {
   const _WallpaperSection();
 
@@ -734,8 +733,8 @@ class _WallpaperSection extends StatelessWidget {
     final wallpaper = scope.wallpaper;
     final l = context.l10n;
     return ListenableBuilder(
-      // Anche le impostazioni: la voce della chiave cambia appena la
-      // finestra la verifica e la salva.
+      // Settings too: the key entry updates as soon as the dialog verifies
+      // and saves the key.
       listenable: Listenable.merge([settings, wallpaper]),
       builder: (context, _) {
         final key = settings.unsplashKey;
@@ -935,7 +934,7 @@ class _UnsplashKeyDialogState extends State<_UnsplashKeyDialog> {
   }
 }
 
-/// Sezione Luoghi: riconoscimento di casa e lavoro e correzioni.
+/// Places section: home and work detection, and corrections.
 class _PlacesSection extends StatelessWidget {
   const _PlacesSection();
 

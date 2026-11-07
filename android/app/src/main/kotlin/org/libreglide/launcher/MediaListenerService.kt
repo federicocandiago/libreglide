@@ -3,11 +3,11 @@ package org.libreglide.launcher
 import android.service.notification.NotificationListenerService
 
 /**
- * Servizio vuoto: esiste solo perché Android concede l'accesso alle sessioni
- * multimediali (MediaSessionManager.getActiveSessions) alle app che hanno un
- * NotificationListenerService abilitato.
+ * Empty service: it exists only because Android grants access to media
+ * sessions (MediaSessionManager.getActiveSessions) to apps that have an
+ * enabled NotificationListenerService.
  *
- * libreGLIDE non legge, non conserva e non invia le notifiche: questa classe
- * non sovrascrive onNotificationPosted né altri metodi.
+ * libreGLIDE does not read, store or send notifications: this class overrides
+ * neither onNotificationPosted nor any other method.
  */
 class MediaListenerService : NotificationListenerService()

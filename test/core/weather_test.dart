@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:libreglide/core/weather.dart';
 
 void main() {
-  test('codici WMO', () {
+  test('WMO codes', () {
     expect(weatherKindOf(0), WeatherKind.clear);
     expect(weatherKindOf(2), WeatherKind.partly);
     expect(weatherKindOf(45), WeatherKind.fog);
@@ -13,13 +13,13 @@ void main() {
     expect(weatherKindOf(1234), WeatherKind.cloudy);
   });
 
-  test('coordinate arrotondate a ~10 km', () {
+  test('coordinates rounded to ~10 km', () {
     expect(roundCoordinate(45.43713), 45.4);
     expect(roundCoordinate(12.33265), 12.3);
     expect(roundCoordinate(-0.06), -0.1);
   });
 
-  test('risposta Open-Meteo: ora, massime e prossime ore ogni 2 ore', () {
+  test('Open-Meteo response: now, highs, next hours every 2 hours', () {
     final now = DateTime(2026, 11, 5, 18, 20);
     final times = [
       for (var h = 0; h < 30; h++)

@@ -1,8 +1,8 @@
-/// Meteo per la card dello Space: modello e interpretazione dei codici WMO
-/// usati da Open-Meteo.
+/// Weather for the Space card: model and interpretation of the WMO codes
+/// used by Open-Meteo.
 library;
 
-/// Condizione meteo semplificata.
+/// Simplified weather condition.
 enum WeatherKind {
   clear,
   partly,
@@ -15,7 +15,7 @@ enum WeatherKind {
   storm,
 }
 
-/// Codice WMO → condizione.
+/// WMO code → condition.
 WeatherKind weatherKindOf(int code) => switch (code) {
   0 => WeatherKind.clear,
   1 || 2 => WeatherKind.partly,
@@ -35,7 +35,7 @@ class HourForecast {
   final double temperature;
   final WeatherKind kind;
 
-  /// Probabilità di precipitazione, 0–100.
+  /// Precipitation probability, 0–100.
   final int rainChance;
 }
 
@@ -51,8 +51,8 @@ class WeatherNow {
     this.tomorrow,
   });
 
-  /// Interpreta la risposta di Open-Meteo (`current`, `hourly`, `daily`,
-  /// con `timezone=auto`: orari locali del luogo, senza fuso).
+  /// Parses the Open-Meteo response (`current`, `hourly`, `daily`, with
+  /// `timezone=auto`: local times of the location, without offset).
   factory WeatherNow.fromOpenMeteo(Map<String, dynamic> j, DateTime now) {
     final current = j['current'] as Map<String, dynamic>;
     final daily = j['daily'] as Map<String, dynamic>;
@@ -62,7 +62,7 @@ class WeatherNow {
     final codes = (hourly['weather_code'] as List).cast<num>();
     final rain = (hourly['precipitation_probability'] as List?)?.cast<num?>();
 
-    // Le prossime 4 ore piene, a passi di 2 ore.
+    // The next 4 full hours, in 2-hour steps.
     final hours = <HourForecast>[];
     final start = DateTime(now.year, now.month, now.day, now.hour + 1);
     for (var i = 0; i < times.length && hours.length < 4; i++) {
@@ -116,7 +116,7 @@ class WeatherNow {
   final double min;
   final List<HourForecast> hours;
 
-  /// Previsione di domani (null se il servizio non l'ha data).
+  /// Tomorrow's forecast (null if the service didn't provide it).
   final DayForecast? tomorrow;
 }
 
@@ -132,10 +132,10 @@ class DayForecast {
   final double max;
   final double min;
 
-  /// Probabilità massima di pioggia nel giorno, in percentuale.
+  /// Maximum chance of rain during the day, as a percentage.
   final int rainChance;
 }
 
-/// Arrotonda una coordinata a 1 decimale (~10 km): al servizio meteo non
-/// serve sapere dove sei con precisione.
+/// Rounds a coordinate to 1 decimal (~10 km): the weather service doesn't
+/// need to know precisely where you are.
 double roundCoordinate(double v) => (v * 10).round() / 10;

@@ -1,4 +1,4 @@
-/// Lato Dart del bridge Kotlin `LauncherBridge`.
+/// Dart side of the Kotlin `LauncherBridge`.
 library;
 
 import 'dart:async';
@@ -14,14 +14,14 @@ import '../core/places.dart';
 class AppIcon {
   const AppIcon({required this.icon, this.mono});
 
-  /// Icona originale in PNG.
+  /// Original icon as PNG.
   final Uint8List icon;
 
-  /// Layer monocromo (maschera bianca in PNG), solo Android 13+.
+  /// Monochrome layer (white mask as PNG), Android 13+ only.
   final Uint8List? mono;
 }
 
-/// Dove è stata lasciata l'auto.
+/// Where the car was left.
 class Parking {
   const Parking({
     required this.lat,
@@ -34,22 +34,22 @@ class Parking {
   final double lat;
   final double lon;
 
-  /// Precisione in metri.
+  /// Accuracy in meters.
   final double accuracy;
   final DateTime at;
 
-  /// Posizione presa al momento dello scollegamento (non l'ultima nota).
+  /// Location taken at the moment of disconnection (not the last known one).
   final bool precise;
 }
 
-/// Tempo di utilizzo di oggi: totale e app più usate.
+/// Today's screen time: total and most used apps.
 class ScreenTime {
   const ScreenTime({required this.total, required this.top});
   final Duration total;
   final List<(String, Duration)> top;
 }
 
-/// Un widget installato che si può aggiungere.
+/// An installed widget that can be added.
 class WidgetProvider {
   const WidgetProvider({
     required this.provider,
@@ -74,7 +74,7 @@ class WidgetProvider {
   final int minHeight;
 }
 
-/// Un widget aggiunto allo Space.
+/// A widget added to the Space.
 class PlacedWidget {
   const PlacedWidget({
     required this.id,
@@ -94,7 +94,7 @@ class PlacedWidget {
   final String label;
   final String package;
 
-  /// Altezza della card in dp.
+  /// Card height in dp.
   final double height;
 
   PlacedWidget withHeight(double h) =>
@@ -108,7 +108,7 @@ class PlacedWidget {
   };
 }
 
-/// Brano in riproduzione.
+/// Track currently playing.
 class MediaInfo {
   const MediaInfo({
     required this.title,
@@ -132,7 +132,7 @@ class MediaInfo {
     artUnchanged: m['artSame'] == true,
   );
 
-  /// Stessa informazione con la copertina già nota.
+  /// The same info with the already known artwork.
   MediaInfo withArt(Uint8List? a) => MediaInfo(
     title: title,
     artist: artist,
@@ -151,7 +151,7 @@ class MediaInfo {
   final bool canNext;
   final Uint8List? art;
 
-  /// La copertina non è cambiata dall'ultima volta (non è stata inviata).
+  /// The artwork hasn't changed since last time (it wasn't sent).
   final bool artUnchanged;
 }
 
@@ -167,31 +167,31 @@ class LauncherBridge {
   final _resumed = StreamController<void>.broadcast();
   final _open = StreamController<String>.broadcast();
 
-  /// Schermata da aprire (comando di sviluppo via adb, extra `open`):
+  /// Screen to open (developer command via adb, `open` extra):
   /// home, space, collections, az, search, drawer, settings, colors,
   /// hidden, diagnostics.
   Stream<String> get openRequests => _open.stream;
 
-  /// Tasto o gesto Home con il launcher già in primo piano.
+  /// Home button or gesture while the launcher is already in the foreground.
   Stream<void> get homePressed => _homePressed.stream;
 
-  /// L'activity del launcher è tornata in primo piano.
+  /// The launcher activity came back to the foreground.
   Stream<void> get resumed => _resumed.stream;
 
-  /// Un solo flusso dal canale nativo, condiviso da tutti gli ascoltatori:
-  /// un secondo `receiveBroadcastStream` ruberebbe il canale al primo.
+  /// A single stream from the native channel, shared by all listeners: a
+  /// second `receiveBroadcastStream` would steal the channel from the first.
   late final Stream<Map<Object?, Object?>> _eventStream = _events
       .receiveBroadcastStream()
       .where((e) => e is Map)
       .cast<Map<Object?, Object?>>()
       .asBroadcastStream();
 
-  /// App installate, aggiornate o rimosse.
+  /// Apps installed, updated or removed.
   late final Stream<String?> packagesChanged = _eventStream
       .where((e) => e['type'] == 'packages_changed')
       .map((e) => e['package'] as String?);
 
-  /// La musica in riproduzione è cambiata.
+  /// The music playing has changed.
   late final Stream<void> mediaChanged = _eventStream
       .where((e) => e['type'] == 'media_changed')
       .map((_) {});
@@ -209,18 +209,18 @@ class LauncherBridge {
     }
   }
 
-  /// La sfocatura di sistema è disponibile (non lo è, per esempio, in
-  /// risparmio energetico).
+  /// Whether system blur is available (it isn't, for example, in battery
+  /// saver mode).
   final ValueNotifier<bool> blurAvailable = ValueNotifier(true);
 
-  /// Attiva o spegne il vetro smerigliato (finestra traslucida).
+  /// Turns frosted glass (translucent window) on or off.
   Future<void> setGlass(bool enabled) async {
     blurAvailable.value =
         await _methods.invokeMethod<bool>('setGlass', {'enabled': enabled}) ??
         false;
   }
 
-  /// Sfocatura dello sfondo dietro la finestra, in dp (0 = nitido).
+  /// Blur of the wallpaper behind the window, in dp (0 = sharp).
   Future<void> setWindowBlur(double dp) =>
       _methods.invokeMethod<bool>('setWindowBlur', {'dp': dp});
 
@@ -231,7 +231,7 @@ class LauncherBridge {
     return [for (final m in raw ?? const []) AppEntry.fromMap(m)];
   }
 
-  /// Icone per gli [ids] indicati, renderizzate a [sizePx] pixel fisici.
+  /// Icons for the given [ids], rendered at [sizePx] physical pixels.
   Future<Map<String, AppIcon>> getIcons(List<String> ids, int sizePx) async {
     final raw = await _methods.invokeMapMethod<String, Object?>('getIcons', {
       'ids': ids,
@@ -248,8 +248,8 @@ class LauncherBridge {
     return out;
   }
 
-  /// Avvia l'app. [bounds] è il rettangolo dell'icona in pixel fisici
-  /// (sinistra, alto, destra, basso) per l'animazione di apertura.
+  /// Launches the app. [bounds] is the icon rectangle in physical pixels
+  /// (left, top, right, bottom) for the opening animation.
   Future<bool> launch(String id, {List<int>? bounds}) async =>
       await _methods.invokeMethod<bool>('launch', {
         'id': id,
@@ -270,14 +270,14 @@ class LauncherBridge {
   Future<bool> openSystemSettings() async =>
       await _methods.invokeMethod<bool>('openSystemSettings') ?? false;
 
-  /// Segnali di contesto senza permessi: `network` (wifi, mobile, offline),
-  /// `audio` (speaker, headphones, bt), `charging`.
+  /// Context signals that need no permissions: `network` (wifi, mobile,
+  /// offline), `audio` (speaker, headphones, bt), `charging`.
   Future<Map<String, Object?>> contextSnapshot() async =>
       await _methods.invokeMapMethod<String, Object?>('getContextSnapshot') ??
       const {};
 
-  // region Calendario
-  /// Eventi tra [from] e [to]; null se manca il permesso calendario.
+  // region Calendar
+  /// Events between [from] and [to]; null without calendar permission.
   Future<List<CalendarEvent>?> events(DateTime from, DateTime to) async {
     final raw = await _methods.invokeListMethod<Map<Object?, Object?>>(
       'getEvents',
@@ -305,11 +305,11 @@ class LauncherBridge {
       false;
   // endregion
 
-  // region Tempo di utilizzo
+  // region Screen time
   Future<bool> hasUsageAccess() async =>
       await _methods.invokeMethod<bool>('hasUsageAccess') ?? false;
 
-  /// Aperture di app dalla cronologia di Android da [since]: (pacchetto, ora).
+  /// App launches from Android usage history since [since]: (package, time).
   Future<List<(String, DateTime)>> usageOpenings(DateTime since) async {
     final list = await _methods.invokeListMethod<Map<Object?, Object?>>(
       'usageOpenings',
@@ -327,7 +327,7 @@ class LauncherBridge {
   Future<bool> openUsageAccess() async =>
       await _methods.invokeMethod<bool>('openUsageAccess') ?? false;
 
-  /// Tempo di utilizzo di oggi; null senza l'accesso ai dati di utilizzo.
+  /// Today's screen time; null without usage access.
   Future<ScreenTime?> screenTimeToday() async {
     final m = await _methods.invokeMapMethod<String, Object?>(
       'screenTimeToday',
@@ -346,7 +346,7 @@ class LauncherBridge {
   }
   // endregion
 
-  // region Widget Android
+  // region Android widgets
   Future<List<WidgetProvider>> widgetProviders() async {
     final raw = await _methods.invokeListMethod<Map<Object?, Object?>>(
       'widgetProviders',
@@ -354,7 +354,7 @@ class LauncherBridge {
     return [for (final m in raw ?? const []) WidgetProvider.fromMap(m)];
   }
 
-  /// Avvia il flusso di sistema; restituisce il widget aggiunto o null.
+  /// Starts the system flow; returns the added widget or null.
   Future<PlacedWidget?> addWidget(WidgetProvider p) async {
     final m = await _methods.invokeMapMethod<String, Object?>('addWidget', {
       'provider': p.provider,
@@ -372,7 +372,7 @@ class LauncherBridge {
       _methods.invokeMethod<bool>('removeWidget', {'id': id});
   // endregion
 
-  // region Parcheggio
+  // region Parking
   Future<Parking?> parking() async {
     final m = await _methods.invokeMapMethod<String, Object?>('getParking');
     if (m == null) return null;
@@ -393,7 +393,7 @@ class LauncherBridge {
   Future<bool> hasBackgroundLocation() async =>
       await _methods.invokeMethod<bool>('hasBackgroundLocation') ?? false;
 
-  // Digital detox
+  // --- Digital detox ---
   Future<void> detoxSync(Map<String, Object?> config) =>
       _methods.invokeMethod<bool>('detoxSync', config);
 
@@ -403,7 +403,7 @@ class LauncherBridge {
   Future<void> detoxSetPin(String pin) =>
       _methods.invokeMethod<bool>('detoxSetPin', {'pin': pin});
 
-  /// 0 = giusto, -1 = sbagliato, altrimenti millisecondi di attesa.
+  /// 0 = correct, -1 = wrong, otherwise milliseconds to wait.
   Future<int> detoxCheckPin(String pin) async =>
       await _methods.invokeMethod<int>('detoxCheckPin', {'pin': pin}) ?? -1;
 
@@ -415,7 +415,7 @@ class LauncherBridge {
   Future<bool> openDetoxService() async =>
       await _methods.invokeMethod<bool>('openDetoxService') ?? false;
 
-  /// App di sistema delicate installate: (pacchetto, nome).
+  /// Installed sensitive system apps: (package, name).
   Future<List<(String, String)>> detoxSystemApps() async {
     final list = await _methods.invokeListMethod<Map<Object?, Object?>>(
       'detoxSystemApps',
@@ -426,8 +426,8 @@ class LauncherBridge {
     ];
   }
 
-  /// La posizione in background è stata negata e Android non la richiede
-  /// più: va concessa dalle impostazioni dell'app.
+  /// Background location was denied and Android won't ask again: it must be
+  /// granted from the app settings.
   Future<bool> backgroundLocationBlocked() async =>
       await _methods.invokeMethod<bool>('backgroundLocationBlocked') ?? false;
 
@@ -435,15 +435,15 @@ class LauncherBridge {
       await _methods.invokeMethod<bool>('requestBackgroundLocation') ?? false;
   // endregion
 
-  // region Luoghi
+  // region Places
   Future<bool> hasPreciseLocation() async =>
       await _methods.invokeMethod<bool>('hasPreciseLocation') ?? false;
 
   Future<bool> requestPreciseLocation() async =>
       await _methods.invokeMethod<bool>('requestPreciseLocation') ?? false;
 
-  /// Campione per i luoghi (posizione precisa, impronta Wi-Fi, ricarica),
-  /// o null senza permesso o senza dati.
+  /// Sample for places (precise location, Wi-Fi fingerprint, charging), or
+  /// null without permission or data.
   Future<LocationSample?> placeSample({bool withLocation = true}) async {
     final m = await _methods.invokeMapMethod<String, Object?>('placeSample', {
       'withLocation': withLocation,
@@ -460,14 +460,14 @@ class LauncherBridge {
   }
   // endregion
 
-  // region Posizione approssimativa e Bluetooth
+  // region Approximate location and Bluetooth
   Future<bool> hasLocation() async =>
       await _methods.invokeMethod<bool>('hasLocation') ?? false;
 
   Future<bool> requestLocation() async =>
       await _methods.invokeMethod<bool>('requestLocation') ?? false;
 
-  /// Posizione approssimativa (lat, lon), o null.
+  /// Approximate location (lat, lon), or null.
   Future<(double, double)?> coarseLocation() async {
     final m = await _methods.invokeMapMethod<String, Object?>('coarseLocation');
     if (m == null) return null;
@@ -481,7 +481,7 @@ class LauncherBridge {
       await _methods.invokeMethod<bool>('requestBluetooth') ?? false;
   // endregion
 
-  // region Contatti
+  // region Contacts
   Future<bool> hasContacts() async =>
       await _methods.invokeMethod<bool>('hasContacts') ?? false;
 
@@ -504,7 +504,7 @@ class LauncherBridge {
   Future<List<Contact>> searchContacts(String query) =>
       _contacts('searchContacts', {'query': query});
 
-  /// Apre il tastierino con il numero: la chiamata la avvia l'utente.
+  /// Opens the dialer with the number: the user starts the call.
   Future<bool> dial(String number) async =>
       await _methods.invokeMethod<bool>('dial', {'number': number}) ?? false;
 
@@ -520,7 +520,7 @@ class LauncherBridge {
   // endregion
 
   // region Media
-  /// Accesso ai media e brano corrente (null se non c'è nulla).
+  /// Media access and current track (null if nothing is playing).
   Future<(bool, MediaInfo?)> media({int artSizePx = 192}) async {
     final raw = await _methods.invokeMapMethod<String, Object?>('getMedia', {
       'artSize': artSizePx,
@@ -539,13 +539,13 @@ class LauncherBridge {
       await _methods.invokeMethod<bool>('openMediaAccess') ?? false;
   // endregion
 
-  /// Scarto dall'UTC del fuso [tz] adesso (ora legale inclusa).
+  /// Current UTC offset of time zone [tz] (including DST).
   Future<Duration> timeZoneOffset(String tz) async => Duration(
     milliseconds:
         await _methods.invokeMethod<int>('timeZoneOffset', {'tz': tz}) ?? 0,
   );
 
-  /// Prossima sveglia impostata (qualsiasi app sveglia), o null.
+  /// Next alarm set (by any alarm app), or null.
   Future<DateTime?> nextAlarm() async {
     final ms = await _methods.invokeMethod<int>('getNextAlarm');
     return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
@@ -554,7 +554,7 @@ class LauncherBridge {
   Future<bool> openAlarms() async =>
       await _methods.invokeMethod<bool>('openAlarms') ?? false;
 
-  /// Timer dell'orologio (o le sveglie, se l'orologio non li espone).
+  /// The clock app's timers (or alarms, if the clock doesn't expose them).
   Future<bool> openTimers() async =>
       await _methods.invokeMethod<bool>('openTimers') ?? false;
 

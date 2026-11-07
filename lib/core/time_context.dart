@@ -1,14 +1,14 @@
-/// Contesto temporale: fasce orarie e tipo di giorno
-/// (spec-motore-contesto §6.4 e §7.1).
+/// Time context: time slots and day type
+/// (spec-motore-contesto §6.4 and §7.1).
 library;
 
 enum Slot { wakeUp, morning, lunch, afternoon, evening, night }
 
 enum DayType { workday, holiday }
 
-/// Orari abituali dell'utente in minuti dalla mezzanotte.
-/// In v0.1 sono i valori predefiniti; in futuro arriveranno dagli
-/// episodi di sonno (mediana degli ultimi 14 giorni).
+/// The user's usual wake and sleep times, in minutes from midnight.
+/// In v0.1 these are the defaults; in the future they will come from sleep
+/// episodes (median of the last 14 days).
 class DailyRhythm {
   const DailyRhythm({this.wakeMinute = 7 * 60, this.sleepMinute = 23 * 60});
 
@@ -20,19 +20,19 @@ const _lunchStart = 12 * 60;
 const _lunchEnd = 14 * 60 + 30;
 const _eveningStart = 19 * 60;
 
-/// Fascia oraria per l'ora locale [t].
+/// Time slot for the local time [t].
 ///
-/// - risveglio: le prime 2 ore dopo il risveglio abituale
-/// - mattina: fino alle 12
-/// - pranzo: 12:00–14:30
-/// - pomeriggio: fino alle 19
-/// - sera: dalle 19 fino a 1 ora prima del sonno abituale
-/// - notte: il resto
+/// - wake-up: the first 2 hours after the usual wake time
+/// - morning: until 12:00
+/// - lunch: 12:00–14:30
+/// - afternoon: until 19:00
+/// - evening: from 19:00 until 1 hour before the usual sleep time
+/// - night: the rest
 Slot slotFor(DateTime t, {DailyRhythm rhythm = const DailyRhythm()}) {
   final m = t.hour * 60 + t.minute;
   final wake = rhythm.wakeMinute;
   final wakeEnd = wake + 120;
-  // La notte inizia 1 ora prima del sonno; può scavalcare la mezzanotte.
+  // Night starts 1 hour before sleep; it may wrap past midnight.
   final nightStart = (rhythm.sleepMinute - 60) % (24 * 60);
 
   if (m >= wake && m < wakeEnd) return Slot.wakeUp;
@@ -45,7 +45,7 @@ Slot slotFor(DateTime t, {DailyRhythm rhythm = const DailyRhythm()}) {
   return Slot.night;
 }
 
-/// Tipo di giorno: feriale, oppure festivo (sabato, domenica, festività).
+/// Day type: workday, or holiday (Saturday, Sunday, public holidays).
 DayType dayTypeFor(DateTime t, {String country = 'IT'}) {
   if (t.weekday == DateTime.saturday || t.weekday == DateTime.sunday) {
     return DayType.holiday;
@@ -55,33 +55,33 @@ DayType dayTypeFor(DateTime t, {String country = 'IT'}) {
       : DayType.workday;
 }
 
-/// Festività nazionali calcolate in locale. In v0.1 solo l'Italia.
+/// National public holidays computed locally. In v0.1 only Italy.
 bool isPublicHoliday(DateTime t, {String country = 'IT'}) {
   if (country != 'IT') return false;
   final d = DateTime(t.year, t.month, t.day);
   const fixed = <(int, int)>[
-    (1, 1), // Capodanno
-    (1, 6), // Epifania
-    (4, 25), // Liberazione
-    (5, 1), // Festa dei lavoratori
-    (6, 2), // Festa della Repubblica
-    (8, 15), // Ferragosto
-    (11, 1), // Ognissanti
-    (12, 8), // Immacolata
-    (12, 25), // Natale
-    (12, 26), // Santo Stefano
+    (1, 1), // New Year's Day
+    (1, 6), // Epiphany
+    (4, 25), // Liberation Day
+    (5, 1), // Labour Day
+    (6, 2), // Republic Day
+    (8, 15), // Ferragosto (Assumption)
+    (11, 1), // All Saints' Day
+    (12, 8), // Immaculate Conception
+    (12, 25), // Christmas
+    (12, 26), // St. Stephen's Day
   ];
   for (final (month, day) in fixed) {
     if (d.month == month && d.day == day) return true;
   }
-  // San Francesco d'Assisi, festività nazionale dal 2026.
+  // St. Francis of Assisi, a national holiday since 2026.
   if (d.year >= 2026 && d.month == 10 && d.day == 4) return true;
 
   final easterMonday = easterSunday(d.year).add(const Duration(days: 1));
   return d == easterMonday;
 }
 
-/// Domenica di Pasqua (algoritmo gregoriano anonimo, Meeus/Jones/Butcher).
+/// Easter Sunday (Anonymous Gregorian algorithm, Meeus/Jones/Butcher).
 DateTime easterSunday(int year) {
   final a = year % 19;
   final b = year ~/ 100;
@@ -100,10 +100,10 @@ DateTime easterSunday(int year) {
   return DateTime(year, month, day);
 }
 
-/// Feature discrete del contesto corrente usate dal predittore
-/// (spec-motore-contesto §7.1). In v0.2 sono valorizzate `slot`, `daytype`,
-/// `network` e `audio`; `place` e `motion` arriveranno con i luoghi (M1)
-/// e finché sono null vengono ignorate.
+/// Discrete features of the current context used by the predictor
+/// (spec-motore-contesto §7.1). In v0.2 `slot`, `daytype`, `network` and
+/// `audio` are populated; `place` and `motion` will come with places (M1)
+/// and are ignored while null.
 class ContextFeatures {
   const ContextFeatures({
     required this.slot,
@@ -133,15 +133,15 @@ class ContextFeatures {
   final Slot slot;
   final DayType dayType;
 
-  /// `wifi`, `mobile` o `offline`.
+  /// `wifi`, `mobile` or `offline`.
   final String? network;
   final String? place;
 
-  /// `speaker`, `headphones` o `bt`.
+  /// `speaker`, `headphones` or `bt`.
   final String? audio;
   final String? motion;
 
-  /// Valori per nome di feature, nel formato salvato in `launch_event`.
+  /// Values by feature name, in the format stored in `launch_event`.
   Map<String, String?> toMap() => {
     'slot': slot.name,
     'daytype': dayType.name,
@@ -151,8 +151,8 @@ class ContextFeatures {
     'motion': motion,
   };
 
-  /// Chiave che identifica il contesto: quando cambia, le Collections
-  /// possono riordinarsi (spec-viste-app §3.2).
+  /// Key identifying the context: when it changes, the Collections may
+  /// reorder (spec-viste-app §3.2).
   String get key =>
       '${slot.name}|${dayType.name}|${network ?? '-'}|${place ?? '-'}|'
       '${audio ?? '-'}|${motion ?? '-'}';

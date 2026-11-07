@@ -13,9 +13,9 @@ import android.os.Looper
 import java.io.ByteArrayOutputStream
 
 /**
- * Segue la musica in riproduzione (sessioni multimediali) e la controlla.
- * Funziona solo se l'utente ha concesso l'accesso alle notifiche a
- * [MediaListenerService]; di quell'accesso usa soltanto le sessioni media.
+ * Tracks the music being played (media sessions) and controls it.
+ * Works only if the user granted notification access to
+ * [MediaListenerService]; of that access, only media sessions are used.
  */
 class MediaWatcher(private val context: Context, private val onChange: () -> Unit) {
 
@@ -37,11 +37,11 @@ class MediaWatcher(private val context: Context, private val onChange: () -> Uni
         onChange()
     }
 
-    /** L'utente ha concesso l'accesso alle notifiche a libreGLIDE. */
+    /** Whether the user granted notification access to libreGLIDE. */
     fun hasAccess(): Boolean =
         context.getSystemService(NotificationManager::class.java).isNotificationListenerAccessGranted(component)
 
-    /** Avvia l'ascolto se l'accesso c'è e non è già attivo. */
+    /** Starts listening if access is granted and it isn't already running. */
     fun startIfPossible() {
         if (started || !hasAccess()) return
         try {
@@ -67,15 +67,15 @@ class MediaWatcher(private val context: Context, private val onChange: () -> Uni
         controllers.forEach { it.registerCallback(controllerCallback, main) }
     }
 
-    /** La sessione da mostrare: quella in riproduzione, altrimenti la prima con dei metadati. */
+    /** The session to show: the playing one, otherwise the first with metadata. */
     private fun current(): MediaController? =
         controllers.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING }
             ?: controllers.firstOrNull { it.metadata != null }
 
-    /** Stato attuale, o null se non c'è nulla da mostrare. */
+    /** Current state, or null if there is nothing to show. */
     fun snapshot(artSizePx: Int): Map<String, Any?>? {
         val data = snapshotOrNull(artSizePx)
-        // Niente da mostrare: alla prossima sessione la copertina va inviata.
+        // Nothing to show: the artwork must be sent again for the next session.
         if (data == null) lastArtId = null
         return data
     }
@@ -93,8 +93,8 @@ class MediaWatcher(private val context: Context, private val onChange: () -> Uni
         val art = metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
             ?: metadata.getBitmap(MediaMetadata.METADATA_KEY_ART)
             ?: metadata.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)
-        // La copertina si ricomprime e si invia solo se è cambiata: gli
-        // eventi del player sono frequenti, la copertina quasi mai.
+        // The artwork is re-encoded and sent only when it changes: player
+        // events are frequent, artwork changes are rare.
         val artId = art?.let { System.identityHashCode(it) * 31 + it.generationId }
         val artSame = artId != null && artId == lastArtId
         if (!artSame) lastArtId = artId
@@ -111,7 +111,7 @@ class MediaWatcher(private val context: Context, private val onChange: () -> Uni
         )
     }
 
-    /** Comandi: playPause, next, previous. */
+    /** Commands: playPause, next, previous. */
     fun command(name: String): Boolean {
         val controller = current() ?: return false
         val controls = controller.transportControls

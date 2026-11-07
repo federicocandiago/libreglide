@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Logo di libreGLIDE: un aliante che plana davanti al sole (stesso disegno
-/// di docs/icon/libreglide-icon.svg, nelle coordinate 108×108 dell'icona).
+/// libreGLIDE logo: a glider soaring in front of the sun (same drawing as
+/// docs/icon/libreglide-icon.svg, in the icon's 108×108 coordinates).
 class LibreGlideLogo extends StatelessWidget {
   const LibreGlideLogo({
     super.key,
@@ -13,14 +13,14 @@ class LibreGlideLogo extends StatelessWidget {
 
   final double size;
 
-  /// Bianco e nero: sole pieno nel colore del testo, aliante staccato da un
-  /// bordo del colore dello sfondo.
+  /// Black and white: solid sun in the text color, glider separated from it
+  /// by an outline in the background color.
   final bool monochrome;
 
-  /// Con il fondo arrotondato dell'icona.
+  /// Draws the icon's rounded background.
   final bool withBackground;
 
-  /// Colore su cui sta il logo (per il bordo del bianco e nero).
+  /// Color the logo sits on (used for the monochrome outline).
   final Color? background;
 
   @override
@@ -44,7 +44,7 @@ class LibreGlideLogo extends StatelessWidget {
   }
 }
 
-/// Percorsi dell'aliante (ala, timone, deriva, fusoliera) e del tettuccio.
+/// Glider paths (wing, elevator, fin, fuselage) and canopy.
 const _glider = [
   'M3,69 C30,62 62,53.2 104.5,38.6 C105,39.3 104.4,40 103.4,40.4 C72,52.6 44,60.2 3.6,70.4 C2.7,70.5 2.5,69.3 3,69 Z',
   'M31.5,54 C38,52.4 45,50.8 50.2,49.6 C50.5,50.2 50.1,50.6 49.4,50.7 C44,51.9 38,53.3 31.8,54.9 C31.2,55 31.1,54.2 31.5,54 Z',
@@ -54,7 +54,7 @@ const _glider = [
 const _canopy =
     'M63.2,53.7 C64.8,52.4 69,51.9 71.8,52.3 C70.2,53.2 66,53.9 63.2,53.7 Z';
 
-/// Interpreta i percorsi SVG usati qui (solo M, L, C, Z assoluti).
+/// Parses the SVG paths used here (absolute M, L, C, Z only).
 Path _parse(String d) {
   final path = Path();
   final tokens = [
@@ -112,11 +112,11 @@ class _LogoPainter extends CustomPainter {
         ),
         Paint()..color = paper,
       );
-      // L'icona occupa la zona sicura (72 su 108).
+      // The icon fills the safe zone (72 of 108).
       canvas.scale(size.width / 72);
       canvas.translate(-18, -18);
     } else {
-      // Senza fondo si mostra tutto l'aliante, ali comprese.
+      // Without background the whole glider is shown, wings included.
       canvas.scale(size.width / 104);
       canvas.translate(-2, -2);
     }

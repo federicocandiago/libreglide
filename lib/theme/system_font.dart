@@ -1,9 +1,9 @@
-/// Carattere di sistema dei Pixel (Google Sans), caricato dal telefono.
+/// Pixel system font (Google Sans), loaded from the phone.
 ///
-/// libreGLIDE non include file di caratteri: se il telefono ha Google Sans
-/// (i Pixel con Android 12+ lo usano per l'interfaccia di sistema), lo
-/// carica dai file di sistema così il testo appare come quello di Android 17.
-/// Altrimenti resta il carattere predefinito (Roboto).
+/// libreGLIDE bundles no font files: if the phone has Google Sans (Pixels on
+/// Android 12+ use it for the system UI), it is loaded from the system files
+/// so text looks like Android 17's. Otherwise the default font (Roboto) is
+/// kept.
 library;
 
 import 'dart:io';
@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 
 const String systemFontFamily = 'LGSans';
 
-/// Carica il carattere e restituisce il nome della famiglia, o null.
+/// Loads the font and returns the family name, or null.
 Future<String?> loadSystemFont() async {
   if (!Platform.isAndroid) return null;
   try {
@@ -28,8 +28,8 @@ Future<String?> loadSystemFont() async {
         name(f).toLowerCase().endsWith('.ttf') &&
         !name(f).toLowerCase().contains('italic') &&
         !name(f).toLowerCase().contains('clock');
-    // Preferenza: Google Sans Flex (il carattere di Android 16/17, variabile),
-    // poi Google Sans Text e Google Sans (statici o variabili).
+    // Preference: Google Sans Flex (Android 16/17's variable font), then
+    // Google Sans Text and Google Sans (static or variable).
     for (final prefix in [
       'GoogleSansFlex-',
       'GoogleSansText-',
@@ -45,12 +45,12 @@ Future<String?> loadSystemFont() async {
       }
       await loader.load();
       debugPrint(
-        'libreglide: carattere di sistema ${set.map(name).join(', ')}',
+        'libreglide: system font ${set.map(name).join(', ')}',
       );
       return systemFontFamily;
     }
   } catch (e) {
-    debugPrint('libreglide: carattere di sistema non disponibile: $e');
+    debugPrint('libreglide: system font unavailable: $e');
   }
   return null;
 }

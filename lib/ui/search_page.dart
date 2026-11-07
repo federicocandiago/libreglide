@@ -11,7 +11,7 @@ import 'scope.dart';
 import 'widgets/app_actions.dart';
 import 'widgets/app_icon.dart';
 
-/// Apre la ricerca globale scendendo dall'alto, con la tastiera già pronta.
+/// Opens global search, sliding down from the top, with the keyboard ready.
 Future<void> showGlobalSearch(BuildContext context) {
   return Navigator.of(context).push(
     PageRouteBuilder<void>(
@@ -39,9 +39,9 @@ Future<void> showGlobalSearch(BuildContext context) {
   );
 }
 
-/// Ricerca globale: barra in alto (già attiva), poi le app consigliate per
-/// questo momento, poi i risultati come elenco; senza testo si possono
-/// sfogliare le raccolte.
+/// Global search: search bar at the top (already focused), then the apps
+/// suggested for this moment, then the results as a list; with no text the
+/// collections can be browsed.
 class GlobalSearchPage extends StatefulWidget {
   const GlobalSearchPage({super.key});
 
@@ -57,8 +57,8 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   Timer? _autoLaunch;
   bool _launching = false;
 
-  /// Pausa prima dell'avvio automatico: evita di aprire un'app mentre si
-  /// sta ancora scrivendo.
+  /// Delay before auto-launch: avoids opening an app while the user is still
+  /// typing.
   static const _autoLaunchDelay = Duration(milliseconds: 350);
 
   @override
@@ -77,7 +77,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   String? _hitsQuery;
   List<SearchHit> _hitsCache = const [];
 
-  /// Risultati per [query], calcolati una volta per testo.
+  /// Results for [query], computed once per text.
   List<SearchHit> _hits(String query) {
     if (query == _hitsQuery) return _hitsCache;
     _hitsQuery = query;
@@ -124,8 +124,8 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
       app,
       bounds: tileContext == null ? null : boundsOf(tileContext),
     );
-    // Chiude la ricerca dopo l'animazione di apertura: tornando al launcher
-    // si ritrova la schermata di partenza.
+    // Close search after the opening animation: returning to the launcher
+    // shows the starting screen.
     Future<void>.delayed(const Duration(milliseconds: 350), () {
       if (mounted) navigator.pop();
     });
@@ -235,7 +235,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   }
 }
 
-/// Icona con nome, per le app consigliate.
+/// Icon with label, for the suggested apps.
 class _AppCell extends StatelessWidget {
   const _AppCell({required this.app, required this.onLaunch});
 
@@ -268,7 +268,7 @@ class _AppCell extends StatelessWidget {
   );
 }
 
-/// Senza testo: le raccolte come chip da sfogliare.
+/// With no text: the collections as browsable chips.
 class _BrowseCollections extends StatelessWidget {
   const _BrowseCollections({required this.onPick});
 

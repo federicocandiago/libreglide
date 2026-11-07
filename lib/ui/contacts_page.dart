@@ -7,7 +7,7 @@ import 'glide_style.dart';
 import 'labels.dart';
 import 'scope.dart';
 
-/// Apre il pannello contatti salendo dal basso.
+/// Opens the contacts panel, sliding up from the bottom.
 Future<void> showContactsPanel(BuildContext context) {
   return Navigator.of(context).push(
     PageRouteBuilder<void>(
@@ -32,7 +32,7 @@ Future<void> showContactsPanel(BuildContext context) {
   );
 }
 
-/// Contatti: ricerca in alto, poi preferiti e più usati.
+/// Contacts: search at the top, then favorites and most used.
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
 
@@ -53,7 +53,7 @@ class _ContactsPageState extends State<ContactsPage> {
     if (_resumeSub == null) {
       final controller = AppScope.of(context).controller;
       controller.contacts.load();
-      // Dopo il dialogo dei permessi si torna qui: si ricarica.
+      // After the permission dialog the user returns here: reload.
       _resumeSub = controller.bridge.resumed.listen(
         (_) => controller.contacts.load(),
       );
@@ -99,7 +99,7 @@ class _ContactsPageState extends State<ContactsPage> {
       backgroundColor: c.page,
       body: SafeArea(
         child: GestureDetector(
-          // Swipe verso il basso per chiudere.
+          // Swipe down to close.
           onVerticalDragEnd: (d) {
             if ((d.primaryVelocity ?? 0) > 600) Navigator.of(context).pop();
           },
@@ -178,7 +178,7 @@ class _ContactsPageState extends State<ContactsPage> {
                               padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
                               child: Wrap(
                                 children: [
-                                  // Una riga sola: i primi 4.
+                                  // A single row: the first 4.
                                   for (final contact in contacts.favorites.take(
                                     4,
                                   ))
@@ -302,7 +302,7 @@ class _ContactTile extends StatelessWidget {
   );
 }
 
-/// Foto del contatto o iniziali su un colore tonale stabile per nome.
+/// Contact photo, or initials on a tonal color that is stable per name.
 class ContactAvatar extends StatelessWidget {
   const ContactAvatar({super.key, required this.contact, this.radius = 24});
 
@@ -340,9 +340,9 @@ class ContactAvatar extends StatelessWidget {
   }
 }
 
-/// Tocco su un contatto: subito il compositore con il suo numero (senza
-/// avviare la chiamata), o la scheda se non ha un numero. Poi il pannello
-/// si chiude.
+/// Tap on a contact: opens the dialer with their number right away (without
+/// starting the call), or the contact card if there is no number. Then the
+/// panel closes.
 Future<void> _quickAction(BuildContext context, Contact contact) async {
   final contacts = AppScope.of(context).controller.contacts;
   final navigator = Navigator.of(context);
@@ -355,7 +355,7 @@ Future<void> _quickAction(BuildContext context, Contact contact) async {
   });
 }
 
-/// Pressione lunga: chiama, messaggio, scheda.
+/// Long press: call, message, contact card.
 Future<void> _showActions(BuildContext context, Contact contact) {
   final contacts = AppScope.of(context).controller.contacts;
   final l = context.l10n;
@@ -367,8 +367,8 @@ Future<void> _showActions(BuildContext context, Contact contact) {
         final navigator = Navigator.of(context);
         Navigator.pop(sheetContext);
         action(contact);
-        // Chiude anche il pannello: tornando al launcher si ritrova la
-        // schermata di partenza.
+        // Close the panel too: returning to the launcher shows the starting
+        // screen.
         Future<void>.delayed(const Duration(milliseconds: 350), () {
           if (navigator.canPop()) navigator.pop();
         });

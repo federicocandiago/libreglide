@@ -27,11 +27,11 @@ import 'settings/settings_page.dart';
 import 'settings/space_cards_page.dart';
 import 'space_page.dart';
 
-/// Pagine, nell'ordine di Glide: Space ← Home (ora) → Collections → A-Z.
+/// Pages, in Glide's order: Space ← Home (time) → Collections → A-Z.
 enum LauncherTab { space, home, collections, allApps }
 
-/// Struttura del launcher: barra delle schede in alto, cassetto degli Space
-/// a sinistra, pagine scorrevoli.
+/// Launcher layout: tab bar at the top, Spaces drawer on the left, swipeable
+/// pages.
 class LauncherShell extends StatefulWidget {
   const LauncherShell({super.key});
 
@@ -43,11 +43,11 @@ class _LauncherShellState extends State<LauncherShell> {
   final _pages = PageController(initialPage: LauncherTab.home.index);
   final _scaffold = GlobalKey<ScaffoldState>();
 
-  /// Incrementato a ogni "torna a casa": le pagine chiudono le card
-  /// espanse e svuotano la ricerca.
+  /// Incremented on every "go home": pages collapse expanded cards and clear
+  /// the search.
   final ValueNotifier<int> _homeSignal = ValueNotifier(0);
 
-  /// Per ogni pagina: il contenuto è scorso (la barra prende un velo).
+  /// Per page: whether the content is scrolled (the bar gets a tint).
   final List<ValueNotifier<bool>> _scrolled = List.generate(
     LauncherTab.values.length,
     (_) => ValueNotifier(false),
@@ -62,7 +62,7 @@ class _LauncherShellState extends State<LauncherShell> {
   void initState() {
     super.initState();
     _pages.addListener(() => _page.value = _pages.page ?? _page.value);
-    // Primo avvio: presentazione in modale sopra la Home.
+    // First run: onboarding as a modal over Home.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !AppScope.of(context).settings.onboardingDone) {
         showOnboarding(context, dismissible: false);
@@ -88,13 +88,14 @@ class _LauncherShellState extends State<LauncherShell> {
     }
   }
 
-  // region Vetro smerigliato
+  // --- Frosted glass ---
+
   Listenable? _glassListenable;
   bool _glassOn = false;
   double _blur = -1;
 
-  /// Sfocatura di sistema solo lontano dalla Home e solo se non c'è la foto
-  /// contestuale (che ha già la sua versione sfocata dietro le pagine).
+  /// System blur only away from Home, and only without the contextual photo
+  /// (which already has its own blurred version behind the pages).
   void _syncGlass() {
     final scope = AppScope.of(context);
     final bridge = scope.controller.bridge;
@@ -111,7 +112,6 @@ class _LauncherShellState extends State<LauncherShell> {
       bridge.setWindowBlur(target);
     }
   }
-  // endregion
 
   @override
   void dispose() {
@@ -135,7 +135,7 @@ class _LauncherShellState extends State<LauncherShell> {
     goTo(LauncherTab.home);
   }
 
-  /// Comando di sviluppo: apre una schermata per nome.
+  /// Development command: opens a screen by name.
   void _open(String target) {
     FocusManager.instance.primaryFocus?.unfocus();
     Navigator.of(context).popUntil((r) => r.isFirst);
@@ -185,7 +185,7 @@ class _LauncherShellState extends State<LauncherShell> {
             .firstOrNull;
         if (kind != null) push(SpaceCardsPage(kind: kind));
       case final String t when t.startsWith('space:'):
-        // Come scegliere uno Space dal cassetto ("auto" = automatico).
+        // Like picking a Space from the drawer ("auto" = automatic).
         final name = t.substring(6);
         AppScope.of(context).controller.chooseSpace(
           SpaceKind.values.where((k) => k.name == name).firstOrNull,
@@ -216,7 +216,7 @@ class _LauncherShellState extends State<LauncherShell> {
       case 'detox:lock':
         AppScope.of(context).controller.bridge.detoxPreview();
       case 'detox:apps':
-        // Con il detox acceso si passa comunque dal PIN.
+        // With detox on, still go through the PIN.
         AppScope.of(context).settings.detoxEnabled
             ? openDetox(context)
             : push(const DetoxAppsPage());
@@ -323,7 +323,7 @@ class _LauncherShellState extends State<LauncherShell> {
   }
 }
 
-/// Barra delle schede: strisce (cassetto), Space, ora, Collections, A-Z.
+/// Tab bar: stripes (drawer), Space, time, Collections, A-Z.
 class _TabBar extends StatelessWidget {
   const _TabBar({
     required this.page,
@@ -345,7 +345,7 @@ class _TabBar extends StatelessWidget {
     final top = MediaQuery.paddingOf(context).top;
 
     return GestureDetector(
-      // Swipe verso il basso sulla barra: come sulla Home.
+      // Swipe down on the bar: same as on Home.
       onVerticalDragEnd: (d) {
         if ((d.primaryVelocity ?? 0) > 300) {
           runGesture(context, AppScope.of(context).settings.swipeDown);
@@ -384,8 +384,8 @@ class _TabBar extends StatelessWidget {
                                 listenable: controller,
                                 builder: (context, _) {
                                   final kind = controller.currentSpace;
-                                  // Il cambio di Space si nota: l'icona
-                                  // nuova entra ruotando e ingrandendosi.
+                                  // Make the Space change noticeable: the
+                                  // new icon rotates and scales in.
                                   return AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 450),
                                     switchInCurve: Curves.easeOutBack,
@@ -450,7 +450,7 @@ class _TabBar extends StatelessWidget {
                             ),
                           ],
                         ),
-                        // Indicatore sotto la scheda attiva, segue lo scorrimento.
+                        // Indicator under the active tab, follows the scroll.
                         ValueListenableBuilder<double>(
                           valueListenable: page,
                           builder: (context, p, _) => Positioned(
@@ -479,7 +479,7 @@ class _TabBar extends StatelessWidget {
   }
 }
 
-/// Colora d'accento la scheda attiva, sfumando durante lo scorrimento.
+/// Tints the active tab with the accent color, blending while scrolling.
 class _Tinted extends StatelessWidget {
   const _Tinted({
     required this.page,
@@ -525,7 +525,7 @@ class _Tab extends StatelessWidget {
   );
 }
 
-/// Le tre strisce colorate che aprono il cassetto degli Space.
+/// The three colored stripes that open the Spaces drawer.
 class _SpaceStripes extends StatelessWidget {
   const _SpaceStripes();
 
@@ -543,8 +543,8 @@ class _SpaceStripes extends StatelessWidget {
       children: [
         for (final (i, color) in colors.indexed)
           Container(
-            // Strisce sottili e scalate, colori attenuati: si notano senza
-            // rubare l'occhio.
+            // Thin, staggered stripes with muted colors: noticeable without
+            // drawing the eye.
             width: 12.0 - i * 2,
             height: 2,
             margin: const EdgeInsets.symmetric(vertical: 1.5),
@@ -558,7 +558,7 @@ class _SpaceStripes extends StatelessWidget {
   }
 }
 
-/// Ora nella scheda centrale, aggiornata allo scoccare del minuto.
+/// Time in the central tab, updated on the minute.
 class _TabClock extends StatefulWidget {
   const _TabClock({required this.color});
 
@@ -617,7 +617,7 @@ class _TabClockState extends State<_TabClock> {
   }
 }
 
-/// Cassetto degli Space: scuro, voci con icona e nome colorati.
+/// Spaces drawer: dark, entries with colored icon and name.
 class SpacesDrawer extends StatelessWidget {
   const SpacesDrawer({
     super.key,
@@ -625,7 +625,7 @@ class SpacesDrawer extends StatelessWidget {
     required this.onSettings,
   });
 
-  /// Space scelto; null = automatico (segue il contesto).
+  /// Chosen Space; null = automatic (follows the context).
   final ValueChanged<SpaceKind?> onSelect;
   final VoidCallback onSettings;
 
@@ -637,8 +637,8 @@ class SpacesDrawer extends StatelessWidget {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
 
-    /// Riga del cassetto: icona in un cerchio del colore dello Space, nome,
-    /// selezione a pillola tinta (Android 17), "ora" sullo Space del contesto.
+    // Drawer row: icon in a circle of the Space's color, name, tinted pill
+    // selection (Android 17), "now" badge on the context Space.
     Widget row({
       required IconData icon,
       required Color color,
@@ -829,8 +829,8 @@ class SpacesDrawer extends StatelessWidget {
   }
 }
 
-/// Pagine in vetro smerigliato (se attivo): sotto il contesto [Glass],
-/// che rende semitrasparenti fondi e card.
+/// Frosted-glass pages (if enabled): placed under the [Glass] context, which
+/// makes backgrounds and cards translucent.
 class _GlassLayer extends StatelessWidget {
   const _GlassLayer({required this.child});
 
@@ -859,9 +859,9 @@ int _glassLevel(AppScope scope) =>
     ? 1
     : 2;
 
-/// Con il vetro e la foto contestuale, la versione sfocata della foto sta
-/// dietro tutto (barra compresa). Si sfoca gratis: decodificata a 32 px e
-/// ingrandita.
+/// With glass and the contextual photo, the blurred version of the photo sits
+/// behind everything (bar included). The blur comes for free: decoded at
+/// 32 px and upscaled.
 class _GlassPhoto extends StatelessWidget {
   const _GlassPhoto({required this.child});
 
@@ -898,7 +898,7 @@ class _GlassPhoto extends StatelessWidget {
   }
 }
 
-/// Fondo di una pagina, letto dentro il vetro (se attivo).
+/// Page background, resolved inside the glass context (if enabled).
 class _PageBackground extends StatelessWidget {
   const _PageBackground({required this.child, this.card = false});
 
@@ -912,7 +912,7 @@ class _PageBackground extends StatelessWidget {
   }
 }
 
-/// Segnala se la pagina è scorsa in verticale (per il velo della barra).
+/// Reports whether the page is scrolled vertically (for the bar tint).
 class _ScrollWatch extends StatelessWidget {
   const _ScrollWatch({required this.scrolled, required this.child});
 
@@ -932,10 +932,9 @@ class _ScrollWatch extends StatelessWidget {
       );
 }
 
-/// Fondo della barra delle schede. Piena sulla Home; con il vetro sfuma
-/// verso il vetro mentre si scorre verso le altre pagine, seguendo il dito.
-/// Quando la pagina sotto è scorsa prende un velo del colore d'accento,
-/// come le barre di Android 17.
+/// Tab bar background. Opaque on Home; with glass it fades to glass while
+/// swiping towards the other pages, following the finger. When the page below
+/// is scrolled it takes an accent-colored tint, like Android 17's bars.
 class _BarSurface extends StatelessWidget {
   const _BarSurface({
     required this.page,
@@ -987,9 +986,9 @@ class _BarSurface extends StatelessWidget {
   }
 }
 
-/// Angoli in alto della finestra sullo sfondo della Home, sotto la barra:
-/// stanno fermi con la barra e sfumano lasciando la Home (se scorressero con
-/// la pagina si vedrebbero spicchi muoversi sotto una barra immobile).
+/// Top corners of the window over the Home wallpaper, below the bar: they
+/// stay fixed with the bar and fade out when leaving Home (if they scrolled
+/// with the page, corner wedges would be seen moving under a fixed bar).
 class _HomeFrame extends StatelessWidget {
   const _HomeFrame({required this.page, required this.child});
 

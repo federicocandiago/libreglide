@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Un aliante che plana davanti al sole. Stesso disegno di
+<!-- A glider soaring in front of the sun. Same artwork as
      docs/icon/libreglide-icon.svg. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
@@ -20,7 +20,7 @@
             </gradient>
         </aapt:attr>
     </path>
-    <!-- Bordo bianco che stacca l'aliante dal sole. -->
+    <!-- White outline that separates the glider from the sun. -->
     <path
         android:fillColor="#FFFFFFFF"
         android:pathData="M3,69 C30,62 62,53.2 104.5,38.6 C105,39.3 104.4,40 103.4,40.4 C72,52.6 44,60.2 3.6,70.4 C2.7,70.5 2.5,69.3 3,69 Z"

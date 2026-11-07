@@ -27,9 +27,10 @@ import android.window.OnBackInvokedDispatcher
 import java.util.Locale
 
 /**
- * Schermata di blocco di Digital detox: nera, a tutto schermo, semplice.
- * Ombrellone e sole, "App bloccata", il PIN se lo sblocco è permesso e
- * "Torna alla Home". È nativa per comparire subito, senza avviare Flutter.
+ * Digital detox lock screen: black, full screen, simple.
+ * Umbrella and sun, "App blocked", the PIN field if unlocking is allowed, and
+ * "Back to Home". It is native so it appears instantly, without starting
+ * Flutter.
  */
 class DetoxLockActivity : Activity() {
 
@@ -66,12 +67,12 @@ class DetoxLockActivity : Activity() {
         bind(intent)
     }
 
-    @Deprecated("Solo per Android 12: dal 13 c'è OnBackInvokedDispatcher.")
+    @Deprecated("Android 12 only: from 13 on, OnBackInvokedDispatcher is used.")
     override fun onBackPressed() = goHome()
 
     override fun onStop() {
         super.onStop()
-        // Lasciata in qualunque modo: non resta appesa in background.
+        // However it was left, don't keep it lingering in the background.
         if (!isChangingConfigurations) finish()
     }
 
@@ -106,8 +107,8 @@ class DetoxLockActivity : Activity() {
         if (pin.isEmpty()) return
         val pkg = lockedPackage ?: return
         unlockButton.isEnabled = false
-        // L'hash del PIN richiede qualche decina di millisecondi: fuori dal
-        // thread principale.
+        // Hashing the PIN takes a few tens of milliseconds: keep it off the
+        // main thread.
         Thread {
             val result = Detox.checkPin(this, pin)
             runOnUiThread {
@@ -124,7 +125,7 @@ class DetoxLockActivity : Activity() {
                                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED),
                                 )
                             } catch (e: Exception) {
-                                // L'app non c'è più: si chiude e basta.
+                                // The app is gone: just close.
                             }
                         }
                         finish()
@@ -150,12 +151,12 @@ class DetoxLockActivity : Activity() {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             )
         } catch (e: Exception) {
-            // Nessuna Home: si chiude soltanto.
+            // No Home app: just close.
         }
         finish()
     }
 
-    // region Interfaccia
+    // region UI
     private fun buildUi(): View {
         val muted = Color.argb(0xB3, 0xFF, 0xFF, 0xFF)
         val column = LinearLayout(this).apply {

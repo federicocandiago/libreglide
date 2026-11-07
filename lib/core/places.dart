@@ -1,15 +1,15 @@
-/// Riconoscimento dei luoghi: casa, lavoro/scuola e luoghi frequenti
-/// (spec-motore-contesto §6), tutto in locale e senza nomi da scrivere.
+/// Place recognition: home, work/school and frequent places
+/// (spec-motore-contesto §6), all local and with no names to type.
 ///
-/// - I campioni (posizione precisa e impronta del Wi-Fi) vengono raggruppati
-///   in luoghi; il Wi-Fi riconosciuto vale più del GPS, soprattutto al chiuso.
-/// - Casa: il luogo dove dormi (il buco più lungo tra un campione e l'altro
-///   in ogni giornata, se inizia e finisce nello stesso luogo), con ricarica
-///   notturna e primo/ultimo uso del giorno.
-/// - Lavoro/scuola: il luogo dei giorni feriali, assente nel weekend, con
-///   orari di arrivo regolari.
-/// - I campioni oltre 100 km da casa (viaggi) non contano.
-/// - Le correzioni dell'utente non vengono mai sovrascritte.
+/// - Samples (precise location and Wi-Fi fingerprint) are clustered into
+///   places; a recognized Wi-Fi counts more than GPS, especially indoors.
+/// - Home: where you sleep (the longest gap between samples each day, if it
+///   starts and ends in the same place), plus overnight charging and the
+///   first/last use of the day.
+/// - Work/school: the workday place, absent on weekends, with regular
+///   arrival times.
+/// - Samples more than 100 km from home (trips) don't count.
+/// - User corrections are never overwritten.
 library;
 
 import 'dart:math' as math;
@@ -39,10 +39,10 @@ class LocationSample {
   final double? lat;
   final double? lon;
 
-  /// Precisione in metri.
+  /// Accuracy in meters.
   final double? accuracy;
 
-  /// Impronta (hash) della rete Wi-Fi, mai il nome.
+  /// Fingerprint (hash) of the Wi-Fi network, never its name.
   final String? wifi;
   final bool charging;
 
@@ -102,23 +102,23 @@ class Place {
   double lat;
   double lon;
 
-  /// Somma dei pesi (1/precisione²) dei campioni: per la media del centro.
+  /// Sum of the sample weights (1/accuracy²): for the center's average.
   double weight;
   DateTime firstSeen;
   DateTime lastSeen;
   PlaceRole role;
   double roleConfidence;
 
-  /// Ruolo scelto dall'utente: vince sempre sull'inferenza.
+  /// Role chosen by the user: always wins over inference.
   PlaceRole? userRole;
 
-  /// Ruoli che l'utente ha escluso ("Questa non è casa mia").
+  /// Roles the user ruled out ("This isn't my home").
   final Set<PlaceRole> blocked;
 
-  /// Impronte Wi-Fi viste qui con una buona posizione, e quante volte.
+  /// Wi-Fi fingerprints seen here with a good fix, and how many times.
   final Map<String, int> wifiHits;
 
-  /// Il ruolo effettivo.
+  /// The effective role.
   PlaceRole get effectiveRole => userRole ?? role;
 
   bool trustsWifi(String hash) => (wifiHits[hash] ?? 0) >= trustedWifiHits;
@@ -149,7 +149,7 @@ const Duration roleWindow = Duration(days: 28);
 const double roleThreshold = 0.6;
 const double roleHysteresis = 0.15;
 
-/// Distanza in metri (formula dell'emisenoverso).
+/// Distance in meters (haversine formula).
 double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
   const r = 6371000.0;
   double rad(double d) => d * math.pi / 180;
@@ -165,7 +165,7 @@ double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
 
 double _sigmoid(double x) => 1 / (1 + math.exp(-x));
 
-/// Punteggi di un luogo, per la diagnostica e i test.
+/// Scores of a place, for diagnostics and tests.
 class PlaceScores {
   const PlaceScores(this.homeConfidence, this.workConfidence, this.days);
   final double homeConfidence;
@@ -185,7 +185,7 @@ class PlaceEngine {
   final List<Place> places;
   late int _nextId;
 
-  /// Punteggi dell'ultima inferenza, per luogo.
+  /// Scores from the last inference, per place.
   final Map<int, PlaceScores> scores = {};
 
   List<Map<String, dynamic>> toJson() => [for (final p in places) p.toJson()];
@@ -205,12 +205,12 @@ class PlaceEngine {
     return null;
   }
 
-  /// Assegna un campione a un luogo (creandolo se serve) e restituisce
-  /// l'id, oppure null se la posizione non è abbastanza buona.
+  /// Assigns a sample to a place (creating it if needed) and returns its id,
+  /// or null if the location isn't good enough.
   int? addSample(LocationSample s) {
-    // 1. Wi-Fi conosciuto: vale anche senza posizione, ma se la posizione è
-    // buona e dice che sei lontano (stesso nome di rete altrove, catene,
-    // eduroam) vince la posizione.
+    // 1. Known Wi-Fi: counts even without a location, but if the location
+    // is good and says you are far away (same network name elsewhere,
+    // chains, eduroam), the location wins.
     if (s.wifi != null) {
       for (final p in places) {
         if (!p.trustsWifi(s.wifi!)) continue;
@@ -224,7 +224,7 @@ class PlaceEngine {
     }
     if (!s.hasGoodFix) return null;
 
-    // 2. Luogo più vicino entro il raggio (più la precisione).
+    // 2. Nearest place within the radius (plus the accuracy).
     Place? best;
     var bestDistance = double.infinity;
     for (final p in places) {
@@ -236,8 +236,8 @@ class PlaceEngine {
     }
     final w = 1 / math.pow(math.max(s.accuracy ?? 50, 10), 2);
     if (best != null && bestDistance <= placeRadius + (s.accuracy ?? 0)) {
-      // Centro come media pesata, con un tetto al peso per seguire i
-      // piccoli spostamenti.
+      // Center as a weighted average, with a cap on the weight so it
+      // follows small shifts.
       final total = math.min(best.weight, 50 * w) + w;
       best.lat = (best.lat * (total - w) + s.lat! * w) / total;
       best.lon = (best.lon * (total - w) + s.lon! * w) / total;
@@ -254,15 +254,15 @@ class PlaceEngine {
       );
       places.add(best);
     }
-    // 3. Il Wi-Fi visto con una buona posizione diventa un'impronta del
-    // luogo.
+    // 3. A Wi-Fi seen with a good fix becomes a fingerprint of the
+    // place.
     if (s.wifi != null) {
       best.wifiHits[s.wifi!] = (best.wifiHits[s.wifi!] ?? 0) + 1;
     }
     return best.id;
   }
 
-  /// Unisce i luoghi troppo vicini e toglie quelli abbandonati da tempo.
+  /// Merges places that are too close and removes long-abandoned ones.
   void maintain(DateTime now) {
     for (var i = 0; i < places.length; i++) {
       for (var j = places.length - 1; j > i; j--) {
@@ -286,8 +286,8 @@ class PlaceEngine {
     );
   }
 
-  /// Ricalcola i ruoli dai campioni degli ultimi 28 giorni.
-  /// [placeOf] dà il luogo di ogni campione (come assegnato da addSample).
+  /// Recomputes the roles from the samples of the last 28 days.
+  /// [placeOf] gives the place of each sample (as assigned by addSample).
   void inferRoles(
     List<LocationSample> samples,
     List<int?> placeOf,
@@ -297,7 +297,7 @@ class PlaceEngine {
     final start = now.subtract(roleWindow);
     final home = withRole(PlaceRole.home);
 
-    // Campioni utili: nella finestra, con un luogo, non in viaggio.
+    // Useful samples: in the window, with a place, not while travelling.
     final items = <(LocationSample, int)>[];
     for (var i = 0; i < samples.length; i++) {
       final s = samples[i];
@@ -316,7 +316,7 @@ class PlaceEngine {
 
     double decay(DateTime t) =>
         math.pow(0.5, now.difference(t).inHours / (24 * 14)).toDouble();
-    // Giornata "da mezzogiorno a mezzogiorno": la notte sta in un solo giorno.
+    // "Noon to noon" day: a night falls within a single day.
     String nightKey(DateTime t) {
       final s = t.subtract(const Duration(hours: 12));
       return '${s.year}-${s.month}-${s.day}';
@@ -324,7 +324,7 @@ class PlaceEngine {
 
     String dayKey(DateTime t) => '${t.year}-${t.month}-${t.day}';
 
-    // --- Sonno: il buco più lungo di ogni notte. ---
+    // --- Sleep: the longest gap of each night ---
     final longest = <String, (Duration, int?, bool, DateTime)>{};
     for (var i = 1; i < items.length; i++) {
       final (a, pa) = items[i - 1];
@@ -357,7 +357,7 @@ class PlaceEngine {
       }
     }
 
-    // --- Primo e ultimo campione di ogni giorno. ---
+    // --- First and last sample of each day ---
     final byDay = <String, List<(LocationSample, int)>>{};
     for (final it in items) {
       byDay.putIfAbsent(dayKey(it.$1.ts), () => []).add(it);
@@ -372,9 +372,9 @@ class PlaceEngine {
       }
     }
 
-    // --- Permanenze (visite): campioni consecutivi nello stesso luogo. ---
-    // dwell[place][day] = minuti; arrivals[place] = minuto del primo arrivo
-    // nei giorni feriali.
+    // --- Dwells (visits): consecutive samples in the same place ---
+    // dwell[place][day] = minutes; arrivals[place] = minute of the first
+    // arrival on workdays.
     final dwell = <int, Map<String, double>>{};
     final arrivals = <int, List<int>>{};
     final firstArrivalDay = <int, Set<String>>{};
@@ -396,7 +396,7 @@ class PlaceEngine {
       }
     }
 
-    // --- Punteggi. ---
+    // --- Scores ---
     final homeConf = <int, double>{};
     final workConf = <int, double>{};
     for (final p in places) {
@@ -412,7 +412,7 @@ class PlaceEngine {
     }
     final homeCandidate = _pick(PlaceRole.home, homeConf);
 
-    // Minuti feriali totali (esclusa casa), per la quota del lavoro.
+    // Total workday minutes (excluding home), for the work share.
     double workdayMinutes(int id) {
       var sum = 0.0;
       dwell[id]?.forEach((day, minutes) {
@@ -482,7 +482,7 @@ class PlaceEngine {
     }
     final workCandidate = _pick(PlaceRole.work, workConf);
 
-    // --- Assegnazione, con isteresi e correzioni dell'utente. ---
+    // --- Assignment, with hysteresis and user corrections ---
     final distinctDays = <int, Set<String>>{};
     for (final (s, id) in items) {
       distinctDays.putIfAbsent(id, () => {}).add(dayKey(s.ts));
@@ -513,9 +513,9 @@ class PlaceEngine {
     }
   }
 
-  /// Il luogo che prende [role]: il ruolo scelto dall'utente vince; poi il
-  /// migliore sopra soglia, ma il titolare attuale cede solo se il nuovo lo
-  /// supera di [roleHysteresis].
+  /// The place that gets [role]: the user's choice wins; then the best one
+  /// above the threshold, but the current holder gives way only if the new
+  /// one beats it by [roleHysteresis].
   Place? _pick(PlaceRole role, Map<int, double> conf) {
     for (final p in places) {
       if (p.userRole == role) return p;
@@ -544,7 +544,7 @@ class PlaceEngine {
     return best;
   }
 
-  /// Correzioni dell'utente sul luogo [id].
+  /// User corrections for place [id].
   void setUserRole(int id, PlaceRole? role) {
     for (final p in places) {
       if (role != null && p.userRole == role && p.id != id) p.userRole = null;

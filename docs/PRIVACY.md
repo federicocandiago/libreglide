@@ -82,7 +82,7 @@ Eventuali modifiche a questa informativa saranno indicate nell'app con una nuova
 
 # libreGLIDE — Privacy policy
 
-> Same text shown in the app (`lib/legal/privacy_policy.dart`). v1.2, 6 novembre 2026.
+> Same text shown in the app (`lib/legal/privacy_policy.dart`). v1.2, November 6, 2026.
 
 ## In short
 
@@ -160,4 +160,4 @@ For data processed by Unsplash, contact Unsplash. You also have the right to lod
 
 ## Changes
 
-Any changes to this policy will be shown in the app with a new version and date. Version 1.2, 6 novembre 2026.
+Any changes to this policy will be shown in the app with a new version and date. Version 1.2, November 6, 2026.

@@ -1,4 +1,4 @@
-/// Un contatto per il pannello contatti.
+/// A contact for the contacts panel.
 library;
 
 import 'dart:math' as math;
@@ -30,7 +30,7 @@ class Contact {
   final Uint8List? photo;
   final bool starred;
 
-  /// Iniziali (al massimo due) per l'avatar senza foto.
+  /// Initials (at most two) for the avatar without a photo.
   String get initials => name
       .trim()
       .split(RegExp(r'\s+'))
@@ -40,11 +40,11 @@ class Contact {
       .join();
 }
 
-/// Emivita dell'uso dei contatti.
+/// Half-life of contact usage.
 const Duration contactHalfLife = Duration(days: 30);
 
-/// Peso d'uso di un contatto riportato a [now]: si dimezza ogni 30 giorni.
-/// A ogni uso: `w = decayedWeight(w, updated, now) + 1`.
+/// Usage weight of a contact decayed to [now]: it halves every 30 days.
+/// On each use: `w = decayedWeight(w, updated, now) + 1`.
 double decayedWeight(double weight, DateTime updated, DateTime now) {
   final age = now.difference(updated);
   if (age <= Duration.zero) return weight;

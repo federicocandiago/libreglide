@@ -5,10 +5,10 @@ import android.view.WindowManager
 import java.util.function.Consumer
 
 /**
- * Vetro smerigliato (facoltativo): sfocatura di sistema dello sfondo dietro
- * la finestra del launcher. La calcola il compositore sulla GPU, non
- * Flutter; Android la spegne da solo in risparmio energetico (e allora
- * [onAvailable] avvisa Flutter, che rende le pagine più coprenti).
+ * Frosted glass (optional): system blur of the wallpaper behind the launcher
+ * window. It is computed by the compositor on the GPU, not by Flutter;
+ * Android turns it off by itself in battery saver (and then [onAvailable]
+ * tells Flutter, which makes the pages more opaque).
  */
 class WindowGlass(private val activity: Activity, private val onAvailable: (Boolean) -> Unit) {
 
@@ -20,7 +20,7 @@ class WindowGlass(private val activity: Activity, private val onAvailable: (Bool
 
     val available: Boolean get() = windowManager.isCrossWindowBlurEnabled
 
-    /** Attiva o spegne il vetro; la finestra diventa traslucida solo se serve. */
+    /** Turns the glass on or off; the window becomes translucent only when needed. */
     fun setEnabled(on: Boolean): Boolean {
         if (on == enabled) return available
         enabled = on
@@ -35,16 +35,16 @@ class WindowGlass(private val activity: Activity, private val onAvailable: (Bool
         return available
     }
 
-    /** Sfocatura dello sfondo di [target] pixel (0 = nitido). */
+    /** Blurs the wallpaper by [target] pixels (0 = sharp). */
     fun blurTo(target: Int) {
         val goal = if (enabled) target else 0
         if (goal == radius) return
         radius = goal
-        // Sfoca tutto ciò che sta dietro la finestra (lo sfondo del telefono).
+        // Blurs everything behind the window (the phone's wallpaper).
         val window = activity.window
-        // Android disegna la sfocatura insieme al velo scuro della finestra:
-        // con il velo a zero il livello è "invisibile" e la sfocatura salta,
-        // quindi serve un velo appena percettibile.
+        // Android draws the blur together with the window's dim layer: with
+        // zero dim the layer is "invisible" and the blur is skipped, so a
+        // barely noticeable dim is needed.
         val flags = WindowManager.LayoutParams.FLAG_BLUR_BEHIND or WindowManager.LayoutParams.FLAG_DIM_BEHIND
         if (goal > 0) window.addFlags(flags) else window.clearFlags(flags)
         window.attributes = window.attributes.apply {

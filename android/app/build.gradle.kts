@@ -6,8 +6,8 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// Chiave di release: android/key.properties (fuori da git). Senza, la
-// release si firma con la chiave di debug, così chiunque può compilare.
+// Release key: android/key.properties (not in git). Without it, the release
+// build is signed with the debug key, so anyone can build it.
 val keyProperties = Properties().apply {
     val file = rootProject.file("key.properties")
     if (file.exists()) file.inputStream().use { load(it) }
@@ -16,7 +16,7 @@ val keyProperties = Properties().apply {
 android {
     namespace = "org.libreglide.launcher"
     compileSdk {
-        // Android 17: la piattaforma si chiama android-37.0 (API con versione minore).
+        // Android 17: the platform is named android-37.0 (API with a minor version).
         version = release(37) { minorApiLevel = 0 }
     }
     ndkVersion = flutter.ndkVersion

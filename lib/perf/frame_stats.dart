@@ -1,6 +1,6 @@
-/// Statistiche sui frame, scritte nel logcat (tag `flutter`, prefisso
-/// `LGPERF`). Attive solo se l'app è compilata con
-/// `--dart-define=LIBREGLIDE_PERF=true`; altrimenti non costano nulla.
+/// Frame statistics, written to logcat (tag `flutter`, prefix `LGPERF`).
+/// Active only if the app is built with
+/// `--dart-define=LIBREGLIDE_PERF=true`; otherwise they cost nothing.
 library;
 
 import 'dart:async';

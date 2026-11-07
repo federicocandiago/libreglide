@@ -1,5 +1,5 @@
-// Genera docs/PRIVACY.md dal testo mostrato nell'app.
-// Uso: dart run tool/privacy_md.dart
+// Generates docs/PRIVACY.md from the text shown in the app.
+// Usage: dart run tool/privacy_md.dart
 import 'dart:io';
 
 import 'package:libreglide/legal/privacy_policy.dart';
@@ -15,7 +15,7 @@ void main() {
       ..writeln()
       ..writeln(
         '> $note (`lib/legal/privacy_policy.dart`). '
-        'v$policyVersion, $policyDate.',
+        'v$policyVersion, ${policyDate(lang)}.',
       )
       ..writeln();
     for (final s in privacyPolicy(lang)) {

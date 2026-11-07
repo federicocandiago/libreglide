@@ -1,14 +1,14 @@
-/// Ricerca delle app per la ricerca globale.
+/// App matching for the global search.
 ///
-/// Ordine dei risultati, per classe di corrispondenza:
-/// 1. il nome inizia con il testo ("whats" → WhatsApp)
-/// 2. una parola del nome inizia con il testo ("maps" → Google Maps)
-/// 3. le iniziali delle parole iniziano con il testo ("gm" → Google Maps)
-/// 4. il testo compare dentro il nome ("app" → WhatsApp)
-/// 5. il nome della categoria corrisponde ("musica" → Spotify)
+/// Result order, by match class:
+/// 1. the name starts with the query ("whats" → WhatsApp)
+/// 2. a word of the name starts with the query ("maps" → Google Maps)
+/// 3. the word initials start with the query ("gm" → Google Maps)
+/// 4. the query appears inside the name ("app" → WhatsApp)
+/// 5. the category name matches ("music" → Spotify)
 ///
-/// A parità di classe vince il punteggio del predittore (frequenza,
-/// recentezza e contesto), poi l'ordine alfabetico.
+/// Within the same class the predictor score wins (frequency, recency and
+/// context), then alphabetical order.
 library;
 
 import 'app_entry.dart';
@@ -21,7 +21,7 @@ class SearchHit {
   final MatchClass match;
 }
 
-/// Le parole di un nome normalizzato (spazi, trattini, punti).
+/// The words of a normalized name (split on spaces, dashes, dots).
 List<String> _words(String normalized) => normalized
     .split(RegExp(r'[\s\-_.:/]+'))
     .where((w) => w.isNotEmpty)
@@ -48,8 +48,8 @@ MatchClass? matchApp(AppEntry app, String query, {String? categoryLabel}) {
   return null;
 }
 
-/// Cerca [query] tra [apps]. [score] è il punteggio del predittore per
-/// pacchetto (più alto = più probabile); le app senza punteggio vengono dopo.
+/// Searches [query] among [apps]. [score] is the predictor score per package
+/// (higher = more likely); apps without a score come after.
 List<SearchHit> searchApps(
   List<AppEntry> apps,
   String query, {

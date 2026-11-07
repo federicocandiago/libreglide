@@ -1,6 +1,6 @@
-/// Sfondo contestuale: una foto Unsplash scelta in base al momento e mostrata
-/// solo dentro libreGLIDE. Lo sfondo di sistema non viene mai toccato:
-/// "tornare indietro" significa semplicemente non disegnare la foto.
+/// Contextual wallpaper: an Unsplash photo picked for the current moment and
+/// shown only inside libreGLIDE. The system wallpaper is never touched:
+/// "reverting" simply means not drawing the photo.
 library;
 
 import 'dart:async';
@@ -71,7 +71,7 @@ class WallpaperController extends ChangeNotifier {
   WallpaperStatus status = WallpaperStatus.off;
   WallpaperMoment? moment;
 
-  /// Larghezza in pixel richiesta a Unsplash.
+  /// Width in pixels requested from Unsplash.
   int widthPx = 1440;
 
   bool _busy = false;
@@ -93,8 +93,8 @@ class WallpaperController extends ChangeNotifier {
     launcher.addListener(update);
     launcher.weather.addListener(update);
     settings.addListener(update);
-    // Dopo il ritorno sulla Home i segnali (fuso, cuffie) si aggiornano:
-    // si ricontrolla con un attimo di ritardo.
+    // After returning to Home the signals (time zone, headphones) refresh:
+    // check again after a short delay.
     _resumeSub = launcher.bridge.resumed.listen(
       (_) => Future<void>.delayed(const Duration(milliseconds: 600), update),
     );
@@ -114,11 +114,11 @@ class WallpaperController extends ChangeNotifier {
       '${t.year}-${t.month.toString().padLeft(2, '0')}-'
       '${t.day.toString().padLeft(2, '0')}';
 
-  /// Foto attiva solo se la funzione è accesa e c'è una chiave.
+  /// The photo is active only if the feature is on and there is a key.
   bool get active =>
       settings.contextWallpaper && (settings.unsplashKey?.isNotEmpty ?? false);
 
-  /// File da disegnare, o null (= si vede lo sfondo del telefono).
+  /// File to draw, or null (= the phone's wallpaper shows through).
   File? get file => active ? current?.file : null;
 
   void update() {
@@ -140,8 +140,8 @@ class WallpaperController extends ChangeNotifier {
     final today = dayKey(now);
     final cacheKey = '${m.query}|$today|${settings.shuffleFor(today)}';
     moment = m;
-    // Il file si controlla una volta per foto, non a ogni aggiornamento:
-    // existsSync è I/O sul thread dell'interfaccia.
+    // Check the file once per photo, not on every update: existsSync is I/O
+    // on the UI thread.
     if (current?.cacheKey == cacheKey &&
         (_verifiedKey == cacheKey || current!.file.existsSync())) {
       _verifiedKey = cacheKey;
@@ -151,7 +151,7 @@ class WallpaperController extends ChangeNotifier {
       }
       return;
     }
-    // Dopo un errore non si riprova la stessa ricerca per 10 minuti.
+    // After an error, don't retry the same search for 10 minutes.
     if (_failedKey == cacheKey &&
         _failedAt != null &&
         now.difference(_failedAt!) < const Duration(minutes: 10)) {
@@ -161,7 +161,7 @@ class WallpaperController extends ChangeNotifier {
     unawaited(_fetch(m, today, cacheKey));
   }
 
-  /// "Cambia foto": la successiva tra le prime per questo momento.
+  /// "Change photo": the next one among the top results for this moment.
   void next() => settings.nextWallpaper(dayKey(_clock()));
 
   Future<void> _fetch(WallpaperMoment m, String today, String cacheKey) async {
@@ -171,7 +171,7 @@ class WallpaperController extends ChangeNotifier {
     final client = UnsplashClient(settings.unsplashKey!);
     try {
       final photos = await client.search(m.query);
-      if (photos.isEmpty) throw const UnsplashException('nessuna foto');
+      if (photos.isEmpty) throw const UnsplashException('no photos');
       final now = _clock();
       final photo =
           photos[pickIndex(
@@ -188,7 +188,7 @@ class WallpaperController extends ChangeNotifier {
       final file = File(p.join(dir.path, '${photo.id}.jpg'));
       await file.writeAsBytes(bytes, flush: true);
       unawaited(client.trackDownload(photo));
-      // Tiene solo la foto in uso.
+      // Keep only the photo in use.
       await for (final f in dir.list()) {
         if (f.path != file.path) await f.delete();
       }
@@ -210,7 +210,7 @@ class WallpaperController extends ChangeNotifier {
       _failedKey = cacheKey;
       _failedAt = _clock();
     } catch (e) {
-      debugPrint('libreglide: sfondo non disponibile: $e');
+      debugPrint('libreglide: wallpaper unavailable: $e');
       status = WallpaperStatus.error;
       _failedKey = cacheKey;
       _failedAt = _clock();

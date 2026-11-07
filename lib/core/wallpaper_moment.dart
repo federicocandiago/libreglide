@@ -1,10 +1,9 @@
-/// Momento della giornata per lo sfondo contestuale e parole chiave per
-/// Unsplash, scelti in modo deterministico (stesso contesto → stessa
-/// ricerca).
+/// Moment of the day for the contextual wallpaper, and Unsplash keywords,
+/// chosen deterministically (same context → same search).
 ///
-/// Priorità: festività → viaggio → meteo notevole → musica → fascia oraria +
-/// stagione.
-/// Le parole chiave sono in inglese perché su Unsplash rendono meglio.
+/// Priority: holiday → travel → notable weather → music → time slot +
+/// season.
+/// Keywords are in English because they work better on Unsplash.
 library;
 
 import 'time_context.dart';
@@ -17,11 +16,11 @@ class WallpaperMoment {
 
   final MomentKind kind;
 
-  /// Identificatore stabile del momento (es. `holiday:christmas`,
+  /// Stable identifier of the moment (e.g. `holiday:christmas`,
   /// `daily:evening:autumn`).
   final String id;
 
-  /// Ricerca per Unsplash.
+  /// Unsplash search query.
   final String query;
 
   @override
@@ -30,7 +29,7 @@ class WallpaperMoment {
 
 enum Season { winter, spring, summer, autumn }
 
-/// Stagione meteorologica (emisfero nord).
+/// Meteorological season (northern hemisphere).
 Season seasonOf(DateTime t) => switch (t.month) {
   12 || 1 || 2 => Season.winter,
   3 || 4 || 5 => Season.spring,
@@ -54,7 +53,7 @@ const _slotWords = {
   Slot.night: 'night sky stars',
 };
 
-/// Festività e ricorrenze con un'immagine riconoscibile (Italia).
+/// Holidays and occasions with a recognizable image (Italy).
 (String, String)? holidayOf(DateTime t) {
   final m = t.month, d = t.day;
   if (m == 12 && d >= 24 && d <= 26) return ('christmas', 'christmas lights');
@@ -77,8 +76,8 @@ const _slotWords = {
   return null;
 }
 
-/// Sceglie il momento. [travelling] = fuso orario diverso da quello di casa
-/// (o, in futuro, città diversa); [city] = nome della città, se noto.
+/// Picks the moment. [travelling] = time zone different from home (or, in
+/// the future, a different city); [city] = city name, if known.
 WallpaperMoment momentFor(
   DateTime now, {
   Slot? slot,
@@ -101,8 +100,8 @@ WallpaperMoment momentFor(
         ? const WallpaperMoment(MomentKind.travel, 'travel', 'travel landscape')
         : WallpaperMoment(MomentKind.travel, 'travel:$c', '$c city');
   }
-  // Meteo notevole: pioggia, neve, temporale, nebbia. Sereno e nuvoloso
-  // lasciano spazio all'ora del giorno.
+  // Notable weather: rain, snow, storm, fog. Clear and cloudy skies give
+  // way to the time of day.
   final w = switch (weather) {
     WeatherKind.rain ||
     WeatherKind.drizzle ||
@@ -127,12 +126,12 @@ WallpaperMoment momentFor(
   );
 }
 
-/// Indice "casuale" ma stabile per giornata: stessa ricerca e stesso giorno
-/// → stessa foto; [shuffle] permette di passare alla successiva.
+/// "Random" but stable index per day: same query and same day → same
+/// photo; [shuffle] moves on to the next one.
 int pickIndex(String query, DateTime day, int count, {int shuffle = 0}) {
   if (count <= 0) return 0;
   final key = '$query|${day.year}-${day.month}-${day.day}|$shuffle';
-  // FNV-1a a 32 bit: deterministico su tutte le piattaforme.
+  // 32-bit FNV-1a: deterministic on all platforms.
   var h = 0x811c9dc5;
   for (final unit in key.codeUnits) {
     h ^= unit;

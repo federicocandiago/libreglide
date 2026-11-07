@@ -1,4 +1,4 @@
-/// Costruzione delle Collections con ordine stabile
+/// Builds the Collections with a stable order
 /// (spec-viste-app §3).
 library;
 
@@ -16,16 +16,16 @@ class CollectionGroup {
 
   final AppCategory category;
 
-  /// Tutte le app del gruppo: prima quelle con punteggio (ordine per
-  /// contesto con isteresi), poi le altre in ordine alfabetico.
-  /// La UI mostra le prime N nella riga e il resto in ordine alfabetico.
+  /// All apps in the group: scored ones first (context order with
+  /// hysteresis), then the others in alphabetical order.
+  /// The UI shows the first N in the row and the rest alphabetically.
   final List<AppEntry> ranked;
   final bool pinned;
 
-  /// App della riga dinamica.
+  /// Apps in the dynamic row.
   List<AppEntry> row(int size) => ranked.take(size).toList();
 
-  /// App della parte espansa: tutte tranne la riga, in ordine alfabetico.
+  /// Apps in the expanded part: all except the row, in alphabetical order.
   List<AppEntry> rest(int size) {
     final inRow = row(size).toSet();
     final others = ranked.where((a) => !inRow.contains(a)).toList()
@@ -34,18 +34,18 @@ class CollectionGroup {
   }
 }
 
-/// Margine dell'isteresi: un elemento supera il precedente solo se il
-/// suo punteggio (log) è più alto di almeno ln(1.1), cioè del 10%.
+/// Hysteresis margin: an item overtakes the previous one only if its (log)
+/// score is higher by at least ln(1.1), i.e. by 10%.
 final double hysteresisMargin = math.log(1.1);
 
-/// Sotto questa soglia di aperture totali si usa l'ordine predefinito.
+/// Below this total launch count the default order is used.
 const int minLaunchesForDynamicOrder = 20;
 
-/// Le categorie con al massimo questo numero di app confluiscono in Altro.
+/// Categories with at most this many apps are merged into Other.
 const int smallCategoryThreshold = 2;
 
-/// Riordina [current] partendo dall'ordine [previous], spostando un
-/// elemento davanti al precedente solo se lo supera di [margin].
+/// Reorders [current] starting from the [previous] order, moving an item
+/// ahead of the previous one only if it beats it by [margin].
 List<T> stableReorder<T>({
   required List<T> previous,
   required List<T> current,
@@ -78,8 +78,8 @@ List<T> stableReorder<T>({
   return base;
 }
 
-/// Mantiene lo stato tra una costruzione e l'altra, così l'ordine cambia
-/// solo quando cambia il contesto.
+/// Keeps state between builds, so the order changes only when the context
+/// changes.
 class CollectionsBuilder {
   String? _lastContextKey;
   int? _lastRevision;
@@ -90,16 +90,16 @@ class CollectionsBuilder {
 
   List<CollectionGroup> get current => _last;
 
-  /// Costruisce i gruppi.
+  /// Builds the groups.
   ///
-  /// - [scores]: punteggi del predittore per pacchetto (log), calcolati
-  ///   solo se serve ricostruire. Le app senza punteggio vanno in fondo,
-  ///   in ordine alfabetico.
-  /// - [revision]: va incrementato quando cambiano app installate,
-  ///   categorie, fissati o nascosti.
-  /// - L'ordine si ricalcola solo se cambia [contextKey] o [fixedOrder]
-  ///   o se [force] è true; se cambia solo [revision] si mantiene l'ordine
-  ///   precedente e i nuovi elementi vanno in fondo.
+  /// - [scores]: predictor scores per package (log), computed only when a
+  ///   rebuild is needed. Apps without a score go last, in alphabetical
+  ///   order.
+  /// - [revision]: must be incremented when installed apps, categories,
+  ///   pinned or hidden items change.
+  /// - The order is recomputed only if [contextKey] or [fixedOrder]
+  ///   changes or [force] is true; if only [revision] changes, the previous
+  ///   order is kept and new items go last.
   List<CollectionGroup> build({
     required List<AppEntry> apps,
     required Map<String, AppCategory> categoryOf,
@@ -126,7 +126,7 @@ class CollectionsBuilder {
     final dynamicOrder =
         !fixedOrder && totalLaunches >= minLaunchesForDynamicOrder;
 
-    // 1. Raggruppa, togliendo le categorie nascoste.
+    // 1. Group, dropping hidden categories.
     final groups = <AppCategory, List<AppEntry>>{};
     for (final app in apps) {
       final cat = categoryOf[app.id] ?? AppCategory.other;
@@ -134,7 +134,7 @@ class CollectionsBuilder {
       groups.putIfAbsent(cat, () => []).add(app);
     }
 
-    // 2. Le categorie piccole non fissate confluiscono in Altro.
+    // 2. Small unpinned categories are merged into Other.
     final small = groups.entries
         .where(
           (e) =>
@@ -159,7 +159,7 @@ class CollectionsBuilder {
       return c != 0 ? c : a.id.compareTo(b.id);
     }
 
-    // 3. Ordine delle app dentro ogni gruppo.
+    // 3. App order within each group.
     final newAppOrder = <AppCategory, List<AppEntry>>{};
     groups.forEach((cat, list) {
       if (fixedOrder) {
@@ -180,13 +180,13 @@ class CollectionsBuilder {
       }
     });
 
-    // 4. Ordine delle categorie.
+    // 4. Category order.
     int defaultIndex(AppCategory c) => defaultCategoryOrder.indexOf(c);
     int byDefault(AppCategory a, AppCategory b) =>
         defaultIndex(a).compareTo(defaultIndex(b));
     final unpinned = groups.keys.where((c) => !pinned.contains(c)).toList();
     List<AppCategory> orderedUnpinned;
-    // Le raccolte con la spinta iniziale vengono prima, la più forte in testa.
+    // Collections with the initial boost come first, strongest on top.
     int byBoostThenDefault(AppCategory a, AppCategory b) {
       final c = (boosts[b] ?? 0).compareTo(boosts[a] ?? 0);
       return c != 0 ? c : byDefault(a, b);
@@ -203,8 +203,8 @@ class CollectionsBuilder {
         return top.reduce((a, b) => a + b) / top.length;
       }
 
-      // Una raccolta spinta ma ancora senza dati parte dal punteggio più
-      // basso tra quelle usate, così la spinta ha sempre un effetto.
+      // A boosted collection with no data yet starts from the lowest score
+      // among the used ones, so the boost always has an effect.
       final finite = [
         for (final c in unpinned)
           if (usage(c).isFinite) usage(c),
@@ -250,7 +250,7 @@ class CollectionsBuilder {
     return _last;
   }
 
-  /// Mantiene l'ordine precedente; i nuovi elementi vanno in fondo.
+  /// Keeps the previous order; new items go last.
   static List<T> _keepOrder<T>(
     List<T> previous,
     List<T> current,
@@ -265,8 +265,8 @@ class CollectionsBuilder {
     ];
   }
 
-  /// Le app senza punteggio stanno sempre dopo quelle con punteggio,
-  /// in ordine alfabetico.
+  /// Apps without a score always come after the scored ones, in
+  /// alphabetical order.
   static List<AppEntry> _scoredFirst(
     List<AppEntry> list,
     double Function(AppEntry) score,

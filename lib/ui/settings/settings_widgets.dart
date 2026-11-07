@@ -1,14 +1,14 @@
-/// Componenti delle schermate di impostazione, nello stile di Glide:
-/// barra con titolo in maiuscoletto, sezioni in card piatte con
-/// intestazione, righe separate da linee sottili. Tocchi Material You:
-/// icone su fondo tonale, switch e selettori della palette.
+/// Building blocks for the settings screens, in Glide's style: a top bar
+/// with a small-caps title, sections as flat cards with a header, rows
+/// separated by thin dividers. Material You touches: icons on a tonal
+/// background, switches and palette pickers.
 library;
 
 import 'package:flutter/material.dart';
 
 import '../glide_style.dart';
 
-/// Pagina di impostazioni: barra in alto e sezioni su fondo grigio.
+/// Settings page: top bar and sections on a grey background.
 class SettingsScaffold extends StatelessWidget {
   const SettingsScaffold({
     super.key,
@@ -83,7 +83,7 @@ class SettingsScaffold extends StatelessWidget {
   }
 }
 
-/// Sezione: card piatta con intestazione in maiuscoletto e righe separate.
+/// Section: flat card with a small-caps header and separated rows.
 class SettingsSection extends StatelessWidget {
   const SettingsSection({
     super.key,
@@ -120,7 +120,7 @@ class SettingsSection extends StatelessWidget {
   }
 }
 
-/// Icona su fondo tonale (tocco Material You).
+/// Icon on a tonal background (Material You touch).
 class TonalIcon extends StatelessWidget {
   const TonalIcon(this.icon, {super.key, this.danger = false});
 
@@ -146,7 +146,7 @@ class TonalIcon extends StatelessWidget {
   }
 }
 
-/// Riga: icona tonale, titolo, sottotitolo facoltativo, elemento a destra.
+/// Row: tonal icon, title, optional subtitle, trailing element.
 class SettingsTile extends StatelessWidget {
   const SettingsTile({
     super.key,
@@ -211,7 +211,7 @@ class SettingsTile extends StatelessWidget {
   }
 }
 
-/// Riga con interruttore; tutta la riga lo attiva.
+/// Row with a switch; tapping anywhere on the row toggles it.
 class SettingsSwitchTile extends StatelessWidget {
   const SettingsSwitchTile({
     super.key,
@@ -238,8 +238,8 @@ class SettingsSwitchTile extends StatelessWidget {
   );
 }
 
-/// Scelta tra poche opzioni: titolo sopra, selettore a tutta larghezza
-/// sotto, così le etichette non vanno mai a capo.
+/// Choice among a few options: title above, full-width selector below, so
+/// the labels never wrap.
 class SettingsChoiceTile<T> extends StatelessWidget {
   const SettingsChoiceTile({
     super.key,
@@ -255,7 +255,7 @@ class SettingsChoiceTile<T> extends StatelessWidget {
   final String title;
   final String? subtitle;
 
-  /// Valore → (etichetta, icona facoltativa).
+  /// Value → (label, optional icon).
   final List<(T, String, IconData?)> options;
   final T selected;
   final ValueChanged<T> onChanged;

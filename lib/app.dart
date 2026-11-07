@@ -28,8 +28,8 @@ class LibreGlideApp extends StatelessWidget {
       settings: settings,
       wallpaper: wallpaper,
       child: DynamicColorBuilder(
-        // Solo l'aspetto ricostruisce l'app: preferiti, widget, card e così
-        // via aggiornano soltanto le parti che li usano.
+        // Only appearance changes rebuild the whole app: favorites, widgets,
+        // cards and so on only update the parts that use them.
         builder: (lightDynamic, darkDynamic) => ListenableBuilder(
           listenable: settings.appearance,
           builder: (context, _) => MaterialApp(

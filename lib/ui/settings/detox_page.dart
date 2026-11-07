@@ -11,8 +11,8 @@ import '../scope.dart';
 import '../widgets/app_icon.dart';
 import 'settings_widgets.dart';
 
-/// Apre Digital detox. Se è acceso serve il PIN: è l'unico modo per
-/// spegnerlo o allentarlo da dentro libreGLIDE.
+/// Opens Digital detox. If it is on, the PIN is required: it is the only way
+/// to turn it off or relax it from within libreGLIDE.
 Future<void> openDetox(BuildContext context) async {
   final scope = AppScope.of(context);
   if (scope.settings.detoxEnabled &&
@@ -25,7 +25,7 @@ Future<void> openDetox(BuildContext context) async {
       .push(MaterialPageRoute<void>(builder: (_) => const DetoxPage()));
 }
 
-/// Chiede il PIN; true se è giusto.
+/// Asks for the PIN; returns true if it is correct.
 Future<bool> askDetoxPin(BuildContext context) async =>
     await showDialog<bool>(
       context: context,
@@ -39,7 +39,7 @@ String _formatMinutes(BuildContext context, int m) =>
       alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
     );
 
-/// Digital detox: interruttore, PIN, orario, sblocco, app bloccate.
+/// Digital detox: switch, PIN, schedule, unlock, blocked apps.
 class DetoxPage extends StatefulWidget {
   const DetoxPage({super.key});
 
@@ -56,7 +56,7 @@ class _DetoxPageState extends State<DetoxPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_resumed != null) return;
-    // Tornando dalle impostazioni di accessibilità lo stato va riletto.
+    // Re-read the state when returning from the accessibility settings.
     _resumed = AppScope.of(context).controller.bridge.resumed
         .listen((_) => _refresh());
     _refresh();
@@ -97,7 +97,7 @@ class _DetoxPageState extends State<DetoxPage> {
       scope.settings.setDetoxEnabled(false);
       return;
     }
-    // Senza PIN il detox non si accende: è lui a proteggere le impostazioni.
+    // Detox can't be turned on without a PIN: the PIN protects the settings.
     if (!_hasPin && !await _setPin()) return;
     scope.settings.setDetoxEnabled(true);
     if (_serviceOn != true && mounted) await _explainService();
@@ -307,9 +307,9 @@ class _DetoxPageState extends State<DetoxPage> {
   }
 }
 
-/// Scelta delle app da bloccare, per gruppi: spuntare un gruppo blocca
-/// tutte le sue app, poi si correggono una per una. In cima le app di
-/// sistema delicate (installazione, Impostazioni, Play Store).
+/// Picks the apps to block, by group: checking a group blocks all of its
+/// apps, which can then be adjusted one by one. Sensitive system apps
+/// (installer, Settings, Play Store) come first.
 class DetoxAppsPage extends StatefulWidget {
   const DetoxAppsPage({super.key});
 
@@ -336,8 +336,8 @@ class _DetoxAppsPageState extends State<DetoxAppsPage> {
     final controller = scope.controller;
     final l = context.l10n;
 
-    // Un'app per pacchetto (il blocco vale per tutto il pacchetto), divise
-    // per categoria; libreGLIDE non si può bloccare.
+    // One app per package (blocking applies to the whole package), grouped
+    // by category; libreGLIDE itself can't be blocked.
     final byCategory = <AppCategory, List<AppEntry>>{};
     final seen = <String>{};
     for (final a in controller.allApps) {
@@ -377,8 +377,8 @@ class _DetoxAppsPageState extends State<DetoxAppsPage> {
   }
 }
 
-/// Un gruppo di app: la spunta del gruppo è un contenitore (tutte,
-/// nessuna, alcune); la freccia mostra le singole app.
+/// A group of apps: the group checkbox is tristate (all, none, some); the
+/// arrow expands the individual apps.
 class _Group extends StatefulWidget {
   const _Group({
     required this.icon,
@@ -391,7 +391,7 @@ class _Group extends StatefulWidget {
   final String title;
   final String? subtitle;
 
-  /// (pacchetto, nome, app per l'icona).
+  /// (package, name, app for the icon).
   final List<(String, String, AppEntry?)> items;
 
   @override
@@ -448,7 +448,7 @@ class _GroupState extends State<_Group> {
                   Checkbox(
                     tristate: true,
                     value: all,
-                    // Tutte bloccate → si sbloccano; altrimenti si bloccano tutte.
+                    // All blocked → unblock them; otherwise block them all.
                     onChanged: (_) =>
                         settings.setDetoxApps(packages, all != true),
                   ),
@@ -523,7 +523,7 @@ class _GroupState extends State<_Group> {
   }
 }
 
-/// Richiesta del PIN per entrare nelle impostazioni del detox.
+/// PIN prompt for entering the detox settings.
 class _AskPinDialog extends StatefulWidget {
   const _AskPinDialog();
 
@@ -589,7 +589,7 @@ class _AskPinDialogState extends State<_AskPinDialog> {
   }
 }
 
-/// Imposta o cambia il PIN (per cambiarlo serve quello attuale).
+/// Sets or changes the PIN (changing it requires the current one).
 class _SetPinDialog extends StatefulWidget {
   const _SetPinDialog({required this.change});
 

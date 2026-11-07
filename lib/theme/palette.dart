@@ -1,4 +1,4 @@
-/// Colori e temi Material You (spec-viste-app §6).
+/// Material You colors and themes (spec-viste-app §6).
 library;
 
 import 'package:flutter/material.dart';
@@ -8,12 +8,12 @@ import '../data/settings.dart';
 class SeedPreset {
   const SeedPreset(this.id, this.color);
 
-  /// Chiave per la traduzione del nome.
+  /// Localization key for the name.
   final String id;
   final Color color;
 }
 
-/// Seed predefiniti (indicativi, da rifinire guardando le palette).
+/// Preset seeds (tentative, to be refined by looking at the palettes).
 const List<SeedPreset> seedPresets = [
   SeedPreset('laguna', Color(0xFF3A6EA5)),
   SeedPreset('salvia', Color(0xFF5B8C5A)),
@@ -25,14 +25,13 @@ const List<SeedPreset> seedPresets = [
   SeedPreset('grafite', Color(0xFF5F6368)),
 ];
 
-/// Seed usato quando il sistema non fornisce colori dinamici.
+/// Seed used when the system provides no dynamic colors.
 const Color fallbackSeed = Color(0xFF3A6EA5);
 
-/// Costruisce lo schema colori secondo le impostazioni.
+/// Builds the color scheme according to the settings.
 ///
-/// Con origine "Sistema", stile Tonale e contrasto standard si usa la
-/// palette di Android così com'è; altrimenti il primario del sistema
-/// diventa il seed.
+/// With source "System", Tonal style and standard contrast, Android's palette
+/// is used as is; otherwise the system primary color becomes the seed.
 ColorScheme buildScheme({
   required SettingsController settings,
   required Brightness brightness,
@@ -58,12 +57,12 @@ ColorScheme buildScheme({
   );
 }
 
-/// Famiglia di caratteri dell'app (Google Sans del telefono, se c'è).
+/// The app's font family (the phone's Google Sans, if available).
 String? appFontFamily;
 
 ThemeData buildTheme(ColorScheme scheme) {
   final dark = scheme.brightness == Brightness.dark;
-  // Stessi toni di GlideColors: card bianche su pagina grigia.
+  // Same tones as GlideColors: white cards on a grey page.
   final card = dark ? scheme.surfaceContainerHigh : scheme.surfaceContainerLow;
   final raised = dark
       ? scheme.surfaceContainerHighest
@@ -74,7 +73,7 @@ ThemeData buildTheme(ColorScheme scheme) {
     fontFamily: appFontFamily,
   );
   return base.copyWith(
-    // Il launcher mostra lo sfondo di sistema: le pagine sono trasparenti.
+    // The launcher shows the system wallpaper: pages are transparent.
     scaffoldBackgroundColor: Colors.transparent,
     splashFactory: InkSparkle.splashFactory,
     pageTransitionsTheme: const PageTransitionsTheme(
@@ -103,7 +102,7 @@ ThemeData buildTheme(ColorScheme scheme) {
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
-    // Interruttori Android 17: spunta nel cursore quando sono attivi.
+    // Android 17 switches: a check mark in the thumb when on.
     switchTheme: SwitchThemeData(
       thumbIcon: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
@@ -131,8 +130,8 @@ ThemeData buildTheme(ColorScheme scheme) {
 
 final Map<String, ThemeData> _themeCache = {};
 
-/// Tema memorizzato: si ricalcola solo se cambiano colori, stile, contrasto,
-/// colori di sistema o carattere.
+/// Memoized theme: recomputed only when colors, style, contrast, system
+/// colors or font change.
 ThemeData themeFor({
   required SettingsController settings,
   required Brightness brightness,

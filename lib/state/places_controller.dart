@@ -1,5 +1,5 @@
-/// Luoghi: campioni a ogni ritorno sul launcher, riconoscimento di casa e
-/// lavoro, correzioni dell'utente. Tutto in locale (spec-motore-contesto §6).
+/// Places: a sample on every return to the launcher, home and work
+/// recognition, user corrections. All local (spec-motore-contesto §6).
 library;
 
 import 'dart:convert';
@@ -28,7 +28,7 @@ class PlacesController extends ChangeNotifier {
   List<LocationSample> _samples = [];
   List<int?> _placeOf = [];
 
-  /// Permesso di posizione precisa concesso.
+  /// Whether precise location permission has been granted.
   bool? permission;
 
   int? _currentId;
@@ -42,7 +42,7 @@ class PlacesController extends ChangeNotifier {
   static const _minInterval = Duration(minutes: 3);
   static const _inferEvery = Duration(hours: 6);
 
-  /// Il luogo vale come "attuale" per 30 minuti dall'ultimo campione.
+  /// A place counts as "current" for 30 minutes after the last sample.
   static const _currentValidity = Duration(minutes: 30);
 
   Future<void> load() async {
@@ -51,7 +51,7 @@ class PlacesController extends ChangeNotifier {
       try {
         engine = PlaceEngine.fromJson(jsonDecode(json) as List<dynamic>);
       } catch (e) {
-        debugPrint('libreglide: stato dei luoghi illeggibile: $e');
+        debugPrint('libreglide: unreadable places state: $e');
       }
     }
     final (samples, placeOf) = await _store.loadSamples(_clock());
@@ -63,7 +63,7 @@ class PlacesController extends ChangeNotifier {
 
   Future<void> _save() => _store.writeKv('places', jsonEncode(engine.toJson()));
 
-  /// Luogo attuale, se recente.
+  /// Current place, if recent.
   Place? get current {
     final at = _currentAt;
     if (at == null || _clock().difference(at) > _currentValidity) return null;
@@ -75,7 +75,7 @@ class PlacesController extends ChangeNotifier {
   Place? get home => engine.withRole(PlaceRole.home);
   Place? get work => engine.withRole(PlaceRole.work);
 
-  /// Oltre 100 km da casa: in viaggio.
+  /// More than 100 km from home: travelling.
   bool get farFromHome {
     final h = home;
     if (h == null || _samples.isEmpty) return false;
@@ -89,15 +89,15 @@ class PlacesController extends ChangeNotifier {
 
   Future<void> requestPermission() => _bridge.requestPreciseLocation();
 
-  /// Prende un campione (al massimo ogni 3 minuti) e, ogni 6 ore,
-  /// ricalcola i ruoli.
-  /// Cosa vede l'interfaccia: si avvisa solo se cambia.
+  /// What the UI sees: listeners are notified only when it changes.
   String _signature() => [
     permission,
     current?.id,
     for (final p in engine.places) '${p.id}:${p.effectiveRole.name}',
   ].join('|');
 
+  /// Takes a sample (at most every 3 minutes) and recomputes roles every
+  /// 6 hours.
   Future<void> sample({bool force = false}) async {
     if (!_settings.placesEnabled || _busy) return;
     final before = _signature();
@@ -114,8 +114,8 @@ class PlacesController extends ChangeNotifier {
     }
     _busy = true;
     try {
-      // Stessa rete Wi-Fi già riconosciuta e posizione presa da poco:
-      // basta l'impronta, senza accendere la localizzazione.
+      // Same already-recognized Wi-Fi network and a recent fix: the
+      // fingerprint is enough, no need to turn on location.
       LocationSample? s;
       if (_lastFix != null &&
           now.difference(_lastFix!) < const Duration(minutes: 15)) {
@@ -146,7 +146,7 @@ class PlacesController extends ChangeNotifier {
       }
       await _save();
     } catch (e) {
-      debugPrint('libreglide: campione di posizione non riuscito: $e');
+      debugPrint('libreglide: location sample failed: $e');
     } finally {
       _busy = false;
       if (_signature() != before) notifyListeners();
@@ -161,7 +161,8 @@ class PlacesController extends ChangeNotifier {
     _lastInference = now;
   }
 
-  // region Correzioni dell'utente
+  // --- User corrections ---
+
   Future<void> setCurrentAs(PlaceRole role) async {
     final p = current;
     if (p == null) return;
@@ -190,5 +191,4 @@ class PlacesController extends ChangeNotifier {
     await _save();
     notifyListeners();
   }
-  // endregion
 }

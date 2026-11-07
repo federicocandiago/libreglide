@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:libreglide/core/places.dart';
 
-/// Luoghi della simulazione.
+/// Places used in the simulation.
 typedef Spot = (double, double, String?);
 const Spot home = (45.4371, 12.3326, 'wifi-home');
 const Spot work = (45.4900, 12.2400, 'wifi-work');
 const Spot gym = (45.4600, 12.3000, null);
 const Spot hotel = (46.9000, 11.4000, 'wifi-hotel');
 
-/// Un campione a [spot] all'ora [h]:[m] del giorno [day].
+/// A sample at [spot] at [h]:[m] on day [day].
 LocationSample at(
   DateTime day,
   int h,
@@ -25,7 +25,7 @@ LocationSample at(
   charging: charging,
 );
 
-/// Giornata tipo di un impiegato 9–18 (weekend a casa e in palestra).
+/// Typical day of a 9–18 office worker (weekends at home and at the gym).
 List<LocationSample> officeDay(DateTime d) {
   final weekend = d.weekday >= DateTime.saturday;
   return [
@@ -46,14 +46,14 @@ List<LocationSample> officeDay(DateTime d) {
   ];
 }
 
-/// Giornata di chi lavora da casa.
+/// Day of someone who works from home.
 List<LocationSample> remoteDay(DateTime d) => [
   at(d, 7, home, charging: true),
   for (var h = 9; h <= 18; h++) at(d, h, home),
   at(d, 23, home, charging: true),
 ];
 
-/// Turno di notte 22–6 nei feriali, sonno 8–15 a casa.
+/// Night shift 22–6 on weekdays, sleeping 8–15 at home.
 List<LocationSample> nightShiftDay(DateTime d) {
   final weekend = d.weekday >= DateTime.saturday;
   return [
@@ -75,8 +75,8 @@ List<LocationSample> nightShiftDay(DateTime d) {
   ];
 }
 
-/// Fa girare il motore come sul telefono: campioni man mano e ruoli
-/// ricalcolati alla fine di ogni giornata.
+/// Runs the engine as on the phone: samples fed in one at a time, roles
+/// recomputed at the end of each day.
 PlaceEngine simulate(
   DateTime start,
   int days,
@@ -108,7 +108,7 @@ bool near(Place? p, Spot s) =>
 void main() {
   final monday = DateTime(2026, 10, 5);
 
-  test('impiegato: casa e lavoro riconosciuti, palestra frequente', () {
+  test('office worker: home and work detected, gym frequent', () {
     final e = simulate(monday, 14, officeDay);
     final h = e.withRole(PlaceRole.home);
     final w = e.withRole(PlaceRole.work);
@@ -120,24 +120,24 @@ void main() {
     expect(g.effectiveRole, PlaceRole.frequent);
   });
 
-  test('impiegato: dopo pochi giorni non si sbilancia', () {
+  test('office worker: no commitment after only a few days', () {
     final e = simulate(monday, 2, officeDay);
     expect(e.withRole(PlaceRole.home), isNull);
     expect(e.withRole(PlaceRole.work), isNull);
   });
 
-  test('smart working: casa sì, lavoro no', () {
+  test('remote worker: home yes, work no', () {
     final e = simulate(monday, 14, remoteDay);
     expect(near(e.withRole(PlaceRole.home), home), isTrue);
     expect(e.withRole(PlaceRole.work), isNull);
   });
 
-  test('turno di notte: casa è dove si dorme, anche di giorno', () {
+  test('night shift: home is where you sleep, even by day', () {
     final e = simulate(monday, 14, nightShiftDay);
     expect(near(e.withRole(PlaceRole.home), home), isTrue);
   });
 
-  test('vacanza lontano: l\'hotel non diventa casa', () {
+  test('far-away holiday: the hotel does not become home', () {
     final samples = <LocationSample>[];
     final placeOf = <int?>[];
     final e = simulate(
@@ -163,7 +163,7 @@ void main() {
     expect(near(e.withRole(PlaceRole.home), home), isTrue);
   });
 
-  test('il Wi-Fi conosciuto riconosce il luogo anche senza posizione', () {
+  test('a known Wi-Fi identifies the place even without location', () {
     final e = simulate(monday, 3, officeDay);
     final id = e.addSample(
       LocationSample(ts: DateTime(2026, 10, 9, 10), wifi: 'wifi-work'),
@@ -171,9 +171,9 @@ void main() {
     expect(near(e.byId(id), work), isTrue);
   });
 
-  test('un hotspot portato ovunque non diventa un\'impronta affidabile', () {
+  test('a hotspot carried everywhere is not a reliable fingerprint', () {
     final e = PlaceEngine();
-    // Lo stesso Wi-Fi visto una volta in tre luoghi diversi.
+    // The same Wi-Fi seen once in three different places.
     for (final (i, spot) in [home, work, gym].indexed) {
       e.addSample(at(monday, 9 + i, spot, wifiOverride: 'hotspot'));
     }
@@ -182,7 +182,7 @@ void main() {
     }
   });
 
-  test('le correzioni dell\'utente vincono sull\'inferenza', () {
+  test('user corrections beat inference', () {
     final samples = <LocationSample>[];
     final placeOf = <int?>[];
     final e = simulate(
@@ -203,7 +203,7 @@ void main() {
     expect(e.withRole(PlaceRole.work)!.id, g.id);
   });
 
-  test('salvataggio e ripristino', () {
+  test('save and restore', () {
     final e = simulate(monday, 14, officeDay);
     final copy = PlaceEngine.fromJson(e.toJson());
     expect(copy.places.length, e.places.length);
@@ -214,7 +214,7 @@ void main() {
     );
   });
 
-  test('stesso Wi-Fi lontano dal suo luogo: vince la posizione', () {
+  test('same Wi-Fi far from its place: location wins', () {
     final e = simulate(monday, 3, officeDay);
     final id = e.addSample(
       at(DateTime(2026, 10, 9), 10, gym, wifiOverride: 'wifi-work'),

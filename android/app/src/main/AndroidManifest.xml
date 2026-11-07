@@ -1,29 +1,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Disinstallazione dal menu dell'app (conferma di sistema). -->
+    <!-- Uninstall from the app menu (system confirmation). -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
-    <!-- Tipo di rete (Wi-Fi, dati, offline) per il contesto: permesso normale, nessun dialogo. -->
+    <!-- Network type (Wi-Fi, mobile, offline) for context: normal permission, no dialog. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Solo per lo sfondo Unsplash, facoltativo: senza una chiave inserita dall'utente
-         libreGLIDE non apre connessioni (vedi lib/net/unsplash.dart). -->
+    <!-- Only for the optional Unsplash wallpaper: without a user-provided key
+         libreGLIDE opens no connections (see lib/net/unsplash.dart). -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Card Agenda: prossimi impegni. Chiesto dalla card, facoltativo. -->
+    <!-- Agenda card: upcoming events. Requested by the card, optional. -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
-    <!-- Pannello contatti (swipe verso l'alto): preferiti e ricerca. Chiesto dal pannello, facoltativo. -->
+    <!-- Contacts panel (swipe up): favorites and search. Requested by the panel, optional. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <!-- Meteo (facoltativo): solo posizione APPROSSIMATIVA, arrotondata prima dell'invio. -->
+    <!-- Weather (optional): COARSE location only, rounded before it is sent. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- Luoghi (facoltativo): posizione precisa solo mentre usi il launcher, per
-         distinguere casa e lavoro. Coordinate e impronte Wi-Fi restano sul telefono. -->
+    <!-- Places (optional): precise location only while the launcher is in use, to
+         tell home from work. Coordinates and Wi-Fi fingerprints stay on the phone. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!-- "Dove ho parcheggiato" (facoltativo, spento di default): unico uso in background
-         della posizione, quando il telefono si scollega dall'autoradio Bluetooth. -->
+    <!-- "Where I parked" (optional, off by default): the only background use of
+         location, when the phone disconnects from the Bluetooth car stereo. -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <!-- Card In auto (facoltativo): riconoscere l'autoradio Bluetooth. -->
+    <!-- In-car card (optional): detect the Bluetooth car stereo. -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <!-- Tempo di utilizzo (facoltativo, spento di default): accesso speciale concesso
-         dall'utente nelle impostazioni di Android. I dati restano sul telefono. -->
+    <!-- Usage time (optional, off by default): special access granted by the user
+         in Android settings. The data stays on the phone. -->
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
@@ -56,14 +56,14 @@
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- Icona nel cassetto delle app, utile in sviluppo e per aprire le impostazioni -->
+            <!-- Icon in the app drawer, useful during development and to open settings -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- Card In ascolto: serve solo ad accedere alle sessioni multimediali.
-             Non legge né salva le notifiche (vedi MediaListenerService). -->
+        <!-- Now Playing card: only needed to access media sessions.
+             It neither reads nor stores notifications (see MediaListenerService). -->
         <service
             android:name=".MediaListenerService"
             android:label="libreGLIDE"
@@ -73,7 +73,7 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-        <!-- Collegamento e scollegamento dall'auto, per il parcheggio. -->
+        <!-- Car connect/disconnect, for parking. -->
         <receiver
             android:name=".ParkingReceiver"
             android:exported="true">
@@ -82,9 +82,9 @@
                 <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
             </intent-filter>
         </receiver>
-        <!-- Digital detox (facoltativo, spento di default): servizio di accessibilità
-             attivato a mano dall'utente. Riceve solo il nome dell'app in primo piano,
-             non il contenuto dello schermo (vedi DetoxService e xml/detox_service.xml). -->
+        <!-- Digital detox (optional, off by default): accessibility service enabled
+             manually by the user. It only receives the foreground app's name, not
+             the screen content (see DetoxService and xml/detox_service.xml). -->
         <service
             android:name=".DetoxService"
             android:label="@string/detox_service_label"
@@ -112,12 +112,12 @@
     </application>
 
     <queries>
-        <!-- App di sistema che Digital detox può bloccare (non hanno un'icona). -->
+        <!-- System apps that Digital detox can block (they have no launcher icon). -->
         <package android:name="com.android.settings" />
         <package android:name="com.google.android.packageinstaller" />
         <package android:name="com.android.packageinstaller" />
         <package android:name="com.android.vending" />
-        <!-- Visibilità delle app avviabili (package visibility). -->
+        <!-- Visibility of launchable apps (package visibility). -->
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />

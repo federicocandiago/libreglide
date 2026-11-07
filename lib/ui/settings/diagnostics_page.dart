@@ -6,7 +6,7 @@ import '../scope.dart';
 import '../widgets/app_icon.dart';
 import 'settings_widgets.dart';
 
-/// Diagnostica: contesto corrente e motivazione delle previsioni
+/// Diagnostics: current context and the reasoning behind predictions
 /// (spec-motore-contesto §10).
 class DiagnosticsPage extends StatelessWidget {
   const DiagnosticsPage({super.key});
@@ -71,17 +71,17 @@ class DiagnosticsPage extends StatelessWidget {
                 children: [
                   Text(
                     'space: ${controller.currentSpace.name} · '
-                    'luogo: ${controller.places.current?.id ?? '—'} · '
-                    'viaggio: ${controller.travelling}',
+                    'place: ${controller.places.current?.id ?? '—'} · '
+                    'travelling: ${controller.travelling}',
                     style: mono,
                   ),
                   for (final p in controller.places.engine.places)
                     Text(
                       '#${p.id} ${p.effectiveRole.name}'
-                      '${p.userRole != null ? ' (utente)' : ''} '
-                      'casa ${((controller.places.engine.scores[p.id]?.homeConfidence ?? 0) * 100).round()}% '
-                      'lavoro ${((controller.places.engine.scores[p.id]?.workConfidence ?? 0) * 100).round()}% '
-                      'giorni ${controller.places.engine.scores[p.id]?.days ?? 0} '
+                      '${p.userRole != null ? ' (user)' : ''} '
+                      'home ${((controller.places.engine.scores[p.id]?.homeConfidence ?? 0) * 100).round()}% '
+                      'work ${((controller.places.engine.scores[p.id]?.workConfidence ?? 0) * 100).round()}% '
+                      'days ${controller.places.engine.scores[p.id]?.days ?? 0} '
                       'wifi ${p.wifiHits.length}',
                       style: mono,
                     ),
@@ -106,7 +106,7 @@ class DiagnosticsPage extends StatelessWidget {
                     children: [
                       Text(
                         'space: ${kind.name} · '
-                        '${controller.cardAffinity.length} tocchi',
+                        '${controller.cardAffinity.length} taps',
                         style: mono,
                       ),
                       for (final e in scores)

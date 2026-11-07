@@ -1,4 +1,4 @@
-/// Card dinamiche dello Space: Agenda e In ascolto.
+/// The Space's dynamic cards: Agenda and Now playing.
 library;
 
 import 'package:flutter/material.dart';
@@ -17,8 +17,9 @@ import 'labels.dart';
 import 'scope.dart';
 import 'widgets/app_icon.dart';
 
-/// Agenda: impegni di oggi (o di domani, di sera) con barra colorata, ora,
-/// titolo e indicazioni per il luogo. Senza permesso, invito a concederlo.
+/// Agenda: today's events (or tomorrow's, in the evening) with a colored bar,
+/// time, title and directions to the location. Without permission, a prompt
+/// to grant it.
 class AgendaCard extends StatelessWidget {
   const AgendaCard({super.key});
 
@@ -175,12 +176,12 @@ class _EventRow extends StatelessWidget {
   }
 }
 
-/// In ascolto: copertina, titolo, artista e controlli. Senza accesso ai
-/// media, se sono collegate le cuffie, invito a concederlo.
+/// Now playing: artwork, title, artist and controls. Without media access,
+/// when headphones are connected, a prompt to grant it.
 class MediaCard extends StatelessWidget {
   const MediaCard({super.key, required this.media});
 
-  /// null = accesso mancante (mostra l'invito).
+  /// null = access missing (shows the prompt).
   final MediaInfo? media;
 
   @override
@@ -329,7 +330,7 @@ class MediaCard extends StatelessWidget {
   }
 }
 
-/// Testo e pulsante "Consenti" per le card che richiedono un permesso.
+/// Text and "Allow" button for cards that require a permission.
 class _PermissionBody extends StatelessWidget {
   const _PermissionBody({
     required this.text,
@@ -389,15 +390,15 @@ class _PermissionBody extends StatelessWidget {
   }
 }
 
-/// Riga di icone delle app di una categoria (le più probabili adesso).
-/// Riga di app di una categoria, per il momento (es. Notizie al
-/// risveglio, Cibo a pranzo, Video la sera).
+/// Row of app icons from one category, the most likely right now, chosen
+/// for the moment (e.g. News on waking up, Food at lunch, Video in the
+/// evening).
 class CategoryAppsCard extends StatelessWidget {
   const CategoryAppsCard({super.key, required this.category});
 
   final AppCategory category;
 
-  /// La categoria ha app da mostrare.
+  /// Whether the category has apps to show.
   static bool hasApps(LauncherController controller, AppCategory category) =>
       controller.collections.any(
         (g) => g.category == category && g.row(1).isNotEmpty,
@@ -445,7 +446,7 @@ class _CategoryApps extends StatelessWidget {
   }
 }
 
-/// Buonanotte: sveglia di domani, Non disturbare, promemoria di ricarica.
+/// Good night: tomorrow's alarm, Do Not Disturb, charging reminder.
 class EveningCard extends StatelessWidget {
   const EveningCard({super.key, required this.nextAlarm});
 
@@ -544,8 +545,8 @@ class EveningCard extends StatelessWidget {
   }
 }
 
-/// Prossima destinazione: impegno con un luogo nelle prossime ore,
-/// indicazioni con un tocco e app di mappe.
+/// Next destination: an event with a location in the next few hours,
+/// one-tap directions and map apps.
 class NextPlaceCard extends StatelessWidget {
   const NextPlaceCard({super.key, required this.event});
 
@@ -608,7 +609,7 @@ class NextPlaceCard extends StatelessWidget {
   }
 }
 
-/// In viaggio: ora di casa, app di viaggio, "Ora vivo qui".
+/// Travelling: home time, travel apps, "I live here now".
 class TravelCard extends StatelessWidget {
   const TravelCard({super.key});
 
@@ -660,7 +661,7 @@ class TravelCard extends StatelessWidget {
   }
 }
 
-/// Vista nativa di un widget Android, alla larghezza disponibile.
+/// Native view of an Android widget, at the available width.
 class AppWidgetHostView extends StatelessWidget {
   const AppWidgetHostView({super.key, required this.widget});
 
@@ -684,7 +685,7 @@ class AppWidgetHostView extends StatelessWidget {
   );
 }
 
-/// Widget Android a tutta larghezza, dentro una card dello Space.
+/// Full-width Android widget, inside a Space card.
 class AppWidgetCard extends StatelessWidget {
   const AppWidgetCard({super.key, required this.widget});
 
@@ -695,7 +696,7 @@ class AppWidgetCard extends StatelessWidget {
       FlatCard(child: AppWidgetHostView(widget: widget));
 }
 
-/// Simbolo della condizione meteo (versione notte per il sereno).
+/// Weather condition icon (night variant for clear sky).
 IconData weatherIcon(WeatherKind k, {bool isDay = true}) => switch (k) {
   WeatherKind.clear =>
     isDay ? Icons.wb_sunny_outlined : Icons.nightlight_outlined,
@@ -722,12 +723,12 @@ String weatherLabel(L10n l, WeatherKind k) => switch (k) {
   WeatherKind.storm => l.weatherStorm,
 };
 
-/// Meteo, come in Glide: temperatura grande e sottile, simbolo, massima e
-/// minima con barrette colorate; sotto le prossime ore.
+/// Weather, as in Glide: large thin temperature, icon, high and low with
+/// colored bars; the next hours below.
 class WeatherCard extends StatelessWidget {
   const WeatherCard({super.key, this.tomorrow = false});
 
-  /// Sera e notte: la previsione di domani invece delle prossime ore.
+  /// Evening and night: tomorrow's forecast instead of the next hours.
   final bool tomorrow;
 
   @override
@@ -954,7 +955,7 @@ class WeatherCard extends StatelessWidget {
   }
 }
 
-/// In auto: prossima destinazione, mappe e musica a portata di pollice.
+/// Driving: next destination, maps and music within thumb's reach.
 class CarCard extends StatelessWidget {
   const CarCard({super.key, this.destination});
 
@@ -1005,14 +1006,14 @@ class CarCard extends StatelessWidget {
   }
 }
 
-/// "3 h 12 min" oppure "45 min".
+/// "3 h 12 min" or "45 min".
 String formatDuration(L10n l, Duration d) {
   final h = d.inHours;
   final m = d.inMinutes % 60;
   return h > 0 ? l.durationHM(h, m) : l.durationM(m);
 }
 
-/// Apre il Benessere digitale se c'è, altrimenti l'accesso ai dati d'uso.
+/// Opens Digital Wellbeing if present, otherwise usage access settings.
 void _openWellbeing(BuildContext context) {
   final controller = AppScope.of(context).controller;
   final app = controller.byPackage('com.google.android.apps.wellbeing');
@@ -1023,7 +1024,7 @@ void _openWellbeing(BuildContext context) {
   }
 }
 
-/// Pillola sulla Home con il tempo di utilizzo di oggi (come in Olauncher).
+/// Home pill with today's screen time (as in Olauncher).
 class ScreenTimePill extends StatelessWidget {
   const ScreenTimePill({super.key});
 
@@ -1075,7 +1076,7 @@ class ScreenTimePill extends StatelessWidget {
   }
 }
 
-/// Card del tempo di utilizzo: totale e le app più usate oggi.
+/// Screen time card: total and today's most used apps.
 class ScreenTimeCard extends StatelessWidget {
   const ScreenTimeCard({super.key});
 
@@ -1190,7 +1191,7 @@ class ScreenTimeCard extends StatelessWidget {
   }
 }
 
-/// Invito a concedere la posizione precisa per riconoscere casa e lavoro.
+/// Prompt to grant precise location to recognize home and work.
 class PlacesInviteCard extends StatelessWidget {
   const PlacesInviteCard({super.key});
 
@@ -1213,9 +1214,9 @@ class PlacesInviteCard extends StatelessWidget {
   }
 }
 
-/// "Dove ho parcheggiato": punto salvato allo scollegamento dall'auto,
-/// indicazioni per tornarci, "Dimentica". Se mancano permessi, li chiede
-/// uno alla volta.
+/// "Where I parked": spot saved when disconnecting from the car, directions
+/// back to it, "Forget". If permissions are missing, requests them one at a
+/// time.
 class ParkingCard extends StatelessWidget {
   const ParkingCard({super.key});
 
@@ -1244,8 +1245,8 @@ class ParkingCard extends StatelessWidget {
               },
               allowLabel: cards.parkingBlocked ? l.openSettings : null,
               onAllow: cards.requestNextParkingPermission,
-              // Senza il permesso la funzione non può andare: si spegne
-              // invece di lasciare la richiesta lì per sempre.
+              // Without the permission the feature can't work: turn it off
+              // instead of leaving the request there forever.
               onDismiss: () =>
                   AppScope.of(context).settings.setParkingCard(false),
               dismissLabel: l.turnOff,

@@ -1,4 +1,4 @@
-/// Etichette tradotte e icone per categorie, fasce orarie e stili.
+/// Localized labels and icons for categories, time slots and styles.
 library;
 
 import 'package:flutter/material.dart';

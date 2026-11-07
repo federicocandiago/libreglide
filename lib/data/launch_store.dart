@@ -1,4 +1,4 @@
-/// Storico delle aperture in SQLite (spec-motore-contesto §5, `launch_event`).
+/// Launch history in SQLite (spec-motore-contesto §5, `launch_event`).
 library;
 
 import 'package:path/path.dart' as p;
@@ -15,7 +15,7 @@ class LaunchStore {
 
   final Database _db;
 
-  /// Giorni di conservazione (spec-motore-contesto §9).
+  /// Retention in days (spec-motore-contesto §9).
   static const retentionDays = 180;
 
   static Future<LaunchStore> open() async {
@@ -74,7 +74,7 @@ class LaunchStore {
         'f_motion': r.features['motion'],
       });
 
-  /// Cancella i dati più vecchi della conservazione e restituisce il resto.
+  /// Deletes data older than the retention period and returns the rest.
   Future<List<LaunchRecord>> loadAndPrune({DateTime? now}) async {
     final t = now ?? DateTime.now();
     final cutoff = t
@@ -103,7 +103,7 @@ class LaunchStore {
     ];
   }
 
-  /// Campioni per i luoghi e stato del motore (chiave-valore).
+  /// Location samples and engine state (key-value).
   static Future<void> _createPlaceTables(Database db) async {
     await db.execute('''
       CREATE TABLE location_sample (
@@ -123,13 +123,13 @@ class LaunchStore {
     ''');
   }
 
-  /// Conservazione dei campioni di posizione (spec-motore-contesto §9).
+  /// Retention of location samples (spec-motore-contesto §9).
   static const sampleRetentionDays = 30;
 
   Future<void> insertSample(LocationSample s, int? placeId) =>
       _db.insert('location_sample', {...s.toMap(), 'place_id': placeId});
 
-  /// Campioni degli ultimi 30 giorni (i più vecchi vengono cancellati).
+  /// Samples from the last 30 days (older ones are deleted).
   Future<(List<LocationSample>, List<int?>)> loadSamples(DateTime now) async {
     final cutoff = now
         .subtract(const Duration(days: sampleRetentionDays))
@@ -142,8 +142,9 @@ class LaunchStore {
     );
   }
 
-  /// Ore delle aperture fatte da libreGLIDE da [since], per pacchetto (per
-  /// non contare due volte quelle che la cronologia di Android registra).
+  /// Times of the launches made by libreGLIDE since [since], per package (so
+  /// that those also recorded by Android usage history aren't counted
+  /// twice).
   Future<Map<String, List<int>>> launcherTimes(DateTime since) async {
     final rows = await _db.query(
       'launch_event',
@@ -158,7 +159,7 @@ class LaunchStore {
     return out;
   }
 
-  /// Aperture salvate in blocco (importazione dalla cronologia).
+  /// Bulk-saved launches (import from usage history).
   Future<void> insertAll(List<LaunchRecord> records, String source) async {
     final batch = _db.batch();
     for (final r in records) {
@@ -173,8 +174,8 @@ class LaunchStore {
     await batch.commit(noResult: true);
   }
 
-  /// Tocchi sulle card dello Space (origine `card`, pacchetto = nome della
-  /// card), con il loro contesto.
+  /// Taps on the Space cards (source `card`, package = card name), with their
+  /// context.
   Future<List<LaunchRecord>> loadCardEvents() async {
     final rows = await _db.query(
       'launch_event',
@@ -201,7 +202,7 @@ class LaunchStore {
   Future<void> deleteSource(String source) =>
       _db.delete('launch_event', where: 'source = ?', whereArgs: [source]);
 
-  /// Aperture per origine (`launcher`, `usage`), per la diagnostica.
+  /// Launch count per source (`launcher`, `usage`), for diagnostics.
   Future<Map<String, int>> countBySource() async {
     final rows = await _db.rawQuery(
       'SELECT source, COUNT(*) AS n FROM launch_event GROUP BY source',
@@ -224,7 +225,7 @@ class LaunchStore {
     'value': value,
   }, conflictAlgorithm: ConflictAlgorithm.replace);
 
-  /// Uso dei contatti aperti dal pannello: peso che decade nel tempo.
+  /// Usage of contacts opened from the panel: a weight that decays over time.
   static Future<void> _createContactTable(Database db) => db.execute('''
     CREATE TABLE contact_usage (
       lookup_key TEXT PRIMARY KEY,
@@ -233,7 +234,7 @@ class LaunchStore {
     )
   ''');
 
-  /// Registra un uso del contatto [lookupKey].
+  /// Records a use of contact [lookupKey].
   Future<void> recordContact(String lookupKey, DateTime now) async {
     final rows = await _db.query(
       'contact_usage',
@@ -258,7 +259,7 @@ class LaunchStore {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  /// Contatti più usati, dal più usato, con il peso riportato a [now].
+  /// Most used contacts, most used first, with the weight decayed to [now].
   Future<List<(String, double)>> topContacts(DateTime now, {int n = 12}) async {
     final rows = await _db.query('contact_usage');
     final scored = [
@@ -275,7 +276,7 @@ class LaunchStore {
     return scored.where((e) => e.$2 > 0.05).take(n).toList();
   }
 
-  /// Spinta iniziale delle raccolte preferite (onboarding).
+  /// Initial boost of the favorite collections (onboarding).
   static Future<void> _createBoostTable(Database db) => db.execute('''
     CREATE TABLE category_boost (
       category TEXT PRIMARY KEY,
@@ -297,7 +298,7 @@ class LaunchStore {
     ];
   }
 
-  /// Sostituisce tutte le spinte con quelle di [boosts].
+  /// Replaces all boosts with those in [boosts].
   Future<void> replaceBoosts(List<CategoryBoost> boosts) =>
       _db.transaction((txn) async {
         await txn.delete('category_boost');

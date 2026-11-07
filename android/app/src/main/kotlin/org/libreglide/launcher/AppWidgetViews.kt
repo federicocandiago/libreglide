@@ -12,8 +12,8 @@ import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 
 /**
- * Crea le viste dei widget Android da incorporare nelle card dello Space.
- * Parametri da Flutter: `id` del widget, `width` e `height` in dp.
+ * Creates Android widget views to embed in the Space's cards.
+ * Parameters from Flutter: widget `id`, `width` and `height` in dp.
  */
 class AppWidgetViewFactory(private val host: AppWidgetHost) :
     PlatformViewFactory(StandardMessageCodec.INSTANCE) {
@@ -30,7 +30,7 @@ class AppWidgetViewFactory(private val host: AppWidgetHost) :
                 val w = (params["width"] as? Number)?.toFloat()
                 val h = (params["height"] as? Number)?.toFloat()
                 if (w != null && h != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    // Widget responsivi: si adattano alla dimensione della card.
+                    // Responsive widgets: they adapt to the card's size.
                     hostView.updateAppWidgetSize(Bundle(), listOf(SizeF(w, h)))
                 }
             }

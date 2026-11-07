@@ -1,9 +1,9 @@
-/// Client Open-Meteo (https://open-meteo.com): meteo gratuito, senza chiave.
+/// Open-Meteo client (https://open-meteo.com): free weather, no API key.
 ///
-/// Secondo e ultimo punto dell'app che usa la rete, insieme a
-/// `unsplash.dart`. Viene chiamato solo se l'utente attiva la card Meteo.
-/// Invia soltanto coordinate arrotondate a ~10 km e i normali dati tecnici
-/// della connessione. Dati meteo: Open-Meteo, licenza CC BY 4.0.
+/// The second and last place in the app that uses the network, together
+/// with `unsplash.dart`. Called only if the user enables the Weather card.
+/// Sends only coordinates rounded to ~10 km and the usual technical
+/// connection data. Weather data: Open-Meteo, CC BY 4.0 license.
 library;
 
 import 'dart:convert';
@@ -31,7 +31,7 @@ class OpenMeteoClient {
     });
     final r = await _http.get(uri).timeout(const Duration(seconds: 15));
     if (r.statusCode != 200) {
-      throw Exception('Open-Meteo: risposta ${r.statusCode}');
+      throw Exception('Open-Meteo: response ${r.statusCode}');
     }
     return WeatherNow.fromOpenMeteo(
       jsonDecode(r.body) as Map<String, dynamic>,

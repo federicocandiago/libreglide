@@ -8,7 +8,7 @@ import '../scope.dart';
 import '../widgets/app_icon.dart';
 import 'settings_widgets.dart';
 
-/// Widget Android nello Space: elenco, altezza, ordine, aggiunta.
+/// Android widgets in the Space: list, height, order, adding.
 class WidgetsPage extends StatelessWidget {
   const WidgetsPage({super.key});
 
@@ -128,11 +128,12 @@ class WidgetsPage extends StatelessWidget {
   }
 }
 
-/// Widget installati, raggruppati per app.
+/// Installed widgets, grouped by app.
 class WidgetProvidersPage extends StatefulWidget {
   const WidgetProvidersPage({super.key, this.home = false});
 
-  /// Destinazione: Home (righe da 88 dp, max 3) o Space.
+  /// Destination: Home (at most [SettingsController.maxHomeWidgets] widgets,
+  /// each 1–4 rows of 88 dp) or Space.
   final bool home;
 
   @override
@@ -159,9 +160,12 @@ class _WidgetProvidersPageState extends State<WidgetProvidersPage> {
     setState(() => _adding = false);
     if (placed != null) {
       if (widget.home) {
-        // Sulla Home l'altezza va a righe intere, da 1 a 4.
+        // On Home the height snaps to whole rows.
         const row = SettingsController.homeRowHeight;
-        final rows = (placed.height / row).ceil().clamp(1, 4);
+        final rows = (placed.height / row).ceil().clamp(
+          SettingsController.minHomeRows,
+          SettingsController.maxHomeRows,
+        );
         scope.settings.addWidget(placed.withHeight(rows * row), home: true);
       } else {
         scope.settings.addWidget(placed);

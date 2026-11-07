@@ -5,14 +5,14 @@ import 'package:libreglide/core/space_profile.dart';
 void main() {
   final now = DateTime(2026, 11, 6, 9);
 
-  test('ogni momento ha il suo contenuto', () {
+  test('each moment has its own content', () {
     final morning = profileFor(SpaceKind.morning);
     final evening = profileFor(SpaceKind.evening);
     expect(morning.actions, isNot(evening.actions));
     expect(evening.weatherTomorrow, isTrue);
     expect(morning.weatherTomorrow, isFalse);
-    // Di mattina l'agenda viene prima del meteo; di sera il riepilogo
-    // del tempo di utilizzo sale in cima.
+    // In the morning the agenda comes before the weather; in the evening
+    // the screen-time summary moves to the top.
     final m = arrangeCards(
       profile: morning,
       available: [SpaceCard.weather, SpaceCard.agenda, SpaceCard.apps],
@@ -25,7 +25,7 @@ void main() {
     expect(e.first, SpaceCard.screenTime);
   });
 
-  test('una card nascosta dal profilo compare se la usi lì', () {
+  test('a card hidden by the profile appears if you use it there', () {
     final profile = profileFor(SpaceKind.morning);
     final aff = CardAffinity();
     expect(
@@ -47,11 +47,11 @@ void main() {
       ),
       [SpaceCard.screenTime],
     );
-    // Gli stessi tocchi non contano di sera.
+    // The same taps don't count in the evening.
     expect(aff.affinity(SpaceCard.screenTime, now, {'slot': 'evening'}), 0);
   });
 
-  test("l'uso fa salire una card", () {
+  test('usage moves a card up', () {
     final profile = profileFor(SpaceKind.afternoon);
     final base = arrangeCards(
       profile: profile,
@@ -66,7 +66,7 @@ void main() {
     expect(used.first, SpaceCard.weather);
   });
 
-  test('le scelte dell\'utente vincono', () {
+  test('user choices win', () {
     final profile = profileFor(SpaceKind.morning);
     final cards = arrangeCards(
       profile: profile,
@@ -79,7 +79,7 @@ void main() {
     expect(cards, [SpaceCard.screenTime, SpaceCard.weather]);
   });
 
-  test('i tocchi vecchi pesano meno', () {
+  test('old taps weigh less', () {
     final aff = CardAffinity();
     aff.add(SpaceCard.media, now.subtract(const Duration(days: 42)), {
       'audio': 'headphones',

@@ -20,7 +20,7 @@ void main() {
   ];
 
   test(
-    'di giorno: eventi di oggi non ancora finiti, prima i tutto-il-giorno',
+    'daytime: unfinished events of today, all-day ones first',
     () {
       final v = agendaFor(at(0, 11), events);
       expect(v.day, AgendaDay.today);
@@ -28,31 +28,31 @@ void main() {
     },
   );
 
-  test('di sera: gli eventi di domani', () {
+  test('evening: events of tomorrow', () {
     final v = agendaFor(at(0, 20), events);
     expect(v.day, AgendaDay.tomorrow);
     expect([for (final e in v.events) e.id], [4]);
   });
 
-  test('di sera senza eventi domani: domani vuoto', () {
+  test('evening with no events tomorrow: empty tomorrow', () {
     final v = agendaFor(at(0, 20), [morningMeeting]);
     expect(v.day, AgendaDay.tomorrow);
     expect(v.events, isEmpty);
   });
 
-  test('di giorno, finito tutto oggi: passa a domani se ci sono eventi', () {
+  test('daytime, all done today: moves to tomorrow if it has events', () {
     final v = agendaFor(at(0, 17), [morningMeeting, tomorrowBreakfast]);
     expect(v.day, AgendaDay.tomorrow);
     expect([for (final e in v.events) e.id], [4]);
   });
 
-  test("dopo mezzanotte: la giornata che inizia è ancora 'oggi'", () {
+  test("after midnight: the day just started is still 'today'", () {
     final v = agendaFor(at(1, 1), events);
     expect(v.day, AgendaDay.today);
     expect([for (final e in v.events) e.id], [4]);
   });
 
-  test('evento di tutto il giorno salvato a mezzanotte UTC', () {
+  test('all-day event stored at midnight UTC', () {
     final utcMidnight = DateTime.utc(2026, 11, 6).millisecondsSinceEpoch;
     final e = CalendarEvent.fromMap({
       'id': 9,
@@ -67,7 +67,7 @@ void main() {
     expect(e.location, isNull);
   });
 
-  group('prossima destinazione', () {
+  group('next destination', () {
     CalendarEvent at3(int id, int h, {String? loc, bool allDay = false}) =>
         CalendarEvent(
           id: id,
@@ -78,7 +78,7 @@ void main() {
           location: loc,
         );
 
-    test('il primo con un luogo entro 3 ore', () {
+    test('the first one with a location within 3 hours', () {
       final events = [
         at3(1, 12),
         at3(2, 13, loc: 'Ufficio'),
@@ -87,12 +87,12 @@ void main() {
       expect(nextDestination(at(0, 11), events)?.id, 2);
     });
 
-    test('troppo lontano o senza luogo: niente', () {
+    test('too far ahead or without location: none', () {
       expect(nextDestination(at(0, 8), [at3(2, 13, loc: 'Ufficio')]), isNull);
       expect(nextDestination(at(0, 12), [at3(1, 13)]), isNull);
     });
 
-    test('già iniziato ma non finito: ancora valido', () {
+    test('already started but not finished: still valid', () {
       final e = at3(5, 10, loc: 'Sala');
       expect(nextDestination(at(0, 10, 30), [e])?.id, 5);
       expect(nextDestination(at(0, 11, 30), [e]), isNull);

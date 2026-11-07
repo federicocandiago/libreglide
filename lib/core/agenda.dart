@@ -1,4 +1,4 @@
-/// Cosa mostrare nella card Agenda dello Space.
+/// What to show in the Space's Agenda card.
 library;
 
 import 'time_context.dart';
@@ -21,8 +21,8 @@ class CalendarEvent {
         (ms as num).toInt(),
         isUtc: allDay,
       );
-      // Gli eventi di tutto il giorno sono salvati a mezzanotte UTC: si
-      // riportano alla stessa data nel fuso locale.
+      // All-day events are stored at UTC midnight: map them back to the
+      // same date in the local time zone.
       return allDay ? DateTime(t.year, t.month, t.day) : t;
     }
 
@@ -45,7 +45,7 @@ class CalendarEvent {
   final bool allDay;
   final String? location;
 
-  /// Colore ARGB del calendario o dell'evento.
+  /// ARGB color of the calendar or of the event.
   final int? color;
 }
 
@@ -59,9 +59,9 @@ class AgendaView {
 
 DateTime _dayOf(DateTime t) => DateTime(t.year, t.month, t.day);
 
-/// Sceglie gli eventi da mostrare:
-/// - di giorno, quelli di oggi non ancora finiti;
-/// - di sera e di notte, oppure se oggi non resta nulla, quelli di domani.
+/// Picks the events to show:
+/// - during the day, today's events that haven't ended yet;
+/// - in the evening and at night, or if nothing is left today, tomorrow's.
 AgendaView agendaFor(
   DateTime now,
   List<CalendarEvent> events, {
@@ -73,7 +73,7 @@ AgendaView agendaFor(
 
   bool onDay(CalendarEvent e, DateTime day) {
     final next = day.add(const Duration(days: 1));
-    // Un evento appartiene al giorno se lo attraversa.
+    // An event belongs to a day if it overlaps it.
     return e.begin.isBefore(next) && e.end.isAfter(day);
   }
 
@@ -83,7 +83,7 @@ AgendaView agendaFor(
   ];
   final slot = slotFor(now, rhythm: rhythm);
   final late = slot == Slot.evening || slot == Slot.night;
-  // Dopo mezzanotte, "domani" per l'utente è ancora la giornata che inizia.
+  // After midnight, "tomorrow" for the user is still the day about to start.
   final afterMidnight = now.hour < rhythm.wakeMinute ~/ 60;
 
   if (afterMidnight) {
@@ -102,7 +102,7 @@ AgendaView agendaFor(
   return AgendaView(AgendaDay.today, _sorted(remainingToday, max));
 }
 
-/// Prima gli eventi di tutto il giorno, poi per ora di inizio.
+/// All-day events first, then by start time.
 List<CalendarEvent> _sorted(List<CalendarEvent> list, int max) {
   final sorted = [...list]
     ..sort((a, b) {
@@ -112,8 +112,8 @@ List<CalendarEvent> _sorted(List<CalendarEvent> list, int max) {
   return sorted.take(max).toList();
 }
 
-/// Prossimo impegno con un luogo che inizia entro [window] (o è già
-/// iniziato e non ancora finito): la "prossima destinazione".
+/// Next event with a location that starts within [window] (or has already
+/// started and not yet ended): the "next destination".
 CalendarEvent? nextDestination(
   DateTime now,
   List<CalendarEvent> events, {

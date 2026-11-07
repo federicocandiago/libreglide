@@ -1,30 +1,34 @@
-/// Previsione delle app: frequenza + recentezza + contesto
+/// App prediction: frequency + recency + context
 /// (spec-motore-contesto §7.2).
 ///
-/// Per ogni app si tengono contatori che decadono nel tempo, aggiornati in
-/// O(1) a ogni apertura senza rileggere lo storico:
+/// Each app keeps counters that decay over time, updated in O(1) on every
+/// launch without re-reading the history:
 ///
-/// - **abitudine** (emivita [habitHalfLife], 30 giorni): la frequenza;
-/// - **slancio** (emivita [momentumHalfLife], 6 ore): la recentezza;
-/// - per ogni feature di contesto (fascia, giorno, rete, cuffie, luogo…)
-///   l'abitudine dell'app con quel valore.
+/// - **habit** (half-life [habitHalfLife], 30 days): the frequency;
+/// - **momentum** (half-life [momentumHalfLife], 6 hours): the recency;
+/// - for each context feature (slot, day type, network, headphones,
+///   place…) the app's habit with that value.
 ///
-/// Punteggio (Naive Bayes con smoothing di Laplace):
+/// Score (Naive Bayes with Laplace smoothing):
 ///
 ///   score(app | ctx) = log((H(app) + κ·M(app)) / (H_tot + κ·M_tot))
-///       + Σ_f λ_f · log((H(app, f = ctx_f) + α) / (H(app) + α · |V_f|))
+///       + Σ_f λ_f · log((H(app, f = ctx_f) + α) / (H_f(app) + α · |V_f|))
 ///
-/// dove H è l'abitudine e M lo slancio. Un'app appena aperta vale per qualche
-/// ora come 1 + κ aperture abituali, poi torna alla sua frequenza normale.
+/// where H is the habit, M the momentum and H_f(app) the app's habit over
+/// the launches where feature f was known (launches imported from Android
+/// usage history have no network, place or audio and must not penalize the
+/// app). An app just launched counts for
+/// a few hours as 1 + κ habitual launches, then falls back to its normal
+/// frequency.
 ///
-/// Trucco per l'O(1): ogni apertura al tempo t aggiunge e^{λ(t − t0)} invece
-/// di aggiornare tutti i pesi; al momento del calcolo si divide per
-/// e^{λ(now − t0)}. Quando gli esponenti crescono troppo si sposta t0.
+/// The O(1) trick: each launch at time t adds e^{λ(t − t0)} instead of
+/// updating all weights; at scoring time the result is divided by
+/// e^{λ(now − t0)}. When the exponents grow too large, t0 is moved.
 library;
 
 import 'dart:math' as math;
 
-/// Un'apertura di app con le feature del contesto in cui è avvenuta.
+/// An app launch with the features of the context it happened in.
 class LaunchRecord {
   const LaunchRecord({
     required this.ts,
@@ -35,20 +39,19 @@ class LaunchRecord {
   final DateTime ts;
   final String package;
 
-  /// Valori per nome di feature (`slot`, `daytype`, `network`, `audio`,
-  /// `place`, `motion`); null = sconosciuto.
+  /// Values by feature name (`slot`, `daytype`, `network`, `audio`,
+  /// `place`, `motion`); null = unknown.
   final Map<String, String?> features;
 }
 
-/// Contributo di un fattore al punteggio, per la diagnostica.
+/// A factor's contribution to the score, for diagnostics.
 class FeatureContribution {
   const FeatureContribution(this.feature, this.value, this.delta);
   final String feature;
   final String value;
 
-  /// log(P(valore | app) / P(valore)) per le feature; per `recency` il
-  /// guadagno dovuto alle aperture recenti. Positivo = rende l'app più
-  /// probabile.
+  /// log(P(value | app) / P(value)) for features; for `recency`, the gain
+  /// from recent launches. Positive = makes the app more likely.
   final double delta;
 
   @override
@@ -56,7 +59,7 @@ class FeatureContribution {
       '$feature=$value (${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(2)})';
 }
 
-/// Scala esponenziale condivisa da tutti i contatori con la stessa emivita.
+/// Exponential scale shared by all counters with the same half-life.
 class _Clock {
   _Clock(Duration halfLife, DateTime t0)
     : lambdaPerMs = math.ln2 / halfLife.inMilliseconds,
@@ -68,10 +71,10 @@ class _Clock {
   double exponent(DateTime t) =>
       lambdaPerMs * (t.millisecondsSinceEpoch - t0Ms);
 
-  /// Peso da aggiungere per un evento al tempo [t].
+  /// Weight to add for an event at time [t].
   double weight(DateTime t) => math.exp(exponent(t));
 
-  /// Fattore che riporta i valori salvati alla scala di [now].
+  /// Factor that brings stored values to the scale of [now].
   double normalizer(DateTime now) => math.exp(-exponent(now));
 }
 
@@ -101,8 +104,8 @@ class AppPredictor {
     'motion': 0.8,
   };
 
-  /// Numero di valori possibili per feature (|V_f|). Per `place` è una
-  /// stima: home, work, altro, viaggio e alcuni luoghi frequenti.
+  /// Number of possible values per feature (|V_f|). For `place` it is an
+  /// estimate: home, work, other, travel and a few frequent places.
   static const defaultVocabularySizes = <String, int>{
     'slot': 6,
     'daytype': 2,
@@ -115,12 +118,12 @@ class AppPredictor {
   final Duration habitHalfLife;
   final Duration momentumHalfLife;
 
-  /// κ: quante aperture abituali vale un'apertura appena avvenuta.
+  /// κ: how many habitual launches a just-happened launch is worth.
   final double momentumBoost;
   final double alpha;
 
-  /// Aperture minime perché un'app venga prevista, a meno che non sia stata
-  /// usata di recente.
+  /// Minimum launches for an app to be predicted, unless it was used
+  /// recently.
   final int minLaunches;
   final Map<String, double> weights;
   final Map<String, int> vocabularySizes;
@@ -128,7 +131,7 @@ class AppPredictor {
   late final _Clock _habit;
   late final _Clock _momentum;
 
-  // Valori nella scala di t0 (vedi _Clock).
+  // Values on the t0 scale (see _Clock).
   final Map<String, double> _appHabit = {};
   final Map<String, double> _appMomentum = {};
   final Map<String, int> _appRaw = {};
@@ -138,7 +141,7 @@ class AppPredictor {
   double _totalMomentum = 0;
   int _total = 0;
 
-  /// Oltre questo esponente si sposta t0, per non uscire dai double.
+  /// Above this exponent t0 is moved, to stay within double range.
   static const _maxExponent = 500.0;
 
   int get totalLaunches => _total;
@@ -181,7 +184,7 @@ class AppPredictor {
     _total = 0;
   }
 
-  /// Toglie un pacchetto (per esempio dopo una disinstallazione).
+  /// Removes a package (e.g. after an uninstall).
   void removePackage(String package) {
     _totalHabit -= _appHabit.remove(package) ?? 0;
     _totalMomentum -= _appMomentum.remove(package) ?? 0;
@@ -214,8 +217,8 @@ class AppPredictor {
     }
   }
 
-  /// Punteggi (log-probabilità non normalizzate) delle app prevedibili:
-  /// almeno [minLaunches] aperture oppure usate nelle ultime ore.
+  /// Scores (unnormalized log-probabilities) of the predictable apps: at
+  /// least [minLaunches] launches, or used in the last few hours.
   Map<String, double> scores(
     Map<String, String?> context, {
     DateTime? now,
@@ -241,9 +244,9 @@ class AppPredictor {
         final vocab = vocabularySizes[f];
         if (lambda == null || vocab == null) return;
         final hf = (_featHabit[app]?[f]?[v] ?? 0) * nh;
-        // Il confronto è con le sole aperture in cui il segnale era noto:
-        // quelle importate dalla cronologia di Android non hanno rete,
-        // luogo né audio e non devono penalizzare l'app.
+        // Compare only against launches where the signal was known: those
+        // imported from Android usage history have no network, place or
+        // audio and must not penalize the app.
         final hTot = _observed(_featHabit[app]?[f]) * nh;
         s += lambda * math.log((hf + alpha) / (hTot + alpha * vocab));
       });
@@ -252,7 +255,7 @@ class AppPredictor {
     return out;
   }
 
-  /// Peso delle aperture in cui una feature era nota.
+  /// Weight of the launches in which a feature was known.
   static double _observed(Map<String, double>? values) {
     if (values == null) return 0;
     var sum = 0.0;
@@ -262,7 +265,7 @@ class AppPredictor {
     return sum;
   }
 
-  /// Le [n] app più probabili nel contesto, dalla più probabile.
+  /// The [n] most likely apps in the context, most likely first.
   List<String> top(
     Map<String, String?> context, {
     int n = 5,
@@ -278,14 +281,14 @@ class AppPredictor {
     return ranked.take(n).toList();
   }
 
-  /// Abitudine complessiva di ogni app (senza contesto), per riempire le
-  /// liste quando le previsioni sono poche.
+  /// Overall habit of each app (without context), to fill lists when there
+  /// are few predictions.
   Map<String, double> habit({DateTime? now}) {
     final nh = _habit.normalizer(now ?? DateTime.now());
     return {for (final e in _appHabit.entries) e.key: e.value * nh};
   }
 
-  /// Spiega perché [app] ha quel punteggio nel contesto dato.
+  /// Explains why [app] has its score in the given context.
   List<FeatureContribution> explain(
     String app,
     Map<String, String?> context, {

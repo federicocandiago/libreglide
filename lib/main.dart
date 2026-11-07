@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
+import 'app_info.dart';
 import 'data/launch_store.dart';
 import 'data/settings.dart';
 import 'perf/frame_stats.dart';
@@ -18,6 +19,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
+  await loadAppInfo();
   appFontFamily = await loadSystemFont();
   final settings = await SettingsController.load();
   final store = await LaunchStore.open();
@@ -27,7 +29,7 @@ Future<void> main() async {
     settings: settings,
   );
 
-  // Icone renderizzate a 56dp nella densità dello schermo.
+  // Icons rendered at 56dp in the screen's pixel density.
   final views = PlatformDispatcher.instance.views;
   final dpr = views.isEmpty ? 3.0 : views.first.devicePixelRatio;
   controller.icons.sizePx = (56 * dpr).round();
@@ -38,7 +40,7 @@ Future<void> main() async {
     settings: settings,
   );
   if (views.isNotEmpty) {
-    // Foto alla larghezza fisica dello schermo, massimo 1440 px.
+    // Photos at the screen's physical width, at most 1440 px.
     wallpaper.widthPx = views.first.physicalSize.width.round().clamp(720, 1440);
   }
 

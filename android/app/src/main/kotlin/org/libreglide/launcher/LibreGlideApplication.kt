@@ -7,11 +7,11 @@ import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
 
 /**
- * Crea l'engine Flutter all'avvio del processo e lo tiene in cache.
+ * Creates the Flutter engine at process start and keeps it cached.
  *
- * Un launcher deve ricomparire all'istante: se l'activity viene ricreata
- * (rotazione, cambio tema, memoria) riusa lo stesso engine già caldo invece
- * di farne partire uno nuovo.
+ * A launcher must reappear instantly: when the activity is recreated
+ * (rotation, theme change, memory pressure) it reuses the same warm engine
+ * instead of starting a new one.
  */
 class LibreGlideApplication : Application() {
 
@@ -19,14 +19,14 @@ class LibreGlideApplication : Application() {
         super.onCreate()
         widgetHost = AppWidgetHost(this, WIDGET_HOST_ID)
         val engine = FlutterEngine(this)
-        // Vista nativa per i widget Android nelle card dello Space.
+        // Native view for Android widgets in the Space's cards.
         engine.platformViewsController.registry
             .registerViewFactory(APP_WIDGET_VIEW, AppWidgetViewFactory(widgetHost))
         engine.dartExecutor.executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault())
         FlutterEngineCache.getInstance().put(ENGINE_ID, engine)
     }
 
-    /** Host dei widget Android, unico per tutta l'app. */
+    /** Android widget host, a single one for the whole app. */
     lateinit var widgetHost: AppWidgetHost
         private set
 

@@ -1,7 +1,7 @@
-/// Categorie delle app e regole per assegnarle.
+/// App categories and the rules to assign them.
 ///
-/// Ordine di priorità (spec-motore-contesto §7.3):
-/// utente > dizionario > manifest > euristica > sistema/altro.
+/// Priority order (spec-motore-contesto §7.3):
+/// user > dictionary > manifest > heuristic > system/other.
 library;
 
 enum AppCategory {
@@ -33,8 +33,8 @@ enum AppCategory {
   }
 }
 
-/// Ordine predefinito delle card nelle Collections, usato quando i dati
-/// sono insufficienti o l'utente sceglie l'ordine fisso.
+/// Default order of the cards in the Collections, used when there is not
+/// enough data or the user picks the fixed order.
 const List<AppCategory> defaultCategoryOrder = [
   AppCategory.messaging,
   AppCategory.social,
@@ -56,7 +56,7 @@ const List<AppCategory> defaultCategoryOrder = [
   AppCategory.other,
 ];
 
-/// Da dove arriva la categoria assegnata.
+/// Where the assigned category comes from.
 enum CategorySource { user, dictionary, manifest, heuristic, fallback }
 
 class CategoryAssignment {
@@ -65,7 +65,7 @@ class CategoryAssignment {
   final CategorySource source;
 }
 
-/// Valori di `ApplicationInfo.category` di Android.
+/// Values of Android's `ApplicationInfo.category`.
 AppCategory? categoryFromManifest(int? value) {
   switch (value) {
     case 0:
@@ -85,13 +85,13 @@ AppCategory? categoryFromManifest(int? value) {
     case 7:
       return AppCategory.productivity;
     case 8:
-      return AppCategory.tools; // accessibilità
+      return AppCategory.tools; // accessibility
     default:
       return null;
   }
 }
 
-/// Assegna la categoria a un'app.
+/// Assigns a category to an app.
 CategoryAssignment categorize({
   required String packageName,
   required String label,
@@ -137,7 +137,7 @@ class _KeywordRule {
   final List<String> keywords;
 }
 
-// Ordine importante: le regole più specifiche prima.
+/// Order matters: more specific rules first.
 const List<_KeywordRule> _keywordRules = [
   _KeywordRule(AppCategory.messaging, [
     'messag',
@@ -301,9 +301,9 @@ const List<_KeywordRule> _keywordRules = [
   ]),
 ];
 
-/// Dizionario offline pacchetto → categoria (prima versione, da ampliare).
+/// Offline package → category dictionary (first version, to be extended).
 const Map<String, AppCategory> categoryDictionary = {
-  // Messaggi
+  // Messaging
   'com.whatsapp': AppCategory.messaging,
   'com.whatsapp.w4b': AppCategory.messaging,
   'org.telegram.messenger': AppCategory.messaging,
@@ -336,7 +336,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'com.instagram.barcelona': AppCategory.social,
   'xyz.blueskyweb.app': AppCategory.social,
   'com.bereal.ft': AppCategory.social,
-  // Musica e audio
+  // Music and audio
   'com.spotify.music': AppCategory.music,
   'com.google.android.apps.youtube.music': AppCategory.music,
   'com.amazon.mp3': AppCategory.music,
@@ -358,7 +358,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'com.dazn': AppCategory.video,
   'com.nowtv.it': AppCategory.video,
   'org.videolan.vlc': AppCategory.video,
-  // Foto
+  // Photos
   'com.google.android.apps.photos': AppCategory.photo,
   'com.google.android.GoogleCamera': AppCategory.photo,
   'com.sec.android.app.camera': AppCategory.photo,
@@ -377,7 +377,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'bbc.mobile.news.ww': AppCategory.news,
   'com.nytimes.android': AppCategory.news,
   'com.devhd.feedly': AppCategory.news,
-  // Mappe e viaggio
+  // Maps and travel
   'com.google.android.apps.maps': AppCategory.maps,
   'com.waze': AppCategory.maps,
   'net.osmand': AppCategory.maps,
@@ -395,7 +395,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'com.airbnb.android': AppCategory.maps,
   'com.tripadvisor.tripadvisor': AppCategory.maps,
   'com.google.android.apps.travel.onthego': AppCategory.maps,
-  // Produttività
+  // Productivity
   'com.google.android.gm': AppCategory.productivity,
   'com.google.android.calendar': AppCategory.productivity,
   'com.samsung.android.calendar': AppCategory.productivity,
@@ -415,7 +415,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'com.fsck.k9': AppCategory.productivity,
   'net.thunderbird.android': AppCategory.productivity,
   'com.adobe.reader': AppCategory.productivity,
-  // Lavoro
+  // Work
   'com.microsoft.teams': AppCategory.work,
   'com.microsoft.office.outlook': AppCategory.work,
   'com.microsoft.office.word': AppCategory.work,
@@ -430,7 +430,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'com.microsoft.skydrive': AppCategory.work,
   'com.azure.authenticator': AppCategory.work,
   'com.google.android.apps.authenticator2': AppCategory.work,
-  // Studio
+  // Education
   'com.google.android.apps.classroom': AppCategory.education,
   'com.duolingo': AppCategory.education,
   'org.wikipedia': AppCategory.education,
@@ -440,7 +440,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'com.quizlet.quizletandroid': AppCategory.education,
   'com.google.android.apps.books': AppCategory.education,
   'com.amazon.kindle': AppCategory.education,
-  // Finanza
+  // Finance
   'com.paypal.android.p2pmobile': AppCategory.finance,
   'com.revolut.revolut': AppCategory.finance,
   'de.number26.android': AppCategory.finance,
@@ -465,7 +465,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'it.subito': AppCategory.shopping,
   'com.ikea.kompis': AppCategory.shopping,
   'com.android.vending': AppCategory.shopping,
-  // Cibo
+  // Food
   'com.deliveroo.orderapp': AppCategory.food,
   'com.glovoapp.consumer': AppCategory.food,
   'com.justeat.app.it': AppCategory.food,
@@ -473,7 +473,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'com.thefork.app': AppCategory.food,
   'com.app.tgtg': AppCategory.food,
   'it.giallozafferano.app': AppCategory.food,
-  // Salute e sport
+  // Health and fitness
   'com.google.android.apps.fitness': AppCategory.health,
   'com.strava': AppCategory.health,
   'com.sec.android.app.shealth': AppCategory.health,
@@ -484,7 +484,7 @@ const Map<String, AppCategory> categoryDictionary = {
   'com.getsomeheadspace.android': AppCategory.health,
   'com.google.android.apps.healthdata': AppCategory.health,
   'it.ministerodellasalute.immuni': AppCategory.health,
-  // Strumenti
+  // Tools
   'com.android.chrome': AppCategory.tools,
   'org.mozilla.firefox': AppCategory.tools,
   'org.mozilla.fenix': AppCategory.tools,
@@ -505,9 +505,9 @@ const Map<String, AppCategory> categoryDictionary = {
   'com.x8bit.bitwarden': AppCategory.tools,
   'com.agilebits.onepassword': AppCategory.tools,
   'org.fdroid.fdroid': AppCategory.tools,
-  'it.pagopa.io.app': AppCategory.tools, // IO, servizi pubblici
+  'it.pagopa.io.app': AppCategory.tools, // IO, public services
   'it.ipzs.cieid': AppCategory.tools,
-  // Sistema
+  // System
   'com.android.settings': AppCategory.system,
   'com.google.android.apps.wellbeing': AppCategory.system,
   'com.samsung.android.app.updatecenter': AppCategory.system,

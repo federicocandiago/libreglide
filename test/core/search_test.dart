@@ -16,27 +16,27 @@ void main() {
 
   List<String> labels(List<SearchHit> h) => [for (final x in h) x.app.label];
 
-  test('prima i nomi che iniziano con il testo', () {
+  test('names starting with the query come first', () {
     expect(labels(searchApps(apps, 'g')), ['Gmail', 'Google Maps']);
   });
 
-  test('parola interna e iniziali', () {
+  test('inner word and initials', () {
     expect(matchApp(maps, 'maps'), MatchClass.wordPrefix);
     expect(matchApp(maps, 'gm'), MatchClass.initials);
     expect(labels(searchApps(apps, 'gm')), ['Gmail', 'Google Maps']);
   });
 
-  test('a metà nome e senza accenti', () {
+  test('mid-name and accent-insensitive', () {
     expect(matchApp(whatsapp, 'app'), MatchClass.substring);
     expect(matchApp(meteo, 'citta'), MatchClass.wordPrefix);
   });
 
-  test('per categoria, solo da 3 lettere', () {
+  test('by category, only from 3 letters on', () {
     expect(labels(searchApps(apps, 'musica', categoryLabel: cat)), ['Spotify']);
     expect(matchApp(spotify, 'mu', categoryLabel: 'Musica'), isNull);
   });
 
-  test('a parità di corrispondenza vince il punteggio', () {
+  test('on an equal match, the score wins', () {
     final hits = searchApps(
       apps,
       'g',
@@ -45,7 +45,7 @@ void main() {
     expect(labels(hits), ['Google Maps', 'Gmail']);
   });
 
-  test('testo vuoto: nessun risultato', () {
+  test('empty query: no results', () {
     expect(searchApps(apps, '  '), isEmpty);
   });
 }

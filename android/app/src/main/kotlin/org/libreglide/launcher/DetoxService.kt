@@ -5,18 +5,18 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
 
 /**
- * Servizio di accessibilità di Digital detox.
+ * Digital detox accessibility service.
  *
- * Riceve SOLO l'evento "è cambiata la finestra in primo piano"
- * (typeWindowStateChanged, vedi res/xml/detox_service.xml) e ne legge il
- * nome del pacchetto. Non può leggere il contenuto dello schermo
- * (canRetrieveWindowContent=false), non fa polling e non tiene nulla in
- * memoria oltre al pacchetto sbloccato: si sveglia solo quando si apre o si
- * cambia app.
+ * Receives ONLY the "foreground window changed" event
+ * (typeWindowStateChanged, see res/xml/detox_service.xml) and reads its
+ * package name. It cannot read the screen content
+ * (canRetrieveWindowContent=false), does no polling and keeps nothing in
+ * memory besides the unlocked package: it wakes up only when an app is
+ * opened or switched.
  */
 class DetoxService : AccessibilityService() {
 
-    /** Finestre che passano sopra un'app senza "lasciarla". */
+    /** Windows that appear over an app without "leaving" it. */
     private var transient: Set<String> = emptySet()
 
     override fun onServiceConnected() {
@@ -40,7 +40,7 @@ class DetoxService : AccessibilityService() {
         val pkg = event.packageName?.toString() ?: return
         if (pkg in transient) return
         if (pkg == packageName && event.className?.toString() == DetoxLockActivity::class.java.name) return
-        // L'utente ha lasciato l'app sbloccata: alla prossima apertura si richiude.
+        // The user left the unlocked app: it locks again on the next opening.
         if (pkg != Detox.unlockedPackage) Detox.unlockedPackage = null
         if (pkg == packageName) return
         if (Detox.unlockedPackage == pkg || !Detox.isLockedNow(this, pkg)) return

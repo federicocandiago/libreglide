@@ -14,8 +14,8 @@ import 'widgets/app_actions.dart';
 import 'widgets/app_icon.dart';
 import 'widgets/context_wallpaper.dart';
 
-/// Home (scheda dell'ora): lo sfondo del telefono e, in basso, il dock
-/// bianco con 2 righe da 4 app, come in Glide.
+/// Home (the time-of-day tab): the phone's wallpaper and, at the bottom, the
+/// white dock with a single row of 4 apps.
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.onOpenSettings});
 
@@ -27,7 +27,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin {
-  /// Modalità modifica dei widget della Home.
+  /// Home widgets edit mode.
   bool _editing = false;
 
   @override
@@ -108,15 +108,15 @@ class _HomePageState extends State<HomePage>
         Column(
           children: [
             Expanded(
-              // Il rilevatore sta SOPRA i widget: swipe verticali e
-              // pressione lunga funzionano anche sui widget (lo swipe tra le
-              // pagine lo gestisce il PageView); i tocchi passano al widget.
+              // The detector sits ABOVE the widgets: vertical swipes and long
+              // press work on widgets too (swiping between pages is handled
+              // by the PageView); taps go through to the widget.
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onLongPress: _editing ? null : _menu,
                 onTap: _editing ? () => setState(() => _editing = false) : null,
-                // Swipe verticali: di default contatti in giù e ricerca in su
-                // (configurabili).
+                // Vertical swipes: by default contacts on swipe down and
+                // search on swipe up (configurable).
                 onVerticalDragEnd: (d) {
                   if (_editing) return;
                   final v = d.primaryVelocity ?? 0;
@@ -125,16 +125,15 @@ class _HomePageState extends State<HomePage>
                 },
                 child: Stack(
                   children: [
-                    // Superficie trasparente: anche lo sfondo libero riceve i
-                    // gesti.
+                    // Transparent surface: the empty wallpaper area receives
+                    // gestures too.
                     const Positioned.fill(
                       child: ColoredBox(color: Colors.transparent),
                     ),
-                    // Lo sfondo visto da una finestra con gli angoli
-                    // arrotondati: barra in alto e vassoio in basso lo
-                    // incorniciano.
-                    // (Gli angoli in alto li disegna la shell, sotto la
-                    // barra che resta ferma; questi seguono il vassoio.)
+                    // The wallpaper seen through a window with rounded
+                    // corners, framed by the bar at the top and the tray at
+                    // the bottom. (The shell draws the top corners, below the
+                    // fixed bar; these follow the tray.)
                     if (settings.dockStyle == DockStyle.tray &&
                         settings.homeCorners)
                       Positioned.fill(
@@ -146,7 +145,7 @@ class _HomePageState extends State<HomePage>
                           ),
                         ),
                       ),
-                    // Widget dall'alto verso il basso.
+                    // Widgets, top to bottom.
                     Positioned(
                       left: 0,
                       right: 0,
@@ -200,9 +199,9 @@ class _HomePageState extends State<HomePage>
   }
 }
 
-/// Un widget Android sulla Home, a tutta larghezza dall'alto. In
-/// modalità modifica un velo con i comandi copre il widget (che altrimenti
-/// si prenderebbe i tocchi).
+/// An Android widget on Home, full width from the top. In edit mode a scrim
+/// with the controls covers the widget (which would otherwise grab the
+/// taps).
 class _HomeWidget extends StatelessWidget {
   const _HomeWidget({
     super.key,
@@ -223,7 +222,10 @@ class _HomeWidget extends StatelessWidget {
     final settings = scope.settings;
     final l = context.l10n;
     const row = SettingsController.homeRowHeight;
-    final rows = (widget.height / row).round().clamp(1, 4);
+    final rows = (widget.height / row).round().clamp(
+      SettingsController.minHomeRows,
+      SettingsController.maxHomeRows,
+    );
     Widget tool(IconData icon, String tip, VoidCallback? onTap) =>
         IconButton.filledTonal(
           tooltip: tip,
@@ -251,7 +253,7 @@ class _HomeWidget extends StatelessWidget {
                         tool(
                           Icons.unfold_less_rounded,
                           l.widgetShorter,
-                          rows > 1
+                          rows > SettingsController.minHomeRows
                               ? () => settings.resizeWidget(
                                   widget.id,
                                   (rows - 1) * row,
@@ -269,7 +271,7 @@ class _HomeWidget extends StatelessWidget {
                         tool(
                           Icons.unfold_more_rounded,
                           l.widgetTaller,
-                          rows < 4
+                          rows < SettingsController.maxHomeRows
                               ? () => settings.resizeWidget(
                                   widget.id,
                                   (rows + 1) * row,
@@ -315,9 +317,9 @@ class _HomeWidget extends StatelessWidget {
   }
 }
 
-/// Dock della Home: 4 posti in un vassoio pieno a tutta larghezza, che
-/// scende sotto la barra dei gesti; oppure (impostazione) le sole icone
-/// sullo sfondo, con una leggera sfumatura scura per leggerle.
+/// Home dock: 4 slots in an opaque full-width tray that extends below the
+/// gesture bar; or (setting) just the icons over the wallpaper, with a light
+/// dark gradient to keep them readable.
 class _Dock extends StatelessWidget {
   const _Dock();
 
@@ -332,8 +334,8 @@ class _Dock extends StatelessWidget {
       builder: (context, _) {
         final favorites = controller.favorites;
         final tray = scope.settings.dockStyle == DockStyle.tray;
-        // Sempre 4 posti: le app del dock, poi un "+" in ogni posto libero.
-        // Tenendo premuta un'app la si trascina in un altro posto.
+        // Always 4 slots: the dock apps, then a "+" in each free slot.
+        // Long-pressing an app lets the user drag it to another slot.
         final row = Row(
           children: [
             for (var i = 0; i < SettingsController.maxFavorites; i++)
@@ -345,14 +347,14 @@ class _Dock extends StatelessWidget {
               ),
           ],
         );
-        // Icone centrate tra il bordo del vassoio e la barra di sistema:
-        // lo spazio sotto è quello della barra stessa (gesti o pulsanti).
+        // Icons centered between the tray edge and the system bar: the space
+        // below is the bar's own (gestures or buttons).
         final padding = EdgeInsets.fromLTRB(
           8,
           tray ? 12 : 20,
           8,
-          // Come prima: un po' sopra la barra di sistema, più comode da
-          // toccare; il vassoio cresce di poco e resta in equilibrio.
+          // As before: slightly above the system bar, easier to tap; the
+          // tray grows a little and stays balanced.
           bottom > 0 ? bottom + 6 : 12,
         );
         if (tray) {
@@ -361,8 +363,8 @@ class _Dock extends StatelessWidget {
             child: Padding(padding: padding, child: row),
           );
         }
-        // Dock trasparente: sotto c'è una sfumatura scura, quindi i pulsanti
-        // di sistema (o la barra dei gesti) devono essere chiari.
+        // Transparent dock: there is a dark gradient underneath, so the
+        // system buttons (or the gesture bar) must be light.
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: const SystemUiOverlayStyle(
             systemNavigationBarColor: Colors.transparent,
@@ -385,7 +387,7 @@ class _Dock extends StatelessWidget {
   }
 }
 
-/// Un posto del dock: accetta un'app trascinata da un altro posto.
+/// A dock slot: accepts an app dragged from another slot.
 class _DockSlot extends StatelessWidget {
   const _DockSlot({required this.index, required this.app});
 
@@ -413,8 +415,8 @@ class _DockSlot extends StatelessWidget {
   }
 }
 
-/// App del dock: tocco per aprire; pressione lunga per trascinarla, o per
-/// il menu dell'app se la si rilascia senza spostarla.
+/// Dock app: tap to open; long press to drag it, or to show the app menu if
+/// released without moving.
 class _DockApp extends StatelessWidget {
   const _DockApp({required this.app});
 
@@ -445,13 +447,12 @@ class _DockApp extends StatelessWidget {
         onDragStarted: () => travel = Offset.zero,
         onDragUpdate: (d) => travel += d.delta,
         onDragEnd: (d) {
-          // Rilasciata quasi dove era: era una pressione lunga, non uno
-          // spostamento.
+          // Released almost where it was: a long press, not a move.
           if (!d.wasAccepted && travel.distance < 24 && context.mounted) {
             showAppActions(context, app);
           }
         },
-        // L'icona trascinata resta centrata sotto il dito.
+        // The dragged icon stays centered under the finger.
         feedback: FractionalTranslation(
           translation: const Offset(-0.5, -0.5),
           child: Material(
@@ -469,7 +470,7 @@ class _DockApp extends StatelessWidget {
   }
 }
 
-/// Riquadro "+" per aggiungere un'app al dock.
+/// "+" tile to add an app to the dock.
 class _AddTile extends StatelessWidget {
   const _AddTile();
 
@@ -486,14 +487,13 @@ class _AddTile extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Center(
-            // Posto libero: un cerchio tonale della misura di un'icona,
-            // senza bordo.
+            // Free slot: a borderless tonal circle the size of an icon.
             child: Container(
               width: 54,
               height: 54,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                // Sullo sfondo: bianco velato, leggibile su ogni foto.
+                // Over the wallpaper: translucent white, readable on any photo.
                 color: onPhoto
                     ? Colors.white.withValues(alpha: 0.22)
                     : scheme.onSurface.withValues(alpha: 0.07),
