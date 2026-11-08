@@ -34,10 +34,15 @@ class LaunchRecord {
     required this.ts,
     required this.package,
     required this.features,
+    this.count = 1,
   });
 
   final DateTime ts;
   final String package;
+
+  /// How many launches this row stands for (more than 1 once the history
+  /// is compacted, see compaction.dart).
+  final int count;
 
   /// Values by feature name (`slot`, `daytype`, `network`, `audio`,
   /// `place`, `motion`); null = unknown.
@@ -148,15 +153,15 @@ class AppPredictor {
 
   void add(LaunchRecord r) {
     _rebaseIfNeeded(r.ts);
-    final wh = _habit.weight(r.ts);
-    final wm = _momentum.weight(r.ts);
+    final wh = _habit.weight(r.ts) * r.count;
+    final wm = _momentum.weight(r.ts) * r.count;
     final app = r.package;
     _appHabit[app] = (_appHabit[app] ?? 0) + wh;
     _appMomentum[app] = (_appMomentum[app] ?? 0) + wm;
-    _appRaw[app] = (_appRaw[app] ?? 0) + 1;
+    _appRaw[app] = (_appRaw[app] ?? 0) + r.count;
     _totalHabit += wh;
     _totalMomentum += wm;
-    _total++;
+    _total += r.count;
     final perApp = _featHabit.putIfAbsent(app, () => {});
     r.features.forEach((f, v) {
       if (v == null) return;

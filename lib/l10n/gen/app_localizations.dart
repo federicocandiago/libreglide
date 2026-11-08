@@ -373,6 +373,24 @@ abstract class L10n {
   /// **'Nessuna app trovata'**
   String get noResults;
 
+  /// No description provided for @bestMatch.
+  ///
+  /// In it, this message translates to:
+  /// **'Miglior risultato'**
+  String get bestMatch;
+
+  /// No description provided for @otherResults.
+  ///
+  /// In it, this message translates to:
+  /// **'Altri risultati'**
+  String get otherResults;
+
+  /// No description provided for @searchWeb.
+  ///
+  /// In it, this message translates to:
+  /// **'Cerca «{query}» sul web'**
+  String searchWeb(String query);
+
   /// No description provided for @layoutGrid.
   ///
   /// In it, this message translates to:
@@ -1102,7 +1120,7 @@ abstract class L10n {
   /// No description provided for @unsplashAttribution.
   ///
   /// In it, this message translates to:
-  /// **'Le foto dello sfondo contestuale sono di autori Unsplash, citati sulla Home'**
+  /// **'Le foto degli sfondi sono di autori Unsplash, citati sulla Home e nello Space'**
   String get unsplashAttribution;
 
   /// No description provided for @showOnboarding.
@@ -1264,8 +1282,92 @@ abstract class L10n {
   /// No description provided for @contextWallpaperDesc.
   ///
   /// In it, this message translates to:
-  /// **'Una foto Unsplash che cambia con il momento: festività, viaggi, ora del giorno, musica. Solo dentro libreGLIDE: lo sfondo del telefono non viene toccato.'**
+  /// **'Nello Space, una foto Unsplash che cambia con il momento: festività, viaggi, meteo, ora del giorno, musica. Solo dentro libreGLIDE: lo sfondo del telefono non viene toccato.'**
   String get contextWallpaperDesc;
+
+  /// No description provided for @spaceHeaderBlur.
+  ///
+  /// In it, this message translates to:
+  /// **'Sfoca la foto dello Space'**
+  String get spaceHeaderBlur;
+
+  /// No description provided for @spaceHeaderBlurDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Leggermente sfocata dietro data e nome dello Space, per leggerli meglio.'**
+  String get spaceHeaderBlurDesc;
+
+  /// No description provided for @dailyWallpaper.
+  ///
+  /// In it, this message translates to:
+  /// **'Sfondo giornaliero'**
+  String get dailyWallpaper;
+
+  /// No description provided for @dailyWallpaperDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Una nuova foto Unsplash ogni giorno sulla Home, scelta la prima volta che la apri.'**
+  String get dailyWallpaperDesc;
+
+  /// No description provided for @changeDailyPhoto.
+  ///
+  /// In it, this message translates to:
+  /// **'Cambia la foto di oggi'**
+  String get changeDailyPhoto;
+
+  /// No description provided for @wallpaperStyle.
+  ///
+  /// In it, this message translates to:
+  /// **'Stile delle foto'**
+  String get wallpaperStyle;
+
+  /// No description provided for @wallpaperStyleDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Si aggiunge alla ricerca degli sfondi giornaliero e contestuale.'**
+  String get wallpaperStyleDesc;
+
+  /// No description provided for @photoStyleNone.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessuno'**
+  String get photoStyleNone;
+
+  /// No description provided for @photoStyleAesthetic.
+  ///
+  /// In it, this message translates to:
+  /// **'Aesthetic'**
+  String get photoStyleAesthetic;
+
+  /// No description provided for @photoStyleNature.
+  ///
+  /// In it, this message translates to:
+  /// **'Natura'**
+  String get photoStyleNature;
+
+  /// No description provided for @photoStyleMinimal.
+  ///
+  /// In it, this message translates to:
+  /// **'Minimal'**
+  String get photoStyleMinimal;
+
+  /// No description provided for @photoStyleAbstract.
+  ///
+  /// In it, this message translates to:
+  /// **'Astratto'**
+  String get photoStyleAbstract;
+
+  /// No description provided for @photoStyleArchitecture.
+  ///
+  /// In it, this message translates to:
+  /// **'Architettura'**
+  String get photoStyleArchitecture;
+
+  /// No description provided for @photoStyleDark.
+  ///
+  /// In it, this message translates to:
+  /// **'Scuro'**
+  String get photoStyleDark;
 
   /// No description provided for @unsplashKey.
   ///
@@ -1390,7 +1492,7 @@ abstract class L10n {
   /// No description provided for @gesturesDesc.
   ///
   /// In it, this message translates to:
-  /// **'Sulla Home e, per lo swipe in giù, anche sulla barra in alto.'**
+  /// **'Sulla Home e, per lo swipe in giù, anche sulla barra in alto. Nella ricerca e nei contatti, lo swipe opposto chiude e torna alla Home.'**
   String get gesturesDesc;
 
   /// No description provided for @collectionLabels.
@@ -1819,6 +1921,30 @@ abstract class L10n {
   /// **'In viaggio'**
   String get spaceTravel;
 
+  /// No description provided for @spaceNightOut.
+  ///
+  /// In it, this message translates to:
+  /// **'Serata fuori'**
+  String get spaceNightOut;
+
+  /// No description provided for @spaceExercise.
+  ///
+  /// In it, this message translates to:
+  /// **'Attività fisica'**
+  String get spaceExercise;
+
+  /// No description provided for @exerciseSpaceDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Uno Space per corsa e camminata veloce, riconosciute dal contapassi del telefono quando apri il launcher. Nessun servizio in background.'**
+  String get exerciseSpaceDesc;
+
+  /// No description provided for @spacesPlaces.
+  ///
+  /// In it, this message translates to:
+  /// **'Dai luoghi'**
+  String get spacesPlaces;
+
   /// No description provided for @spacesContext.
   ///
   /// In it, this message translates to:
@@ -1920,12 +2046,6 @@ abstract class L10n {
   /// In it, this message translates to:
   /// **'Nome dello Space di lavoro'**
   String get workLabel;
-
-  /// No description provided for @workLabelAuto.
-  ///
-  /// In it, this message translates to:
-  /// **'Lavoro/Scuola'**
-  String get workLabelAuto;
 
   /// No description provided for @workLabelWork.
   ///
@@ -2089,11 +2209,23 @@ abstract class L10n {
   /// **'ora'**
   String get spaceNow;
 
-  /// No description provided for @workLabelBoth.
+  /// No description provided for @workLabelAutomatic.
   ///
   /// In it, this message translates to:
-  /// **'Entrambi'**
-  String get workLabelBoth;
+  /// **'Automatico'**
+  String get workLabelAutomatic;
+
+  /// No description provided for @workKindLearning.
+  ///
+  /// In it, this message translates to:
+  /// **'Dopo qualche giorno capisce dagli orari se è lavoro (mattina e pomeriggio) o scuola (solo mattina).'**
+  String get workKindLearning;
+
+  /// No description provided for @workKindDetected.
+  ///
+  /// In it, this message translates to:
+  /// **'Rilevato dagli orari: {kind}'**
+  String workKindDetected(String kind);
 
   /// No description provided for @groupLook.
   ///
@@ -2449,6 +2581,30 @@ abstract class L10n {
   /// **'Dock'**
   String get dockStyle;
 
+  /// No description provided for @homeTabLabel.
+  ///
+  /// In it, this message translates to:
+  /// **'Scheda Home'**
+  String get homeTabLabel;
+
+  /// No description provided for @homeTabDate.
+  ///
+  /// In it, this message translates to:
+  /// **'Data'**
+  String get homeTabDate;
+
+  /// No description provided for @homeTabWeather.
+  ///
+  /// In it, this message translates to:
+  /// **'Meteo'**
+  String get homeTabWeather;
+
+  /// No description provided for @homeTabWeatherOff.
+  ///
+  /// In it, this message translates to:
+  /// **'Per il meteo attiva la card Meteo nelle impostazioni dello Space.'**
+  String get homeTabWeatherOff;
+
   /// No description provided for @dockTray.
   ///
   /// In it, this message translates to:
@@ -2472,6 +2628,18 @@ abstract class L10n {
   /// In it, this message translates to:
   /// **'Barra e dock incorniciano lo sfondo con angoli appena arrotondati.'**
   String get homeCornersDesc;
+
+  /// No description provided for @lockPortrait.
+  ///
+  /// In it, this message translates to:
+  /// **'Blocca in verticale'**
+  String get lockPortrait;
+
+  /// No description provided for @lockPortraitDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Il launcher resta in verticale anche se ruoti il telefono. Disattivalo per seguire la rotazione automatica.'**
+  String get lockPortraitDesc;
 
   /// No description provided for @learnFromUsage.
   ///

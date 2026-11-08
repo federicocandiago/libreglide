@@ -7,6 +7,7 @@ library;
 import 'dart:math' as math;
 
 import 'categories.dart';
+import 'places.dart';
 import 'space.dart';
 
 /// Glide cards of the Space (Android widgets are not part of this).
@@ -85,7 +86,23 @@ const Map<SpaceCard, int> defaultCardPriority = {
   SpaceCard.placesInvite: 80,
 };
 
-SpaceProfile profileFor(SpaceKind kind) => switch (kind) {
+/// [workKind] weighs the work Space: more tools at work, fewer at school
+/// (null = not known yet, the work profile).
+SpaceProfile profileFor(SpaceKind kind, {WorkKind? workKind}) => switch (kind) {
+  SpaceKind.work when workKind == WorkKind.school => const SpaceProfile(
+    // Silent in class, a timer for study; the timetable on top and little
+    // else: no email, commute, music or weather in the way.
+    actions: [QuickAction.dnd, QuickAction.timer],
+    category: AppCategory.education,
+    priority: {SpaceCard.agenda: 10},
+    hidden: {
+      SpaceCard.screenTime,
+      SpaceCard.nextPlace,
+      SpaceCard.media,
+      SpaceCard.weather,
+    },
+    agendaWhenEmpty: true,
+  ),
   SpaceKind.wakeUp => const SpaceProfile(
     actions: [QuickAction.alarm, QuickAction.dnd],
     category: AppCategory.news,
@@ -155,6 +172,18 @@ SpaceProfile profileFor(SpaceKind kind) => switch (kind) {
     priority: {SpaceCard.travel: 6, SpaceCard.nextPlace: 8},
     hidden: {SpaceCard.screenTime},
   ),
+  SpaceKind.nightOut => const SpaceProfile(
+    actions: [QuickAction.toHome, QuickAction.maps],
+    category: AppCategory.social,
+    priority: {SpaceCard.weather: 30},
+    hidden: {SpaceCard.screenTime, SpaceCard.agenda},
+  ),
+  SpaceKind.exercise => const SpaceProfile(
+    actions: [QuickAction.timer, QuickAction.dnd],
+    category: AppCategory.health,
+    priority: {SpaceCard.media: 6, SpaceCard.weather: 10},
+    hidden: {SpaceCard.screenTime, SpaceCard.agenda, SpaceCard.nextPlace},
+  ),
   SpaceKind.listening => const SpaceProfile(
     actions: [QuickAction.alarm, QuickAction.dnd],
     category: AppCategory.music,
@@ -173,7 +202,7 @@ class CardAffinity {
   CardAffinity({this.halfLife = const Duration(days: 21)});
 
   final Duration halfLife;
-  final List<(SpaceCard, DateTime, Map<String, String?>)> _events = [];
+  final List<(SpaceCard, DateTime, Map<String, String?>, int)> _events = [];
 
   /// Signals describing the context of a tap.
   static const _features = ['slot', 'place', 'audio', 'motion'];
@@ -181,8 +210,13 @@ class CardAffinity {
   /// Values too generic to tell anything.
   static const _ignored = {'other', 'speaker'};
 
-  void add(SpaceCard card, DateTime t, Map<String, String?> features) =>
-      _events.add((card, t, features));
+  /// Adds a tap ([count] taps for a compacted row).
+  void add(
+    SpaceCard card,
+    DateTime t,
+    Map<String, String?> features, {
+    int count = 1,
+  }) => _events.add((card, t, features, count));
 
   void clear() => _events.clear();
 
@@ -195,10 +229,10 @@ class CardAffinity {
       final v = ctx[f];
       if (v == null || _ignored.contains(v)) continue;
       var sum = 0.0;
-      for (final (c, t, features) in _events) {
+      for (final (c, t, features, count) in _events) {
         if (c != card || features[f] != v) continue;
         final age = now.difference(t).inMinutes / halfLife.inMinutes;
-        sum += math.pow(0.5, age.clamp(0, 60)).toDouble();
+        sum += count * math.pow(0.5, age.clamp(0, 60)).toDouble();
       }
       if (sum > best) best = sum;
     }

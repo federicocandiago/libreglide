@@ -158,6 +158,17 @@ class L10nEs extends L10n {
   String get noResults => 'No se encontraron apps';
 
   @override
+  String get bestMatch => 'Mejor resultado';
+
+  @override
+  String get otherResults => 'Otros resultados';
+
+  @override
+  String searchWeb(String query) {
+    return 'Buscar «$query» en la web';
+  }
+
+  @override
   String get layoutGrid => 'Cuadrícula';
 
   @override
@@ -557,7 +568,7 @@ class L10nEs extends L10n {
 
   @override
   String get unsplashAttribution =>
-      'Las fotos del fondo contextual son de autores de Unsplash, citados en Inicio';
+      'Las fotos de los fondos son de autores de Unsplash, citados en Inicio y en el Space';
 
   @override
   String get showOnboarding => 'Ver de nuevo la introducción';
@@ -652,7 +663,52 @@ class L10nEs extends L10n {
 
   @override
   String get contextWallpaperDesc =>
-      'Una foto de Unsplash que cambia con el momento: festivos, viajes, hora del día, música. Solo dentro de libreGLIDE: el fondo de tu teléfono nunca se toca.';
+      'En el Space, una foto de Unsplash que cambia con el momento: festivos, viajes, tiempo, hora del día, música. Solo dentro de libreGLIDE: el fondo de tu teléfono nunca se toca.';
+
+  @override
+  String get spaceHeaderBlur => 'Desenfocar la foto del Space';
+
+  @override
+  String get spaceHeaderBlurDesc =>
+      'Ligeramente desenfocada detrás de la fecha y el nombre del Space, para leerlos mejor.';
+
+  @override
+  String get dailyWallpaper => 'Fondo diario';
+
+  @override
+  String get dailyWallpaperDesc =>
+      'Una nueva foto de Unsplash cada día en Inicio, elegida la primera vez que lo abres.';
+
+  @override
+  String get changeDailyPhoto => 'Cambiar la foto de hoy';
+
+  @override
+  String get wallpaperStyle => 'Estilo de las fotos';
+
+  @override
+  String get wallpaperStyleDesc =>
+      'Se añade a la búsqueda de los fondos diario y contextual.';
+
+  @override
+  String get photoStyleNone => 'Ninguno';
+
+  @override
+  String get photoStyleAesthetic => 'Aesthetic';
+
+  @override
+  String get photoStyleNature => 'Naturaleza';
+
+  @override
+  String get photoStyleMinimal => 'Minimalista';
+
+  @override
+  String get photoStyleAbstract => 'Abstracto';
+
+  @override
+  String get photoStyleArchitecture => 'Arquitectura';
+
+  @override
+  String get photoStyleDark => 'Oscuro';
 
   @override
   String get unsplashKey => 'Clave de Unsplash';
@@ -724,7 +780,7 @@ class L10nEs extends L10n {
 
   @override
   String get gesturesDesc =>
-      'En Inicio y, al deslizar hacia abajo, también en la barra superior.';
+      'En Inicio y, al deslizar hacia abajo, también en la barra superior. En la búsqueda y los contactos, el deslizamiento contrario cierra y vuelve a Inicio.';
 
   @override
   String get collectionLabels => 'Nombres en Collections';
@@ -982,6 +1038,19 @@ class L10nEs extends L10n {
   String get spaceTravel => 'De viaje';
 
   @override
+  String get spaceNightOut => 'Noche fuera';
+
+  @override
+  String get spaceExercise => 'Actividad física';
+
+  @override
+  String get exerciseSpaceDesc =>
+      'Un Space para correr y caminar rápido, detectados con el podómetro del teléfono cuando abres el launcher. Sin servicio en segundo plano.';
+
+  @override
+  String get spacesPlaces => 'Por lugar';
+
+  @override
   String get spacesContext => 'Según el contexto';
 
   @override
@@ -1036,9 +1105,6 @@ class L10nEs extends L10n {
 
   @override
   String get workLabel => 'Nombre del Space de trabajo';
-
-  @override
-  String get workLabelAuto => 'Trabajo/Escuela';
 
   @override
   String get workLabelWork => 'Trabajo';
@@ -1156,7 +1222,16 @@ class L10nEs extends L10n {
   String get spaceNow => 'ahora';
 
   @override
-  String get workLabelBoth => 'Ambos';
+  String get workLabelAutomatic => 'Automático';
+
+  @override
+  String get workKindLearning =>
+      'Tras unos días distingue por tus horarios si es trabajo (mañana y tarde) o escuela (solo mañanas).';
+
+  @override
+  String workKindDetected(String kind) {
+    return 'Detectado por tus horarios: $kind';
+  }
 
   @override
   String get groupLook => 'Aspecto y contenido';
@@ -1373,6 +1448,19 @@ class L10nEs extends L10n {
   String get dockStyle => 'Dock';
 
   @override
+  String get homeTabLabel => 'Pestaña Inicio';
+
+  @override
+  String get homeTabDate => 'Fecha';
+
+  @override
+  String get homeTabWeather => 'Tiempo';
+
+  @override
+  String get homeTabWeatherOff =>
+      'Para ver el tiempo, activa la tarjeta Tiempo en los ajustes del Space.';
+
+  @override
   String get dockTray => 'Bandeja';
 
   @override
@@ -1384,6 +1472,13 @@ class L10nEs extends L10n {
   @override
   String get homeCornersDesc =>
       'La barra y el dock enmarcan el fondo con esquinas ligeramente redondeadas.';
+
+  @override
+  String get lockPortrait => 'Bloquear en vertical';
+
+  @override
+  String get lockPortraitDesc =>
+      'El launcher se queda en vertical aunque gires el teléfono. Desactívalo para seguir la rotación automática.';
 
   @override
   String get learnFromUsage => 'Aprender también de apps abiertas fuera';

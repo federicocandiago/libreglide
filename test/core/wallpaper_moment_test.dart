@@ -77,4 +77,25 @@ void main() {
       MomentKind.holiday,
     );
   });
+
+  group('photo style', () {
+    test('daily query: style + "wallpaper", or just "wallpaper"', () {
+      expect(dailyQuery(WallpaperStyle.none), 'wallpaper');
+      expect(dailyQuery(WallpaperStyle.nature), 'nature wallpaper');
+    });
+
+    test('style appended to the contextual query', () {
+      expect(withStyle('rain window', WallpaperStyle.none), 'rain window');
+      expect(
+        withStyle('rain window', WallpaperStyle.minimal),
+        'rain window minimal',
+      );
+    });
+
+    test('unknown saved style falls back to none', () {
+      expect(WallpaperStyle.byName('dark'), WallpaperStyle.dark);
+      expect(WallpaperStyle.byName('vaporwave'), WallpaperStyle.none);
+      expect(WallpaperStyle.byName(null), WallpaperStyle.none);
+    });
+  });
 }

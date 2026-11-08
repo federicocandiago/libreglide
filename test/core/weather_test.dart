@@ -52,4 +52,19 @@ void main() {
     expect(w.tomorrow?.max, 15.0);
     expect(w.tomorrow?.rainChance, 80);
   });
+
+  group('temperature unit', () {
+    test('Fahrenheit only in the regions that use it', () {
+      expect(usesFahrenheit('US'), isTrue);
+      expect(usesFahrenheit('us'), isTrue);
+      expect(usesFahrenheit('IT'), isFalse);
+      expect(usesFahrenheit(null), isFalse);
+    });
+
+    test('rounded degrees in the chosen unit', () {
+      expect(formatDegrees(12.4, fahrenheit: false), '12°');
+      expect(formatDegrees(-0.6, fahrenheit: false), '-1°');
+      expect(formatDegrees(20, fahrenheit: true), '68°');
+    });
+  });
 }

@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:libreglide/core/categories.dart';
+import 'package:libreglide/core/places.dart';
 import 'package:libreglide/core/space.dart';
 import 'package:libreglide/core/space_profile.dart';
 
@@ -86,5 +88,17 @@ void main() {
     });
     final a = aff.affinity(SpaceCard.media, now, {'audio': 'headphones'});
     expect(a, closeTo(0.25, 0.01));
+  });
+
+  test('the work Space is weighed by work or school', () {
+    final work = profileFor(SpaceKind.work, workKind: WorkKind.work);
+    final school = profileFor(SpaceKind.work, workKind: WorkKind.school);
+    final unknown = profileFor(SpaceKind.work);
+    expect(work.actions, contains(QuickAction.email));
+    expect(work.category, AppCategory.work);
+    expect(school.actions, isNot(contains(QuickAction.email)));
+    expect(school.category, AppCategory.education);
+    expect(school.hidden, containsAll([SpaceCard.media, SpaceCard.weather]));
+    expect(unknown.category, AppCategory.work);
   });
 }

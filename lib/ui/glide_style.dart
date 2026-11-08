@@ -121,6 +121,8 @@ class GlideColors {
     SpaceKind.work => const Color(0xFF3B7DD8),
     SpaceKind.moving => const Color(0xFF43A047),
     SpaceKind.listening => const Color(0xFFE0533D),
+    SpaceKind.nightOut => const Color(0xFFC2185B),
+    SpaceKind.exercise => const Color(0xFF00A3BF),
     SpaceKind.travel => const Color(0xFF26A69A),
     _ => spaceBaseColor(k.slot!),
   }.harmonizeWith(scheme.primary);

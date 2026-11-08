@@ -353,7 +353,11 @@ Un luogo diventa `frequent` se non è casa né lavoro e ha avuto visite in almen
 
 #### Scuola o lavoro
 
-`work_label = auto` mostra "Lavoro/Scuola". L'utente può scegliere "Lavoro" o "Scuola" dalle impostazioni. Cambia solo l'etichetta e l'icona: la logica è la stessa.
+Con `work_label = auto` il tipo si deduce dagli orari nel luogo di lavoro (ultime 4 settimane, solo giorni feriali): ogni giorno conta come "mattina" se ci sei visto tra le 8:00 e le 13:00 e come "pomeriggio" tra le 14:30 e le 19:30. Dopo almeno 5 giorni: pomeriggi in almeno metà dei giorni → **Lavoro**; in un quarto o meno → **Scuola**; nel mezzo resta la risposta precedente (isteresi). Finché non ci sono abbastanza giorni lo Space si chiama "Lavoro/Scuola". L'utente può sempre fissare "Lavoro" o "Scuola" dalle impostazioni.
+
+Stessa struttura, pesi diversi:
+- **Lavoro:** azioni nuovo evento ed email, riga di app di lavoro, agenda e prossimo luogo in alto.
+- **Scuola** (più essenziale): azioni silenzioso e timer, riga di app per lo studio, agenda (orario) in alto anche se vuota; nascosti email, prossimo luogo, musica, meteo e tempo di utilizzo (tornano se usati spesso lì o scelti con "Mostra sempre qui").
 
 ### 6.6 Città offline ("Sei a Venezia")
 
@@ -465,16 +469,14 @@ Si valutano le regole in ordine di priorità e vince la prima che è vera. L'ute
 
 | # | Space | Condizione |
 |---|---|---|
-| 1 | **In auto** | `motion = guida` |
-| 2 | **Ascolto** | cuffie o Bluetooth audio collegati negli ultimi 10 minuti, oppure `audio ≠ speaker` e `motion = cammino` |
-| 3 | **Riunione** | `inEvent` oppure `nextEventInMin ≤ 10` (solo se il calendario è concesso) |
-| 4 | **Risveglio** | `justWokeUp` |
-| 5 | **In viaggio** | `travel` |
-| 6 | **Lavoro/Scuola** | `place.role = work` con confidenza ≥ 0.6 |
-| 7 | **Sera** | `place.role = home` e `slot ∈ {sera, notte}` |
-| 8 | **Casa** | `place.role = home` |
-| 9 | **In giro** | posizione nota ma `place = altro`, oppure un luogo frequente (con le sue app) |
-| 10 | **Giornata** | sempre vera: si basa solo su `slot` e `daytype` |
+| 1 | **In movimento** (auto) | Android Auto o autoradio Bluetooth collegata |
+| 2 | **Attività fisica** | contapassi di sistema, letto a ogni ritorno sul launcher: cadenza media ≥ 115 passi/min su una finestra di 3–45 minuti; resta 15 minuti, finisce sotto i 60 passi/min. Facoltativo (permesso Attività fisica) |
+| 3 | **In ascolto** | cuffie o audio Bluetooth collegati |
+| 4 | **In viaggio** | roaming o fuso orario diverso da casa |
+| 5 | **Serata fuori** | sera o notte, casa già riconosciuta, luogo localizzato diverso da casa e lavoro, niente Wi-Fi. Venerdì, sabato e vigilie di festivi: qualsiasi luogo; domenica dalle 20:30; dal lunedì al giovedì dalle 21:00 e solo in un luogo occasionale (non frequente). Dopo mezzanotte vale la sera prima |
+| 6 | **Lavoro/Scuola** | `place.role = work` |
+| 7 | **Casa** | `place.role = home`, tranne risveglio, sera e notte che restano Spaces orari |
+| 8 | **Fascia oraria** | sempre vera: risveglio, mattina, pranzo, pomeriggio, sera, notte |
 
 Il contenuto di ogni Space (widget, azioni rapide, app suggerite) sarà nella specifica della UI. Il motore fornisce `SpaceId` + `ContextState` + `List<AppPrediction>`.
 
@@ -490,6 +492,11 @@ Il contenuto di ogni Space (widget, azioni rapide, app suggerite) sarà nella sp
 | `launch_event` | 180 giorni, con decadimento nel punteggio |
 | `place` | cancellato dopo 90 giorni senza visite, tranne i ruoli impostati dall'utente |
 
+- **Compattazione** (`lib/core/compaction.dart`), a piccoli passi ogni 5 minuti (di più in carica) finché c'è lavoro, poi una volta al giorno:
+  - `launch_event` e tocchi sulle card: righe singole per 48 ore; poi una riga al giorno per app/card, sorgente e contesto, con conteggio `n` e un orario "equivalente" che mantiene **esatto** il peso dell'abitudine (emivita 30 giorni per le app, 21 per le card); dopo 30 giorni le righe giornaliere si fondono per mese. La recentezza (emivita 6 ore) dopo 48 ore vale meno dello 0,4%. L'import dalla cronologia di Android non risale mai prima delle righe singole.
+  - Campioni di posizione dopo 48 ore: si tolgono solo quelli ridondanti (tra due campioni dello stesso luogo, stesso giorno, a meno di 30 minuti), così pause notturne, permanenze, primo/ultimo campione del giorno e orari di arrivo restano identici.
+  - Conservazione: un gruppo mensile si cancella appena il suo mese inizia a superare i 180 giorni (nulla di più vecchio resta). `VACUUM` al massimo una volta al mese, in carica.
+  - Test di equivalenza: punteggi delle app e affinità delle card uguali prima e dopo; ruoli e punteggi dei luoghi identici dopo lo sfoltimento.
 - **Backup:** il database è escluso dal backup cloud e dal trasferimento tra dispositivi tramite `dataExtractionRules`. Le impostazioni dell'utente possono essere incluse.
 - **Cifratura:** facoltativa in v1 (SQLCipher). È da decidere (§13).
 - **Esportazione:** un JSON leggibile con tutto il contenuto, per trasparenza.

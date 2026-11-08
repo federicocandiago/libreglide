@@ -4,9 +4,12 @@ library;
 import 'package:flutter/material.dart';
 
 import '../core/categories.dart';
+import '../core/places.dart';
 import '../core/space.dart';
 import '../core/space_profile.dart';
 import '../core/time_context.dart';
+import '../core/wallpaper_moment.dart';
+import '../core/weather.dart';
 import '../l10n/gen/app_localizations.dart';
 
 extension L10nContext on BuildContext {
@@ -99,25 +102,28 @@ String paletteStyleLabel(L10n l, DynamicSchemeVariant v) => switch (v) {
   _ => v.name,
 };
 
-String spaceLabel(L10n l, SpaceKind k, {String workLabel = 'auto'}) =>
-    switch (k) {
-      SpaceKind.home => l.spaceHome,
-      SpaceKind.work => switch (workLabel) {
-        'lavoro' => l.spaceWork,
-        'scuola' => l.spaceSchool,
-        _ => l.spaceWorkOrSchool,
-      },
-      SpaceKind.moving => l.spaceMoving,
-      SpaceKind.listening => l.spaceListening,
-      SpaceKind.travel => l.spaceTravel,
-      _ => slotLabel(l, k.slot!),
-    };
+String spaceLabel(L10n l, SpaceKind k, {WorkKind? workKind}) => switch (k) {
+  SpaceKind.home => l.spaceHome,
+  SpaceKind.work => switch (workKind) {
+    WorkKind.work => l.spaceWork,
+    WorkKind.school => l.spaceSchool,
+    null => l.spaceWorkOrSchool,
+  },
+  SpaceKind.moving => l.spaceMoving,
+  SpaceKind.listening => l.spaceListening,
+  SpaceKind.nightOut => l.spaceNightOut,
+  SpaceKind.exercise => l.spaceExercise,
+  SpaceKind.travel => l.spaceTravel,
+  _ => slotLabel(l, k.slot!),
+};
 
 IconData spaceIcon(SpaceKind k) => switch (k) {
   SpaceKind.home => Icons.home_rounded,
   SpaceKind.work => Icons.work_rounded,
   SpaceKind.moving => Icons.directions_car_rounded,
   SpaceKind.listening => Icons.headphones_rounded,
+  SpaceKind.nightOut => Icons.nightlife_rounded,
+  SpaceKind.exercise => Icons.directions_run_rounded,
   SpaceKind.travel => Icons.flight_takeoff_rounded,
   _ => slotIcon(k.slot!),
 };
@@ -153,3 +159,48 @@ IconData spaceCardIcon(SpaceCard card) => switch (card) {
   SpaceCard.screenTime => Icons.hourglass_bottom_rounded,
   SpaceCard.placesInvite => Icons.home_work_rounded,
 };
+
+String wallpaperStyleLabel(L10n l, WallpaperStyle s) => switch (s) {
+  WallpaperStyle.none => l.photoStyleNone,
+  WallpaperStyle.aesthetic => l.photoStyleAesthetic,
+  WallpaperStyle.nature => l.photoStyleNature,
+  WallpaperStyle.minimal => l.photoStyleMinimal,
+  WallpaperStyle.abstract => l.photoStyleAbstract,
+  WallpaperStyle.architecture => l.photoStyleArchitecture,
+  WallpaperStyle.dark => l.photoStyleDark,
+};
+
+/// Weather condition icon (night variant for clear sky).
+IconData weatherIcon(WeatherKind k, {bool isDay = true}) => switch (k) {
+  WeatherKind.clear =>
+    isDay ? Icons.wb_sunny_outlined : Icons.nightlight_outlined,
+  WeatherKind.partly =>
+    isDay ? Icons.wb_cloudy_outlined : Icons.nights_stay_outlined,
+  WeatherKind.cloudy => Icons.cloud_outlined,
+  WeatherKind.fog => Icons.foggy,
+  WeatherKind.drizzle => Icons.grain_rounded,
+  WeatherKind.rain => Icons.water_drop_outlined,
+  WeatherKind.snow => Icons.ac_unit_rounded,
+  WeatherKind.showers => Icons.umbrella_outlined,
+  WeatherKind.storm => Icons.thunderstorm_outlined,
+};
+
+String weatherLabel(L10n l, WeatherKind k) => switch (k) {
+  WeatherKind.clear => l.weatherClear,
+  WeatherKind.partly => l.weatherPartly,
+  WeatherKind.cloudy => l.weatherCloudy,
+  WeatherKind.fog => l.weatherFog,
+  WeatherKind.drizzle => l.weatherDrizzle,
+  WeatherKind.rain => l.weatherRain,
+  WeatherKind.snow => l.weatherSnow,
+  WeatherKind.showers => l.weatherShowers,
+  WeatherKind.storm => l.weatherStorm,
+};
+
+/// [celsius] in the unit of the phone's region (°F in the US), rounded.
+String degrees(double celsius) => formatDegrees(
+  celsius,
+  fahrenheit: usesFahrenheit(
+    WidgetsBinding.instance.platformDispatcher.locale.countryCode,
+  ),
+);

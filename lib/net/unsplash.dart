@@ -1,10 +1,10 @@
 /// Unsplash client: one of the only two places in the app that use the
 /// network (the other is `open_meteo.dart`).
 ///
-/// Called only if the user has entered their own key and enabled the
-/// contextual wallpaper. Sends only generic keywords ("sunset autumn"), the
-/// key and the usual technical connection data: no location and no phone
-/// usage data (see the privacy policy).
+/// Called only if the user has entered their own key and enabled the daily
+/// or the contextual wallpaper. Sends only generic keywords ("sunset
+/// autumn", "nature wallpaper"), the key and the usual technical connection
+/// data: no location and no phone usage data (see the privacy policy).
 ///
 /// Unsplash guidelines followed:
 /// - photos are loaded from the URLs returned by the API (hotlinking);
@@ -106,6 +106,22 @@ class UnsplashClient {
       for (final p in body['results'] as List<dynamic>)
         UnsplashPhoto.fromJson(p as Map<String, dynamic>),
     ];
+  }
+
+  /// One random portrait photo for [query], with a high content filter: a
+  /// new one every call, for the daily wallpaper.
+  Future<UnsplashPhoto> random(String query) async {
+    final uri = Uri.https(_api, '/photos/random', {
+      'query': query,
+      'orientation': 'portrait',
+      'content_filter': 'high',
+    });
+    final r = await _http
+        .get(uri, headers: _headers)
+        .timeout(const Duration(seconds: 15));
+    if (r.statusCode == 404) throw const UnsplashException('no photos');
+    _check(r);
+    return UnsplashPhoto.fromJson(jsonDecode(r.body) as Map<String, dynamic>);
   }
 
   /// Checks the key with a minimal search.

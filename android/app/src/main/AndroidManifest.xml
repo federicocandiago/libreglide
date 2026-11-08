@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Agenda card: upcoming events. Requested by the card, optional. -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <!-- Exercise Space: reads the system step counter when the launcher is
+         opened. Optional, off by default. -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <!-- Contacts panel (swipe up): favorites and search. Requested by the panel, optional. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <!-- Weather (optional): COARSE location only, rounded before it is sent. -->
@@ -125,6 +128,16 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
+        </intent>
+        <!-- "Search the web": the browser that handles web searches, and the
+             default browser, to address the search to it. -->
+        <intent>
+            <action android:name="android.intent.action.WEB_SEARCH" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
         </intent>
     </queries>
 </manifest>

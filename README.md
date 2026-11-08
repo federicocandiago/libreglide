@@ -13,7 +13,7 @@ A **context-aware**, open source, **local-only** Android launcher, built with Fl
 ## Features
 
 - **Four pages**, swiped horizontally: **Space ← Home → Collections → A-Z**. The Home button always brings you back Home.
-- **Space:** the page for the moment. The date card shows the current Space: Wake up, Morning, Lunch, Afternoon, Evening, Night, Home, Work/School, On the move, Listening or Travelling. Each Space has its own content:
+- **Space:** the page for the moment. The date card shows the current Space: Wake up, Morning, Lunch, Afternoon, Evening, Night, Home, Work/School, On the move, Exercise (optional, from the phone's step counter), Listening, Travelling or Night out. Each Space has its own content:
   - **Quick actions:** alarm, new event, maps, timer, places to eat, tomorrow's alarm, and more.
   - **Cards first:** agenda in the morning, tomorrow's weather in the evening, a screen time recap at night.
   - **A row of apps from a category:** news when you wake up, food at lunch, video in the evening.
@@ -36,7 +36,7 @@ A **context-aware**, open source, **local-only** Android launcher, built with Fl
 
   It uses an accessibility service that receives **only** the name of the app in the foreground.
 - **Material You look:** system colors or 8 presets, 5 palette styles, contrast levels, light/dark/automatic theme, themed icons, the system font (Google Sans Flex where available), and an optional **frosted glass** mode with Android's system blur.
-- **Contextual wallpaper** from Unsplash (optional, with your own key), chosen by moment and weather, shown only inside libreGLIDE.
+- **Unsplash wallpapers** (optional, with your own key), shown only inside libreGLIDE: a **daily wallpaper** on Home, new every day, and a **contextual wallpaper** in the Space header, chosen by moment and weather. Both can follow a photo style (aesthetic, nature, minimal, abstract, architecture, dark).
 - **Languages:** English, Italian, Spanish, German and French. The privacy policy is available in English and Italian.
 
 ## Privacy

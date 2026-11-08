@@ -5,19 +5,28 @@ import 'package:flutter/material.dart';
 import '../core/app_entry.dart';
 import '../core/categories.dart';
 import '../core/search.dart';
+import 'gestures.dart';
 import 'glide_style.dart';
 import 'labels.dart';
 import 'scope.dart';
 import 'widgets/app_actions.dart';
 import 'widgets/app_icon.dart';
+import 'widgets/search_results.dart';
+import 'widgets/swipe_to_close.dart';
 
-/// Opens global search, sliding down from the top, with the keyboard ready.
-Future<void> showGlobalSearch(BuildContext context) {
+/// Opens global search with the keyboard ready. It slides in following the
+/// swipe that [openedBy] (from the top when opened otherwise) and closes
+/// with the opposite swipe.
+Future<void> showGlobalSearch(
+  BuildContext context, {
+  SwipeDirection? openedBy,
+}) {
+  final enter = openedBy ?? SwipeDirection.down;
   return Navigator.of(context).push(
     PageRouteBuilder<void>(
       transitionDuration: const Duration(milliseconds: 260),
       reverseTransitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (_, _, _) => const GlobalSearchPage(),
+      pageBuilder: (_, _, _) => GlobalSearchPage(closeSwipe: enter.opposite),
       transitionsBuilder: (context, animation, _, child) {
         final curved = CurvedAnimation(
           parent: animation,
@@ -28,7 +37,7 @@ Future<void> showGlobalSearch(BuildContext context) {
           opacity: curved,
           child: SlideTransition(
             position: Tween(
-              begin: const Offset(0, -0.08),
+              begin: Offset(0, enter == SwipeDirection.down ? -0.08 : 0.08),
               end: Offset.zero,
             ).animate(curved),
             child: child,
@@ -43,7 +52,10 @@ Future<void> showGlobalSearch(BuildContext context) {
 /// suggested for this moment, then the results as a list; with no text the
 /// collections can be browsed.
 class GlobalSearchPage extends StatefulWidget {
-  const GlobalSearchPage({super.key});
+  const GlobalSearchPage({super.key, this.closeSwipe = SwipeDirection.up});
+
+  /// The swipe that closes search and goes back to Home.
+  final SwipeDirection closeSwipe;
 
   @override
   State<GlobalSearchPage> createState() => _GlobalSearchPageState();
@@ -51,11 +63,15 @@ class GlobalSearchPage extends StatefulWidget {
 
 class _GlobalSearchPageState extends State<GlobalSearchPage> {
   final _text = TextEditingController();
+  final _scroll = ScrollController();
   String _query = '';
   AppCategory? _category;
   Map<String, double>? _scores;
   Timer? _autoLaunch;
   bool _launching = false;
+
+  /// Whether a browser can run web searches (checked once).
+  bool _canWeb = false;
 
   /// Delay before auto-launch: avoids opening an app while the user is still
   /// typing.
@@ -65,12 +81,29 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   void initState() {
     super.initState();
     _text.addListener(_onText);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final can = await AppScope.of(context).controller.bridge.canWebSearch();
+      if (mounted && can != _canWeb) setState(() => _canWeb = can);
+    });
+  }
+
+  /// Searches the text on the web with the default browser, then closes.
+  void _webSearch(String q) {
+    if (_launching) return;
+    _launching = true;
+    final navigator = Navigator.of(context);
+    AppScope.of(context).controller.bridge.webSearch(q);
+    Future<void>.delayed(const Duration(milliseconds: 350), () {
+      if (mounted) navigator.pop();
+    });
   }
 
   @override
   void dispose() {
     _autoLaunch?.cancel();
     _text.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -158,77 +191,140 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(cardGap, cardGap, cardGap, 0),
-              child: PillSearchField(
-                controller: _text,
-                hint: l.searchHint,
-                autofocus: true,
-                onSubmitted: () {
-                  if (results.isNotEmpty) _launch(results.first);
-                },
-                onClose: () => Navigator.of(context).pop(),
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.fromLTRB(
+        child: SwipeToClose(
+          direction: widget.closeSwipe,
+          scroll: _scroll,
+          onClose: () => Navigator.of(context).maybePop(),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
                   cardGap,
                   cardGap,
                   cardGap,
-                  MediaQuery.paddingOf(context).bottom + cardGap,
+                  0,
                 ),
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                children: [
-                  if (top.isNotEmpty)
-                    FlatCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          CapsHeader(
-                            icon: slotIcon(controller.context.slot),
-                            label: l.nowAppsHeader,
-                          ),
-                          for (var r = 0; r < top.length; r += 4)
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  for (var i = r; i < r + 4; i++)
-                                    Expanded(
-                                      child: i < top.length
-                                          ? _AppCell(
-                                              app: top[i],
-                                              onLaunch: _launch,
-                                            )
-                                          : const SizedBox(),
-                                    ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  const SizedBox(height: cardGap),
-                  if (q.isEmpty && _category == null)
-                    _BrowseCollections(
-                      onPick: (cat) => setState(() => _category = cat),
-                    )
-                  else
-                    _ResultsCard(
-                      results: results,
-                      category: _category,
-                      onClearCategory: () => setState(() => _category = null),
-                      onLaunch: _launch,
-                    ),
-                ],
+                child: PillSearchField(
+                  controller: _text,
+                  hint: l.searchHint,
+                  autofocus: true,
+                  // Enter: the best match; with no apps, the web.
+                  onSubmitted: () {
+                    if (results.isNotEmpty) {
+                      _launch(results.first);
+                    } else if (q.isNotEmpty && _canWeb) {
+                      _webSearch(q);
+                    }
+                  },
+                  onClose: () => Navigator.of(context).pop(),
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: ListView(
+                  controller: _scroll,
+                  padding: EdgeInsets.fromLTRB(
+                    cardGap,
+                    cardGap,
+                    cardGap,
+                    MediaQuery.paddingOf(context).bottom + cardGap,
+                  ),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  children: [
+                    // While typing the suggestions give way to the results.
+                    if (q.isEmpty && top.isNotEmpty)
+                      FlatCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CapsHeader(
+                              icon: slotIcon(controller.context.slot),
+                              label: l.nowAppsHeader,
+                            ),
+                            for (var r = 0; r < top.length; r += 4)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    for (var i = r; i < r + 4; i++)
+                                      Expanded(
+                                        child: i < top.length
+                                            ? _AppCell(
+                                                app: top[i],
+                                                onLaunch: _launch,
+                                              )
+                                            : const SizedBox(),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    if (q.isEmpty) const SizedBox(height: cardGap),
+                    if (q.isNotEmpty) ...[
+                      if (results.isNotEmpty)
+                        BestMatchCard(
+                          leading: AppIconView(app: results.first, size: 48),
+                          title: results.first.label,
+                          subtitle: categoryLabel(
+                            l,
+                            controller.categoryOf(results.first),
+                          ),
+                          onTap: (ctx) => _launch(results.first, ctx),
+                          onLongPress: () =>
+                              showAppActions(context, results.first),
+                        )
+                      else
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                          child: Text(
+                            l.noResults,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: c.muted),
+                          ),
+                        ),
+                      if (results.length > 1) ...[
+                        const SizedBox(height: cardGap),
+                        OtherResultsCard(
+                          rows: [
+                            for (final app in results.skip(1))
+                              _ResultRow(
+                                app: app,
+                                category: categoryLabel(
+                                  l,
+                                  controller.categoryOf(app),
+                                ),
+                                onLaunch: _launch,
+                              ),
+                          ],
+                        ),
+                      ],
+                      if (_canWeb) ...[
+                        const SizedBox(height: 4),
+                        WebSearchHint(
+                          query: q,
+                          enter: results.isEmpty,
+                          onTap: () => _webSearch(q),
+                        ),
+                      ],
+                    ] else if (_category == null)
+                      _BrowseCollections(
+                        onPick: (cat) => setState(() => _category = cat),
+                      )
+                    else
+                      _ResultsCard(
+                        results: results,
+                        category: _category,
+                        onClearCategory: () => setState(() => _category = null),
+                        onLaunch: _launch,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -284,7 +380,10 @@ class _BrowseCollections extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          CapsHeader(icon: Icons.apps_rounded, label: l.searchCollections),
+          CapsHeader(
+            icon: Icons.table_rows_rounded,
+            label: l.searchCollections,
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
             child: Wrap(

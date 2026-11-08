@@ -10,6 +10,7 @@ import '../core/app_entry.dart';
 import '../core/boost.dart';
 import '../core/categories.dart';
 import '../core/collections.dart';
+import '../core/exercise.dart';
 import '../core/places.dart';
 import '../core/predictor.dart';
 import '../core/space.dart';
@@ -132,10 +133,10 @@ class LauncherController extends ChangeNotifier {
           importUsage();
         }),
       );
-    _contextTimer = Timer.periodic(
-      const Duration(minutes: 5),
-      (_) => refreshContext(),
-    );
+    _contextTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      refreshContext();
+      _maintain();
+    });
     settings.addListener(_onSettingsChanged);
     _lastSettingsRevision = settings.collectionsRevision;
     _updateDetox();
@@ -183,10 +184,45 @@ class LauncherController extends ChangeNotifier {
         final card = SpaceCard.values
             .where((c) => c.name == r.package)
             .firstOrNull;
-        if (card != null) cardAffinity.add(card, r.ts, r.features);
+        if (card != null) {
+          cardAffinity.add(card, r.ts, r.features, count: r.count);
+        }
       }
     } catch (e) {
       debugPrint('libreglide: card taps unavailable: $e');
+    }
+  }
+
+  // --- Database maintenance ---
+
+  bool _maintaining = false;
+  DateTime? _maintainedAt;
+
+  /// Compacts and prunes the history a little at a time (see
+  /// compaction.dart): every 5 minutes a few short steps (more when
+  /// charging) until everything is done, then nothing until the next day.
+  Future<void> _maintain() async {
+    final now = _clock();
+    if (_maintaining ||
+        (_maintainedAt != null &&
+            now.difference(_maintainedAt!) < const Duration(hours: 20))) {
+      return;
+    }
+    _maintaining = true;
+    try {
+      final steps = charging ? 12 : 3;
+      for (var i = 0; i < steps; i++) {
+        if (!await store.maintainStep(now)) {
+          await store.prune(now);
+          if (charging) await store.vacuumIfDue(now);
+          _maintainedAt = now;
+          break;
+        }
+      }
+    } catch (e) {
+      debugPrint('libreglide: database maintenance failed: $e');
+    } finally {
+      _maintaining = false;
     }
   }
 
@@ -218,9 +254,13 @@ class LauncherController extends ChangeNotifier {
       usageAccess = await bridge.hasUsageAccess();
       if (!usageAccess!) return;
       final stored = int.tryParse(await store.readKv(_usageMarker) ?? '');
-      final since = stored != null
+      var since = stored != null
           ? DateTime.fromMillisecondsSinceEpoch(stored)
           : now.subtract(const Duration(days: 14));
+      // Before this the launcher's own openings are compacted, so duplicates
+      // couldn't be told apart: never import that far back.
+      final raw = await store.rawSince();
+      if (raw != null && since.isBefore(raw)) since = raw;
       final openings = await bridge.usageOpenings(since);
       final own = await store.launcherTimes(
         since.subtract(const Duration(minutes: 1)),
@@ -271,6 +311,9 @@ class LauncherController extends ChangeNotifier {
 
   /// Stored launches by source (`launcher`, `usage`).
   Future<Map<String, int>> launchSources() => store.countBySource();
+
+  /// Rows in the history tables (launches, location samples).
+  Future<(int, int)> databaseRows() => store.rowCounts();
 
   // --- Digital detox ---
 
@@ -411,11 +454,21 @@ class LauncherController extends ChangeNotifier {
   /// Latest signals read from the system (network, headphones, charging).
   Map<String, Object?> _snapshot = const {};
 
+  /// Exercise from the step counter, read at each return to the launcher.
+  final exercise = ExerciseDetector();
+
+  /// Exercising now (only with the Exercise Space turned on).
+  bool get exercising => settings.exerciseSpace && exercise.activeAt(_clock());
+
   ContextFeatures _contextNow() => ContextFeatures.at(
     _clock(),
     network: _snapshot['network'] as String?,
     audio: _snapshot['audio'] as String?,
-    motion: _snapshot['car'] == true ? 'driving' : null,
+    motion: _snapshot['car'] == true
+        ? 'driving'
+        : exercising
+        ? 'exercise'
+        : null,
     place: _placeFeature(),
   );
 
@@ -494,6 +547,14 @@ class LauncherController extends ChangeNotifier {
       debugPrint('libreglide: context signals unavailable: $e');
     }
     unawaited(places.sample());
+    if (settings.exerciseSpace) {
+      try {
+        final steps = await bridge.stepCount();
+        if (steps != null) exercise.add(StepSample(steps, _clock()));
+      } catch (e) {
+        debugPrint('libreglide: step counter unavailable: $e');
+      }
+    }
     final contextBefore = context.key;
     updateContext();
     // Battery, Do Not Disturb, time zone and roaming don't change the
@@ -512,6 +573,8 @@ class LauncherController extends ChangeNotifier {
       _snapshot['tz'],
       _snapshot['roaming'],
       homeOffset?.inMinutes,
+      // Night out also depends on the weekday and the hour.
+      nightOut,
     ].join('|');
   }
 
@@ -630,13 +693,33 @@ class LauncherController extends ChangeNotifier {
   /// Space picked manually from the drawer; null = the context one.
   SpaceKind? spaceOverride;
 
-  /// Context Space: car, headphones, travel, work, home, time of day.
+  /// Context Space: car, exercise, headphones, travel, night out, work,
+  /// home, time of day.
   SpaceKind get contextSpace => selectSpace(
     slot: context.slot,
     place: places.currentRole,
     driving: driving,
+    exercising: exercising,
     audio: context.audio,
     travelling: travelling,
+    nightOut: nightOut,
+  );
+
+  /// Work or school: the user's choice, otherwise inferred from the hours
+  /// at the work place (null while learning).
+  WorkKind? get workKind => switch (settings.workLabel) {
+    'lavoro' => WorkKind.work,
+    'scuola' => WorkKind.school,
+    _ => places.workKind,
+  };
+
+  /// Night out: evening or night away from home and work, off Wi-Fi.
+  bool get nightOut => isNightOut(
+    now: _clock(),
+    slot: context.slot,
+    place: places.currentRole,
+    network: context.network,
+    homeKnown: places.home != null,
   );
 
   /// Displayed Space: the manually picked one or the context one.
@@ -749,6 +832,10 @@ class LauncherController extends ChangeNotifier {
         features['place'] = 'travel';
       case SpaceKind.moving:
         features['motion'] = 'driving';
+      case SpaceKind.nightOut:
+        features['place'] = 'other';
+      case SpaceKind.exercise:
+        features['motion'] = 'exercise';
       case SpaceKind.listening:
         features['audio'] = 'headphones';
       default:

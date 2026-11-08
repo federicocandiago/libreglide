@@ -139,3 +139,36 @@ int pickIndex(String query, DateTime day, int count, {int shuffle = 0}) {
   }
   return h % count;
 }
+
+// --- Daily wallpaper and photo style ---
+
+/// Photo style chosen by the user, added to every Unsplash search.
+/// [word] stays in English (it works better on Unsplash); the labels shown
+/// in the app are translated.
+enum WallpaperStyle {
+  none(null),
+  aesthetic('aesthetic'),
+  nature('nature'),
+  minimal('minimal'),
+  abstract('abstract'),
+  architecture('architecture'),
+  dark('dark');
+
+  const WallpaperStyle(this.word);
+
+  final String? word;
+
+  /// The style saved in settings, or [none] if unknown.
+  static WallpaperStyle byName(String? name) => WallpaperStyle.values
+      .firstWhere((s) => s.name == name, orElse: () => WallpaperStyle.none);
+}
+
+/// Query for the daily wallpaper: the style plus "wallpaper", which keeps
+/// results close to phone wallpapers (a fully random Unsplash photo can be
+/// anything, from a product shot to a portrait).
+String dailyQuery(WallpaperStyle style) =>
+    style.word == null ? 'wallpaper' : '${style.word} wallpaper';
+
+/// [query] with the style word appended (unchanged for [WallpaperStyle.none]).
+String withStyle(String query, WallpaperStyle style) =>
+    style.word == null ? query : '$query ${style.word}';

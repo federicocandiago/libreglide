@@ -11,6 +11,7 @@ import '../core/categories.dart';
 import '../core/detox.dart';
 import '../core/space.dart';
 import '../core/space_profile.dart';
+import '../core/wallpaper_moment.dart';
 import '../platform/launcher_bridge.dart';
 
 enum ColorSource { system, preset }
@@ -25,6 +26,10 @@ enum GestureAction { search, contacts, none }
 
 /// Home dock style: solid tray (default) or icons on the wallpaper.
 enum DockStyle { tray, transparent }
+
+/// What the Home tab in the top bar shows: today's short date (default) or
+/// the local weather (only with the Weather card on).
+enum HomeTabLabel { date, weather }
 
 /// Palette styles offered to the user (a subset of
 /// [DynamicSchemeVariant]).
@@ -64,21 +69,32 @@ class SettingsController extends ChangeNotifier {
   List<AppCategory> pinnedCategories = [];
   Set<AppCategory> hiddenCategories = {};
 
-  /// Contextual wallpaper (Unsplash). The key is the user's own and stays on
-  /// the phone.
+  /// Unsplash wallpapers. The key is the user's own and stays on the phone.
+  /// Daily: a new photo on Home every day. Contextual: a photo that follows
+  /// the moment, in the Space header only.
+  bool dailyWallpaper = false;
   bool contextWallpaper = false;
+  WallpaperStyle wallpaperStyle = WallpaperStyle.none;
+
+  /// Slight blur of the photo behind the Space date card, for legibility.
+  bool spaceHeaderBlur = true;
   String? unsplashKey;
 
   /// Home time zone (e.g. "Europe/Rome"): if the current one differs, the
   /// user is considered to be travelling.
   String? homeTimeZone;
 
-  /// "Change photo": offset from the photo of the day.
+  /// "Change photo" (contextual): offset from the photo of the day.
   int wallpaperShuffle = 0;
   String? wallpaperShuffleDay;
 
-  /// Photo in use (JSON), so it isn't downloaded again on every start.
+  /// "Change today's photo" (daily): how many times it was used today.
+  int dailyShuffle = 0;
+  String? dailyShuffleDay;
+
+  /// Photos in use (JSON), so they aren't downloaded again on every start.
   String? wallpaperState;
+  String? dailyWallpaperState;
 
   /// Home gestures: by default contacts on swipe down, search on swipe up.
   GestureAction swipeDown = GestureAction.contacts;
@@ -95,6 +111,10 @@ class SettingsController extends ChangeNotifier {
   bool nextPlaceCard = true;
   bool travelCard = true;
   bool weatherCard = false;
+
+  /// Exercise Space from the step counter (needs the "Physical activity"
+  /// permission).
+  bool exerciseSpace = false;
 
   /// Home and work recognition (requires precise location).
   bool placesEnabled = true;
@@ -130,8 +150,13 @@ class SettingsController extends ChangeNotifier {
 
   /// Home dock: solid tray framing the wallpaper, or transparent.
   DockStyle dockStyle = DockStyle.tray;
+  HomeTabLabel homeTabLabel = HomeTabLabel.date;
 
   /// Slightly rounded window corners over the Home wallpaper.
+  /// Keep the launcher in portrait instead of following the phone's
+  /// rotation (on by default).
+  bool lockPortrait = true;
+
   bool homeCorners = true;
 
   /// Also learn from apps opened outside libreGLIDE (Android usage history,
@@ -253,6 +278,7 @@ class SettingsController extends ChangeNotifier {
     nextPlaceCard = p.getBool('nextPlaceCard') ?? true;
     travelCard = p.getBool('travelCard') ?? true;
     weatherCard = p.getBool('weatherCard') ?? false;
+    exerciseSpace = p.getBool('exerciseSpace') ?? false;
     placesEnabled = p.getBool('placesEnabled') ?? true;
     workLabel = p.getString('workLabel') ?? 'auto';
     screenTime =
@@ -276,6 +302,7 @@ class SettingsController extends ChangeNotifier {
     parkingCard = p.getBool('parkingCard') ?? false;
     frostedGlass = p.getBool('frostedGlass') ?? false;
     homeCorners = p.getBool('homeCorners') ?? true;
+    lockPortrait = p.getBool('lockPortrait') ?? true;
     learnFromUsage = p.getBool('learnFromUsage') ?? true;
     cardRules = {};
     for (final item in p.getStringList('cardRules') ?? const <String>[]) {
@@ -288,6 +315,9 @@ class SettingsController extends ChangeNotifier {
     dockStyle =
         DockStyle.values.elementAtOrNull(p.getInt('dockStyle') ?? 0) ??
         DockStyle.tray;
+    homeTabLabel =
+        HomeTabLabel.values.elementAtOrNull(p.getInt('homeTabLabel') ?? 0) ??
+        HomeTabLabel.date;
     detoxEnabled = p.getBool('detoxEnabled') ?? false;
     detoxAllDay = p.getBool('detoxAllDay') ?? true;
     detoxStart = p.getInt('detoxStart') ?? 22 * 60;
@@ -296,11 +326,19 @@ class SettingsController extends ChangeNotifier {
     detoxApps = (p.getStringList('detoxApps') ?? const []).toSet();
     detoxHideApps = p.getBool('detoxHideApps') ?? false;
     contextWallpaper = p.getBool('contextWallpaper') ?? false;
+    // Before 1.2 the contextual photo was also the Home wallpaper: keep Home
+    // as it was for whoever had it on.
+    dailyWallpaper = p.getBool('dailyWallpaper') ?? contextWallpaper;
+    wallpaperStyle = WallpaperStyle.byName(p.getString('wallpaperStyle'));
+    spaceHeaderBlur = p.getBool('spaceHeaderBlur') ?? true;
     unsplashKey = p.getString('unsplashKey');
     homeTimeZone = p.getString('homeTimeZone');
     wallpaperShuffle = p.getInt('wallpaperShuffle') ?? 0;
     wallpaperShuffleDay = p.getString('wallpaperShuffleDay');
     wallpaperState = p.getString('wallpaperState');
+    dailyWallpaperState = p.getString('dailyWallpaperState');
+    dailyShuffle = p.getInt('dailyShuffle') ?? 0;
+    dailyShuffleDay = p.getString('dailyShuffleDay');
     agendaCard = p.getBool('agendaCard') ?? true;
     mediaCard = p.getBool('mediaCard') ?? true;
     searchTopApps = p.getInt('searchTopApps') == 4 ? 4 : 8;
@@ -470,13 +508,34 @@ class SettingsController extends ChangeNotifier {
     _changed();
   }
 
+  void setDailyWallpaper(bool v) {
+    dailyWallpaper = v;
+    _prefs.setBool('dailyWallpaper', v);
+    _changed();
+  }
+
+  void setSpaceHeaderBlur(bool v) {
+    spaceHeaderBlur = v;
+    _prefs.setBool('spaceHeaderBlur', v);
+    _changed();
+  }
+
+  void setWallpaperStyle(WallpaperStyle v) {
+    wallpaperStyle = v;
+    _prefs.setString('wallpaperStyle', v.name);
+    _changed();
+  }
+
   void setUnsplashKey(String? key) {
     final k = key?.trim();
     unsplashKey = (k == null || k.isEmpty) ? null : k;
     if (unsplashKey == null) {
       _prefs.remove('unsplashKey');
       contextWallpaper = false;
-      _prefs.setBool('contextWallpaper', false);
+      dailyWallpaper = false;
+      _prefs
+        ..setBool('contextWallpaper', false)
+        ..setBool('dailyWallpaper', false);
     } else {
       _prefs.setString('unsplashKey', unsplashKey!);
     }
@@ -502,12 +561,35 @@ class SettingsController extends ChangeNotifier {
   int shuffleFor(String today) =>
       wallpaperShuffleDay == today ? wallpaperShuffle : 0;
 
+  /// Switches to another daily photo for [today].
+  void nextDailyWallpaper(String today) {
+    dailyShuffle = dailyShuffleDay == today ? dailyShuffle + 1 : 1;
+    dailyShuffleDay = today;
+    _prefs
+      ..setInt('dailyShuffle', dailyShuffle)
+      ..setString('dailyShuffleDay', today);
+    _changed();
+  }
+
+  /// Daily photo changes for [today] (0 if not used today).
+  int dailyShuffleFor(String today) =>
+      dailyShuffleDay == today ? dailyShuffle : 0;
+
   void saveWallpaperState(String? json) {
     wallpaperState = json;
-    if (json == null) {
-      _prefs.remove('wallpaperState');
+    _saveOrRemove('wallpaperState', json);
+  }
+
+  void saveDailyWallpaperState(String? json) {
+    dailyWallpaperState = json;
+    _saveOrRemove('dailyWallpaperState', json);
+  }
+
+  void _saveOrRemove(String key, String? value) {
+    if (value == null) {
+      _prefs.remove(key);
     } else {
-      _prefs.setString('wallpaperState', json);
+      _prefs.setString(key, value);
     }
   }
 
@@ -617,6 +699,12 @@ class SettingsController extends ChangeNotifier {
     _changed();
   }
 
+  void setExerciseSpace(bool v) {
+    exerciseSpace = v;
+    _prefs.setBool('exerciseSpace', v);
+    _changed();
+  }
+
   /// Always shows or hides a card in a Space (null = as decided by the
   /// profile and usage).
   void setCardRule(SpaceKind kind, SpaceCard card, CardRule? rule) {
@@ -634,6 +722,12 @@ class SettingsController extends ChangeNotifier {
     _changed();
   }
 
+  void setLockPortrait(bool v) {
+    lockPortrait = v;
+    _prefs.setBool('lockPortrait', v);
+    _changed();
+  }
+
   void setHomeCorners(bool v) {
     homeCorners = v;
     _prefs.setBool('homeCorners', v);
@@ -643,6 +737,12 @@ class SettingsController extends ChangeNotifier {
   void setDockStyle(DockStyle v) {
     dockStyle = v;
     _prefs.setInt('dockStyle', v.index);
+    _changed();
+  }
+
+  void setHomeTabLabel(HomeTabLabel v) {
+    homeTabLabel = v;
+    _prefs.setInt('homeTabLabel', v.index);
     _changed();
   }
 

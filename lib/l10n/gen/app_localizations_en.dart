@@ -157,6 +157,17 @@ class L10nEn extends L10n {
   String get noResults => 'No apps found';
 
   @override
+  String get bestMatch => 'Best match';
+
+  @override
+  String get otherResults => 'Other results';
+
+  @override
+  String searchWeb(String query) {
+    return 'Search “$query” on the web';
+  }
+
+  @override
   String get layoutGrid => 'Grid';
 
   @override
@@ -551,7 +562,7 @@ class L10nEn extends L10n {
 
   @override
   String get unsplashAttribution =>
-      'Contextual wallpaper photos are by Unsplash authors, credited on Home';
+      'Wallpaper photos are by Unsplash authors, credited on Home and in the Space';
 
   @override
   String get showOnboarding => 'Show the introduction again';
@@ -646,7 +657,52 @@ class L10nEn extends L10n {
 
   @override
   String get contextWallpaperDesc =>
-      'An Unsplash photo that changes with the moment: holidays, travel, time of day, music. Only inside libreGLIDE: your phone\'s wallpaper is never touched.';
+      'In the Space, an Unsplash photo that changes with the moment: holidays, travel, weather, time of day, music. Only inside libreGLIDE: your phone\'s wallpaper is never touched.';
+
+  @override
+  String get spaceHeaderBlur => 'Blur the Space photo';
+
+  @override
+  String get spaceHeaderBlurDesc =>
+      'Slightly blurred behind the date and the Space name, so they are easier to read.';
+
+  @override
+  String get dailyWallpaper => 'Daily wallpaper';
+
+  @override
+  String get dailyWallpaperDesc =>
+      'A new Unsplash photo on Home every day, picked the first time you open it.';
+
+  @override
+  String get changeDailyPhoto => 'Change today\'s photo';
+
+  @override
+  String get wallpaperStyle => 'Photo style';
+
+  @override
+  String get wallpaperStyleDesc =>
+      'Added to the search for the daily and contextual wallpapers.';
+
+  @override
+  String get photoStyleNone => 'None';
+
+  @override
+  String get photoStyleAesthetic => 'Aesthetic';
+
+  @override
+  String get photoStyleNature => 'Nature';
+
+  @override
+  String get photoStyleMinimal => 'Minimal';
+
+  @override
+  String get photoStyleAbstract => 'Abstract';
+
+  @override
+  String get photoStyleArchitecture => 'Architecture';
+
+  @override
+  String get photoStyleDark => 'Dark';
 
   @override
   String get unsplashKey => 'Unsplash key';
@@ -718,7 +774,7 @@ class L10nEn extends L10n {
 
   @override
   String get gesturesDesc =>
-      'On Home and, for swipe down, also on the top bar.';
+      'On Home and, for swipe down, also on the top bar. In search and contacts, the opposite swipe closes and goes back to Home.';
 
   @override
   String get collectionLabels => 'Names in Collections';
@@ -974,6 +1030,19 @@ class L10nEn extends L10n {
   String get spaceTravel => 'Travelling';
 
   @override
+  String get spaceNightOut => 'Night out';
+
+  @override
+  String get spaceExercise => 'Exercise';
+
+  @override
+  String get exerciseSpaceDesc =>
+      'A Space for running and brisk walking, recognized from the phone\'s step counter when you open the launcher. No background service.';
+
+  @override
+  String get spacesPlaces => 'From places';
+
+  @override
   String get spacesContext => 'From context';
 
   @override
@@ -1027,9 +1096,6 @@ class L10nEn extends L10n {
 
   @override
   String get workLabel => 'Name of the work Space';
-
-  @override
-  String get workLabelAuto => 'Work/School';
 
   @override
   String get workLabelWork => 'Work';
@@ -1147,7 +1213,16 @@ class L10nEn extends L10n {
   String get spaceNow => 'now';
 
   @override
-  String get workLabelBoth => 'Both';
+  String get workLabelAutomatic => 'Automatic';
+
+  @override
+  String get workKindLearning =>
+      'After a few days it tells from your hours whether it\'s work (morning and afternoon) or school (mornings only).';
+
+  @override
+  String workKindDetected(String kind) {
+    return 'Detected from your hours: $kind';
+  }
 
   @override
   String get groupLook => 'Look & content';
@@ -1363,6 +1438,19 @@ class L10nEn extends L10n {
   String get dockStyle => 'Dock';
 
   @override
+  String get homeTabLabel => 'Home tab';
+
+  @override
+  String get homeTabDate => 'Date';
+
+  @override
+  String get homeTabWeather => 'Weather';
+
+  @override
+  String get homeTabWeatherOff =>
+      'To show the weather, turn on the Weather card in the Space settings.';
+
+  @override
   String get dockTray => 'Tray';
 
   @override
@@ -1374,6 +1462,13 @@ class L10nEn extends L10n {
   @override
   String get homeCornersDesc =>
       'The bar and dock frame the wallpaper with slightly rounded corners.';
+
+  @override
+  String get lockPortrait => 'Lock to portrait';
+
+  @override
+  String get lockPortraitDesc =>
+      'The launcher stays in portrait even when you rotate the phone. Turn it off to follow auto-rotate.';
 
   @override
   String get learnFromUsage => 'Also learn from apps opened elsewhere';

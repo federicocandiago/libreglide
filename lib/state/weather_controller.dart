@@ -27,7 +27,12 @@ class WeatherController extends ChangeNotifier {
   DateTime? _lastAttempt;
   StreamSubscription<void>? _resumeSub;
 
+  /// A forecast younger than this is kept: at most one call every 30
+  /// minutes, and only when the user comes back to the launcher.
   static const refreshEvery = Duration(minutes: 30);
+
+  /// After a failed call (offline, no location), wait this long.
+  static const retryAfter = Duration(minutes: 15);
 
   void start() {
     _resumeSub = _bridge.resumed.listen((_) => refresh());
@@ -68,8 +73,7 @@ class WeatherController extends ChangeNotifier {
     final fresh =
         weather != null && now.difference(weather!.fetched) < refreshEvery;
     final recentlyTried =
-        _lastAttempt != null &&
-        now.difference(_lastAttempt!) < const Duration(minutes: 5);
+        _lastAttempt != null && now.difference(_lastAttempt!) < retryAfter;
     if (!force && (fresh || recentlyTried)) return;
     _busy = true;
     _lastAttempt = now;

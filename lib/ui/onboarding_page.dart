@@ -388,7 +388,7 @@ class _Intro extends StatelessWidget {
                 divider(),
                 _Bullet(icon: Icons.schedule_rounded, text: l.obHowHome),
                 divider(),
-                _Bullet(icon: Icons.apps_rounded, text: l.obHowCollections),
+                _Bullet(icon: Icons.table_rows_rounded, text: l.obHowCollections),
                 divider(),
                 _Bullet(
                   icon: Icons.swipe_vertical_rounded,

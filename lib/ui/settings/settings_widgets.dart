@@ -249,6 +249,7 @@ class SettingsChoiceTile<T> extends StatelessWidget {
     required this.options,
     required this.selected,
     required this.onChanged,
+    this.disabled = const {},
   });
 
   final IconData icon;
@@ -257,6 +258,9 @@ class SettingsChoiceTile<T> extends StatelessWidget {
 
   /// Value → (label, optional icon).
   final List<(T, String, IconData?)> options;
+
+  /// Options shown but not selectable.
+  final Set<T> disabled;
   final T selected;
   final ValueChanged<T> onChanged;
 
@@ -281,6 +285,7 @@ class SettingsChoiceTile<T> extends StatelessWidget {
                   for (final (value, label, icon) in options)
                     ButtonSegment<T>(
                       value: value,
+                      enabled: !disabled.contains(value),
                       label: Text(label, maxLines: 1, softWrap: false),
                       icon: icon == null ? null : Icon(icon, size: 18),
                     ),

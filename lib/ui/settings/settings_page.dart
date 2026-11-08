@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_info.dart';
 import '../../core/places.dart';
+import '../../core/wallpaper_moment.dart';
 import '../../data/settings.dart';
 import '../../net/unsplash.dart';
 import '../../state/wallpaper_controller.dart';
@@ -109,7 +110,7 @@ class SettingsPage extends StatelessWidget {
                   _Section.wallpaper,
                   Icons.wallpaper_rounded,
                   l.sectionWallpaper,
-                  onOff(settings.contextWallpaper),
+                  onOff(settings.dailyWallpaper || settings.contextWallpaper),
                 ),
                 entry(
                   _Section.space,
@@ -354,12 +355,34 @@ List<Widget> _sections(BuildContext context) {
           selected: settings.dockStyle,
           onChanged: settings.setDockStyle,
         ),
+        SettingsChoiceTile<HomeTabLabel>(
+          icon: Icons.today_rounded,
+          title: l.homeTabLabel,
+          subtitle: settings.weatherCard ? null : l.homeTabWeatherOff,
+          options: [
+            (HomeTabLabel.date, l.homeTabDate, Icons.calendar_today_rounded),
+            (HomeTabLabel.weather, l.homeTabWeather, Icons.wb_sunny_outlined),
+          ],
+          disabled: {if (!settings.weatherCard) HomeTabLabel.weather},
+          // Without the Weather card the tab shows the date anyway.
+          selected: settings.weatherCard
+              ? settings.homeTabLabel
+              : HomeTabLabel.date,
+          onChanged: settings.setHomeTabLabel,
+        ),
         SettingsSwitchTile(
           icon: Icons.rounded_corner_rounded,
           title: l.homeCorners,
           subtitle: l.homeCornersDesc,
           value: settings.homeCorners,
           onChanged: settings.setHomeCorners,
+        ),
+        SettingsSwitchTile(
+          icon: Icons.screen_lock_portrait_rounded,
+          title: l.lockPortrait,
+          subtitle: l.lockPortraitDesc,
+          value: settings.lockPortrait,
+          onChanged: settings.setLockPortrait,
         ),
         SettingsSwitchTile(
           icon: Icons.blur_on_rounded,
@@ -436,6 +459,20 @@ List<Widget> _sections(BuildContext context) {
           },
         ),
         SettingsSwitchTile(
+          icon: Icons.directions_run_rounded,
+          title: l.spaceExercise,
+          subtitle: l.exerciseSpaceDesc,
+          value: settings.exerciseSpace,
+          onChanged: (v) {
+            settings.setExerciseSpace(v);
+            if (v) {
+              controller.bridge.requestActivityRecognition();
+            } else {
+              controller.exercise.reset();
+            }
+          },
+        ),
+        SettingsSwitchTile(
           icon: Icons.directions_car_rounded,
           title: l.cardCar,
           subtitle: l.cardCarDesc,
@@ -508,8 +545,8 @@ List<Widget> _sections(BuildContext context) {
           icon: Icons.swipe_up_rounded,
           title: l.swipeUpAction,
           options: [
-            (GestureAction.contacts, l.gestureContacts, null),
             (GestureAction.search, l.gestureSearch, null),
+            (GestureAction.contacts, l.gestureContacts, null),
             (GestureAction.none, l.gestureNone, null),
           ],
           selected: settings.swipeUp,
@@ -722,7 +759,8 @@ class _DefaultHomeTileState extends State<_DefaultHomeTile> {
   }
 }
 
-/// Wallpaper section: contextual Unsplash wallpaper.
+/// Wallpaper section: Unsplash key, daily wallpaper (Home), contextual
+/// wallpaper (Space) and the photo style shared by both.
 class _WallpaperSection extends StatelessWidget {
   const _WallpaperSection();
 
@@ -739,9 +777,11 @@ class _WallpaperSection extends StatelessWidget {
       builder: (context, _) {
         final key = settings.unsplashKey;
         final hasKey = key != null && key.isNotEmpty;
-        final invalid = wallpaper.status == WallpaperStatus.invalidKey;
+        final invalid =
+            wallpaper.daily.status == WallpaperStatus.invalidKey ||
+            wallpaper.contextual.status == WallpaperStatus.invalidKey;
         final scheme = Theme.of(context).colorScheme;
-        final status = switch (wallpaper.status) {
+        String? statusOf(WallpaperSlot slot) => switch (slot.status) {
           WallpaperStatus.loading => l.wallpaperLoading,
           WallpaperStatus.invalidKey => l.keyInvalid,
           WallpaperStatus.error => l.wallpaperError,
@@ -777,11 +817,34 @@ class _WallpaperSection extends StatelessWidget {
                 builder: (_) => const _UnsplashKeyDialog(),
               ),
             ),
+            // --- Daily wallpaper (Home) ---
+            if (hasKey)
+              SettingsSwitchTile(
+                icon: Icons.today_rounded,
+                title: l.dailyWallpaper,
+                subtitle: statusOf(wallpaper.daily) ?? l.dailyWallpaperDesc,
+                value: settings.dailyWallpaper,
+                onChanged: settings.setDailyWallpaper,
+              )
+            else
+              SettingsTile(
+                icon: Icons.today_rounded,
+                title: l.dailyWallpaper,
+                subtitle: l.dailyWallpaperDesc,
+              ),
+            if (wallpaper.dailyActive)
+              SettingsTile(
+                icon: Icons.shuffle_rounded,
+                title: l.changeDailyPhoto,
+                onTap: wallpaper.nextDaily,
+              ),
+            // --- Contextual wallpaper (Space) ---
             if (hasKey)
               SettingsSwitchTile(
                 icon: Icons.auto_awesome_rounded,
                 title: l.contextWallpaper,
-                subtitle: status ?? l.contextWallpaperDesc,
+                subtitle:
+                    statusOf(wallpaper.contextual) ?? l.contextWallpaperDesc,
                 value: settings.contextWallpaper,
                 onChanged: settings.setContextWallpaper,
               )
@@ -791,7 +854,15 @@ class _WallpaperSection extends StatelessWidget {
                 title: l.contextWallpaper,
                 subtitle: l.contextWallpaperDesc,
               ),
-            if (wallpaper.active)
+            if (wallpaper.dailyActive || wallpaper.contextActive)
+              SettingsSwitchTile(
+                icon: Icons.blur_on_rounded,
+                title: l.spaceHeaderBlur,
+                subtitle: l.spaceHeaderBlurDesc,
+                value: settings.spaceHeaderBlur,
+                onChanged: settings.setSpaceHeaderBlur,
+              ),
+            if (wallpaper.contextActive)
               SettingsTile(
                 icon: Icons.shuffle_rounded,
                 title: l.changePhoto,
@@ -800,6 +871,34 @@ class _WallpaperSection extends StatelessWidget {
                     : l.changePhotoDesc(wallpaper.moment!.query),
                 onTap: wallpaper.next,
               ),
+            // --- Photo style, for both ---
+            if (wallpaper.dailyActive || wallpaper.contextActive) ...[
+              SettingsTile(
+                icon: Icons.style_outlined,
+                title: l.wallpaperStyle,
+                subtitle: l.wallpaperStyleDesc,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  cardPadding,
+                  0,
+                  cardPadding,
+                  14,
+                ),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final style in WallpaperStyle.values)
+                      ChoiceChip(
+                        label: Text(wallpaperStyleLabel(l, style)),
+                        selected: settings.wallpaperStyle == style,
+                        onSelected: (_) => settings.setWallpaperStyle(style),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ],
         );
       },
@@ -852,6 +951,7 @@ class _UnsplashKeyDialogState extends State<_UnsplashKeyDialog> {
         return;
       }
       settings.setUnsplashKey(key);
+      settings.setDailyWallpaper(true);
       settings.setContextWallpaper(true);
       Navigator.pop(context);
     } catch (_) {
@@ -991,8 +1091,17 @@ class _PlacesSection extends StatelessWidget {
               SettingsChoiceTile<String>(
                 icon: Icons.badge_outlined,
                 title: l.workLabel,
+                subtitle: settings.workLabel != 'auto'
+                    ? null
+                    : switch (places.workKind) {
+                        WorkKind.work => l.workKindDetected(l.workLabelWork),
+                        WorkKind.school => l.workKindDetected(
+                          l.workLabelSchool,
+                        ),
+                        null => l.workKindLearning,
+                      },
                 options: [
-                  ('auto', l.workLabelBoth, null),
+                  ('auto', l.workLabelAutomatic, null),
                   ('lavoro', l.workLabelWork, null),
                   ('scuola', l.workLabelSchool, null),
                 ],

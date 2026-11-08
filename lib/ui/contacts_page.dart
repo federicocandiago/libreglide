@@ -3,17 +3,26 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/contact.dart';
+import 'gestures.dart';
 import 'glide_style.dart';
 import 'labels.dart';
 import 'scope.dart';
+import 'widgets/search_results.dart';
+import 'widgets/swipe_to_close.dart';
 
-/// Opens the contacts panel, sliding up from the bottom.
-Future<void> showContactsPanel(BuildContext context) {
+/// Opens the contacts panel. It slides in following the swipe that
+/// [openedBy] (from the bottom when opened otherwise) and closes with the
+/// opposite swipe.
+Future<void> showContactsPanel(
+  BuildContext context, {
+  SwipeDirection? openedBy,
+}) {
+  final enter = openedBy ?? SwipeDirection.up;
   return Navigator.of(context).push(
     PageRouteBuilder<void>(
       transitionDuration: const Duration(milliseconds: 280),
       reverseTransitionDuration: const Duration(milliseconds: 220),
-      pageBuilder: (_, _, _) => const ContactsPage(),
+      pageBuilder: (_, _, _) => ContactsPage(closeSwipe: enter.opposite),
       transitionsBuilder: (context, animation, _, child) {
         final curved = CurvedAnimation(
           parent: animation,
@@ -22,7 +31,7 @@ Future<void> showContactsPanel(BuildContext context) {
         );
         return SlideTransition(
           position: Tween(
-            begin: const Offset(0, 0.12),
+            begin: Offset(0, enter == SwipeDirection.up ? 0.12 : -0.12),
             end: Offset.zero,
           ).animate(curved),
           child: FadeTransition(opacity: curved, child: child),
@@ -34,7 +43,10 @@ Future<void> showContactsPanel(BuildContext context) {
 
 /// Contacts: search at the top, then favorites and most used.
 class ContactsPage extends StatefulWidget {
-  const ContactsPage({super.key});
+  const ContactsPage({super.key, this.closeSwipe = SwipeDirection.down});
+
+  /// The swipe that closes the panel and goes back to Home.
+  final SwipeDirection closeSwipe;
 
   @override
   State<ContactsPage> createState() => _ContactsPageState();
@@ -42,8 +54,12 @@ class ContactsPage extends StatefulWidget {
 
 class _ContactsPageState extends State<ContactsPage> {
   final _text = TextEditingController();
+  final _scroll = ScrollController();
   String _query = '';
   List<Contact> _results = const [];
+
+  /// The text [_results] belong to: Enter acts only on fresh results.
+  String? _resultsFor;
   Timer? _debounce;
   StreamSubscription<void>? _resumeSub;
 
@@ -72,13 +88,35 @@ class _ContactsPageState extends State<ContactsPage> {
     setState(() => _query = q);
     _debounce?.cancel();
     if (q.isEmpty) {
-      setState(() => _results = const []);
+      setState(() {
+        _results = const [];
+        _resultsFor = null;
+      });
       return;
     }
-    _debounce = Timer(const Duration(milliseconds: 180), () async {
-      final r = await AppScope.of(context).controller.contacts.search(q);
-      if (mounted && q == _query) setState(() => _results = r);
-    });
+    _debounce = Timer(const Duration(milliseconds: 180), () => _search(q));
+  }
+
+  Future<List<Contact>> _search(String q) async {
+    final r = await AppScope.of(context).controller.contacts.search(q);
+    if (mounted && q == _query) {
+      setState(() {
+        _results = r;
+        _resultsFor = q;
+      });
+    }
+    return r;
+  }
+
+  /// Enter: the best match (searching right away if the results for this
+  /// text haven't arrived yet).
+  Future<void> _submit() async {
+    final q = _query;
+    if (q.isEmpty) return;
+    _debounce?.cancel();
+    final r = _resultsFor == q ? _results : await _search(q);
+    if (!mounted || q != _query || r.isEmpty) return;
+    await _quickAction(context, r.first);
   }
 
   @override
@@ -86,6 +124,7 @@ class _ContactsPageState extends State<ContactsPage> {
     _debounce?.cancel();
     _resumeSub?.cancel();
     _text.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -98,16 +137,16 @@ class _ContactsPageState extends State<ContactsPage> {
     return Scaffold(
       backgroundColor: c.page,
       body: SafeArea(
-        child: GestureDetector(
-          // Swipe down to close.
-          onVerticalDragEnd: (d) {
-            if ((d.primaryVelocity ?? 0) > 600) Navigator.of(context).pop();
-          },
+        child: SwipeToClose(
+          direction: widget.closeSwipe,
+          scroll: _scroll,
+          onClose: () => Navigator.of(context).maybePop(),
           child: ListenableBuilder(
             listenable: contacts,
             builder: (context, _) {
               final granted = contacts.permission ?? false;
               return ListView(
+                controller: _scroll,
                 padding: const EdgeInsets.all(cardGap),
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
@@ -117,6 +156,7 @@ class _ContactsPageState extends State<ContactsPage> {
                       controller: _text,
                       hint: l.contactsSearchHint,
                       autofocus: true,
+                      onSubmitted: _submit,
                       onClose: () => Navigator.of(context).pop(),
                     ),
                     const SizedBox(height: cardGap),
@@ -155,7 +195,12 @@ class _ContactsPageState extends State<ContactsPage> {
                       ),
                     )
                   else if (_query.isNotEmpty)
-                    _Results(contacts: _results)
+                    _Results(
+                      contacts: _results,
+                      // No "not found" while the first results are on their
+                      // way.
+                      settled: _resultsFor == _query,
+                    )
                   else if (granted)
                     FlatCard(
                       child: Column(
@@ -202,15 +247,18 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 }
 
+/// Results: the best match (Enter calls it), then the others.
 class _Results extends StatelessWidget {
-  const _Results({required this.contacts});
+  const _Results({required this.contacts, required this.settled});
 
   final List<Contact> contacts;
+  final bool settled;
 
   @override
   Widget build(BuildContext context) {
     final c = GlideColors.of(context);
     if (contacts.isEmpty) {
+      if (!settled) return const SizedBox();
       return Padding(
         padding: const EdgeInsets.all(24),
         child: Center(
@@ -221,52 +269,75 @@ class _Results extends StatelessWidget {
         ),
       );
     }
-    return FlatCard(
-      child: Column(
-        children: [
-          for (final (i, contact) in contacts.indexed) ...[
-            if (i > 0) Divider(height: 1, indent: 72, color: c.hairline),
-            InkWell(
-              onTap: () => _quickAction(context, contact),
-              onLongPress: () => _showActions(context, contact),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    ContactAvatar(contact: contact, radius: 22),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            contact.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          if (contact.number != null)
-                            Text(
-                              contact.number!,
-                              style: TextStyle(color: c.muted, fontSize: 13),
-                            ),
-                        ],
-                      ),
+    final best = contacts.first;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        BestMatchCard(
+          leading: ContactAvatar(contact: best, radius: 26),
+          title: best.name,
+          subtitle: best.number,
+          onTap: (_) => _quickAction(context, best),
+          onLongPress: () => _showActions(context, best),
+        ),
+        if (contacts.length > 1) ...[
+          const SizedBox(height: cardGap),
+          OtherResultsCard(
+            dividerIndent: 72,
+            rows: [
+              for (final contact in contacts.skip(1))
+                _ContactRow(contact: contact),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// A contact in the results: avatar, name, number, star.
+class _ContactRow extends StatelessWidget {
+  const _ContactRow({required this.contact});
+
+  final Contact contact;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = GlideColors.of(context);
+    return InkWell(
+      onTap: () => _quickAction(context, contact),
+      onLongPress: () => _showActions(context, contact),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: Row(
+          children: [
+            ContactAvatar(contact: contact, radius: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    contact.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
-                    if (contact.starred)
-                      Icon(Icons.star_rounded, size: 18, color: c.accent),
-                  ],
-                ),
+                  ),
+                  if (contact.number != null)
+                    Text(
+                      contact.number!,
+                      style: TextStyle(color: c.muted, fontSize: 13),
+                    ),
+                ],
               ),
             ),
+            if (contact.starred)
+              Icon(Icons.star_rounded, size: 18, color: c.accent),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -302,7 +373,8 @@ class _ContactTile extends StatelessWidget {
   );
 }
 
-/// Contact photo, or initials on a tonal color that is stable per name.
+/// Contact photo, or initials on a tonal color that is stable per name. The
+/// photo is loaded once per contact and cached (initials until it arrives).
 class ContactAvatar extends StatelessWidget {
   const ContactAvatar({super.key, required this.contact, this.radius = 24});
 
@@ -318,13 +390,7 @@ class ContactAvatar extends StatelessWidget {
       (scheme.tertiaryContainer, scheme.onTertiaryContainer),
     ];
     final (bg, fg) = palette[contact.name.hashCode.abs() % palette.length];
-    if (contact.photo != null) {
-      return CircleAvatar(
-        radius: radius,
-        backgroundImage: MemoryImage(contact.photo!),
-      );
-    }
-    return CircleAvatar(
+    final initials = CircleAvatar(
       radius: radius,
       backgroundColor: bg,
       child: Text(
@@ -336,6 +402,15 @@ class ContactAvatar extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+    if (!contact.hasPhoto) return initials;
+    return FutureBuilder<ImageProvider?>(
+      future: AppScope.of(context).controller.contacts.photo(contact),
+      builder: (context, snap) {
+        final image = snap.data;
+        if (image == null) return initials;
+        return CircleAvatar(radius: radius, backgroundImage: image);
+      },
     );
   }
 }

@@ -10,6 +10,7 @@ import 'data/launch_store.dart';
 import 'data/settings.dart';
 import 'perf/frame_stats.dart';
 import 'platform/launcher_bridge.dart';
+import 'platform/orientation.dart';
 import 'theme/palette.dart';
 import 'theme/system_font.dart';
 import 'state/launcher_controller.dart';
@@ -22,6 +23,13 @@ Future<void> main() async {
   await loadAppInfo();
   appFontFamily = await loadSystemFont();
   final settings = await SettingsController.load();
+  await applyOrientation(lockPortrait: settings.lockPortrait);
+  var lockPortrait = settings.lockPortrait;
+  settings.addListener(() {
+    if (settings.lockPortrait == lockPortrait) return;
+    lockPortrait = settings.lockPortrait;
+    applyOrientation(lockPortrait: lockPortrait);
+  });
   final store = await LaunchStore.open();
   final controller = LauncherController(
     bridge: LauncherBridge(),

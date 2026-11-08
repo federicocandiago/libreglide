@@ -139,3 +139,26 @@ class DayForecast {
 /// Rounds a coordinate to 1 decimal (~10 km): the weather service doesn't
 /// need to know precisely where you are.
 double roundCoordinate(double v) => (v * 10).round() / 10;
+
+// --- Temperature unit ---
+
+/// Regions that use Fahrenheit (ISO 3166 country codes).
+const _fahrenheitRegions = {
+  'US',
+  'LR',
+  'MM',
+  'BS',
+  'BZ',
+  'KY',
+  'PW',
+  'FM',
+  'MH',
+};
+
+/// Whether temperatures are shown in Fahrenheit in [countryCode].
+bool usesFahrenheit(String? countryCode) =>
+    _fahrenheitRegions.contains(countryCode?.toUpperCase());
+
+/// [celsius] in the unit of the region, rounded, with the degree sign.
+String formatDegrees(double celsius, {required bool fahrenheit}) =>
+    '${(fahrenheit ? celsius * 9 / 5 + 32 : celsius).round()}°';

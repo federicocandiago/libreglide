@@ -73,6 +73,9 @@ class PlacesController extends ChangeNotifier {
   PlaceRole? get currentRole => current?.effectiveRole;
 
   Place? get home => engine.withRole(PlaceRole.home);
+
+  /// Work or school, inferred from the hours at the work place.
+  WorkKind? get workKind => engine.workKind;
   Place? get work => engine.withRole(PlaceRole.work);
 
   /// More than 100 km from home: travelling.

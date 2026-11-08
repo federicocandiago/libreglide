@@ -42,11 +42,16 @@ import android.net.wifi.WifiManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.BatteryManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Process
 import android.os.UserHandle
+import android.app.SearchManager
 import android.provider.AlarmClock
 import android.provider.CalendarContract
 import android.provider.ContactsContract
@@ -214,6 +219,11 @@ class LauncherBridge(
                 background(result) { readEvents(from, to) }
             }
             "requestCalendar" -> result.success(requestCalendar())
+            "hasActivityRecognition" -> result.success(hasActivityRecognition())
+            "requestActivityRecognition" -> result.success(
+                requestOnce(Manifest.permission.ACTIVITY_RECOGNITION, "activity_asked", REQUEST_ACTIVITY),
+            )
+            "stepCount" -> stepCount(result)
             "hasUsageAccess" -> result.success(hasUsageAccess())
             "usageOpenings" -> {
                 val since = call.argument<Number>("since")?.toLong() ?: 0L
@@ -272,6 +282,16 @@ class LauncherBridge(
                 val keys = call.argument<List<String>>("keys") ?: emptyList()
                 background(result) { contactsByLookup(keys) }
             }
+            "contactPhoto" -> {
+                val id = call.argument<Number>("id")!!.toLong()
+                background(result) { if (hasContacts()) thumbnail(id) else null }
+            }
+            "canWebSearch" -> result.success(
+                webSearchIntent("").resolveActivity(context.packageManager) != null,
+            )
+            "webSearch" -> result.success(
+                startSafely(webSearchIntent(call.argument<String>("query") ?: "")),
+            )
             "searchContacts" -> {
                 val query = call.argument<String>("query") ?: ""
                 background(result) { searchContacts(query) }
@@ -639,43 +659,61 @@ class LauncherBridge(
         ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
         ContactsContract.Contacts.STARRED,
         ContactsContract.Contacts.HAS_PHONE_NUMBER,
+        ContactsContract.Contacts.PHOTO_THUMBNAIL_URI,
     )
 
-    /** Contact rows with primary number and thumbnail (in memory only). */
+    /**
+     * Contact rows with their primary number, in two queries in all (the
+     * contacts, then the numbers of all of them at once). Photos are not
+     * included: only whether there is one; Flutter asks for each visible
+     * photo once ([contactPhoto]) and caches it.
+     */
     private fun readContacts(uri: Uri, selection: String?, args: Array<String>?, limit: Int): List<Map<String, Any?>> {
         if (!hasContacts()) return emptyList()
-        val out = ArrayList<Map<String, Any?>>()
+        val rows = ArrayList<MutableMap<String, Any?>>()
+        val withNumber = ArrayList<Long>()
         context.contentResolver.query(
             uri, contactProjection, selection, args,
             "${ContactsContract.Contacts.DISPLAY_NAME_PRIMARY} COLLATE LOCALIZED ASC",
         )?.use { c ->
-            while (c.moveToNext() && out.size < limit) {
+            while (c.moveToNext() && rows.size < limit) {
                 val id = c.getLong(0)
                 val name = c.getString(2) ?: continue
-                out.add(
-                    mapOf(
+                if (c.getInt(4) == 1) withNumber.add(id)
+                rows.add(
+                    mutableMapOf(
                         "id" to id,
                         "lookupKey" to c.getString(1),
                         "name" to name,
                         "starred" to (c.getInt(3) == 1),
-                        "number" to if (c.getInt(4) == 1) primaryNumber(id) else null,
-                        "photo" to thumbnail(id),
+                        "hasPhoto" to (c.getString(5) != null),
                     ),
                 )
             }
         }
-        return out
+        val numbers = primaryNumbers(withNumber)
+        for (row in rows) row["number"] = numbers[row["id"] as Long]
+        return rows
     }
 
-    private fun primaryNumber(contactId: Long): String? {
+    /** Primary number of each contact, with a single query. */
+    private fun primaryNumbers(contactIds: List<Long>): Map<Long, String> {
+        if (contactIds.isEmpty()) return emptyMap()
+        val out = HashMap<Long, String>()
         context.contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER, ContactsContract.CommonDataKinds.Phone.IS_SUPER_PRIMARY),
-            "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
-            arrayOf(contactId.toString()),
+            arrayOf(ContactsContract.CommonDataKinds.Phone.CONTACT_ID, ContactsContract.CommonDataKinds.Phone.NUMBER),
+            "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} IN (${contactIds.joinToString(",") { "?" }})",
+            contactIds.map { it.toString() }.toTypedArray(),
+            // The super-primary number first: the first one per contact wins.
             "${ContactsContract.CommonDataKinds.Phone.IS_SUPER_PRIMARY} DESC",
-        )?.use { c -> if (c.moveToFirst()) return c.getString(0) }
-        return null
+        )?.use { c ->
+            while (c.moveToNext()) {
+                val number = c.getString(1) ?: continue
+                out.putIfAbsent(c.getLong(0), number)
+            }
+        }
+        return out
     }
 
     private fun thumbnail(contactId: Long): ByteArray? = try {
@@ -704,7 +742,34 @@ class LauncherBridge(
     private fun searchContacts(query: String): List<Map<String, Any?>> {
         if (query.isBlank()) return emptyList()
         val uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_FILTER_URI, Uri.encode(query.trim()))
-        return readContacts(uri, null, null, 30)
+        return readContacts(uri, null, null, 20)
+    }
+
+    /**
+     * Web search with the default browser and its own search engine: the
+     * text goes to the browser only when the user asks; libreGLIDE sends
+     * nothing itself. The search is addressed to the default browser when it
+     * handles it: otherwise Android picks the handler, and on Pixels that is
+     * the Google app, not the browser.
+     */
+    private fun webSearchIntent(query: String): Intent {
+        val search = Intent(Intent.ACTION_WEB_SEARCH)
+            .putExtra(SearchManager.QUERY, query)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val browser = defaultBrowser() ?: return search
+        val toBrowser = Intent(search).setPackage(browser)
+        return if (toBrowser.resolveActivity(context.packageManager) != null) toBrowser else search
+    }
+
+    /** Package of the default browser, or null if none is set. */
+    private fun defaultBrowser(): String? {
+        val info = context.packageManager.resolveActivity(
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://example.org")),
+            PackageManager.MATCH_DEFAULT_ONLY,
+        )
+        val pkg = info?.activityInfo?.packageName
+        // "android" is the chooser: no default browser.
+        return if (pkg == null || pkg == "android") null else pkg
     }
     // endregion
 
@@ -1075,6 +1140,42 @@ class LauncherBridge(
     private fun requestBluetooth(): Boolean =
         requestOnce(Manifest.permission.BLUETOOTH_CONNECT, "bluetooth_asked", REQUEST_BLUETOOTH)
 
+    private fun hasActivityRecognition(): Boolean =
+        context.checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) ==
+            PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Current value of the system step counter (steps since boot), or null
+     * without the permission or the sensor.
+     *
+     * The counter is kept by the phone's low-power sensor hub anyway: we only
+     * listen until it reports its current value (or 1.5 s pass, as some
+     * phones report only at the next step) and stop at once. No background
+     * service, no accelerometer.
+     */
+    private fun stepCount(result: MethodChannel.Result) {
+        val sm = context.getSystemService(SensorManager::class.java)
+        val sensor = sm?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        if (!hasActivityRecognition() || sm == null || sensor == null) {
+            result.success(null)
+            return
+        }
+        var done = false
+        lateinit var listener: SensorEventListener
+        fun finish(steps: Long?) {
+            if (done) return
+            done = true
+            sm.unregisterListener(listener)
+            result.success(steps)
+        }
+        listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent) = finish(event.values[0].toLong())
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+        sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL, main)
+        main.postDelayed({ finish(null) }, 1500)
+    }
+
     /**
      * Requests a permission; if the user already denied it permanently, opens
      * the app info page, where it can be granted manually.
@@ -1215,5 +1316,6 @@ class LauncherBridge(
         private const val REQUEST_CONFIGURE_WIDGET = 4207
         private const val REQUEST_PRECISE = 4208
         private const val REQUEST_BACKGROUND = 4209
+        private const val REQUEST_ACTIVITY = 4210
     }
 }

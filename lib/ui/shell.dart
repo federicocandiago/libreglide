@@ -26,6 +26,7 @@ import 'settings/legal_pages.dart';
 import 'settings/settings_page.dart';
 import 'settings/space_cards_page.dart';
 import 'space_page.dart';
+import 'widgets/rows_icon.dart';
 
 /// Pages, in Glide's order: Space ← Home (time) → Collections → A-Z.
 enum LauncherTab { space, home, collections, allApps }
@@ -94,8 +95,8 @@ class _LauncherShellState extends State<LauncherShell> {
   bool _glassOn = false;
   double _blur = -1;
 
-  /// System blur only away from Home, and only without the contextual photo
-  /// (which already has its own blurred version behind the pages).
+  /// System blur only away from Home, and only without the Unsplash Home
+  /// photo (which already has its own blurred version behind the pages).
   void _syncGlass() {
     final scope = AppScope.of(context);
     final bridge = scope.controller.bridge;
@@ -348,7 +349,11 @@ class _TabBar extends StatelessWidget {
       // Swipe down on the bar: same as on Home.
       onVerticalDragEnd: (d) {
         if ((d.primaryVelocity ?? 0) > 300) {
-          runGesture(context, AppScope.of(context).settings.swipeDown);
+          runGesture(
+            context,
+            AppScope.of(context).settings.swipeDown,
+            SwipeDirection.down,
+          );
         }
       },
       child: _BarSurface(
@@ -417,7 +422,7 @@ class _TabBar extends StatelessWidget {
                                 page: page,
                                 index: LauncherTab.home.index,
                                 from: Theme.of(context).colorScheme.onSurface,
-                                builder: (color) => _TabClock(color: color),
+                                builder: (color) => _TabLabel(color: color),
                               ),
                             ),
                             _Tab(
@@ -427,11 +432,9 @@ class _TabBar extends StatelessWidget {
                                 page: page,
                                 index: LauncherTab.collections.index,
                                 from: c.muted,
-                                builder: (color) => Icon(
-                                  Icons.apps_rounded,
-                                  color: color,
-                                  size: 26,
-                                ),
+                                // Rows, like the full-width Collection cards.
+                                builder: (color) =>
+                                    RowsIcon(color: color, size: 26),
                               ),
                             ),
                             _Tab(
@@ -558,19 +561,20 @@ class _SpaceStripes extends StatelessWidget {
   }
 }
 
-/// Time in the central tab, updated on the minute.
-class _TabClock extends StatefulWidget {
-  const _TabClock({required this.color});
+/// Label of the Home tab: today's date in the short local format, or the
+/// local weather (icon and degrees) when chosen in settings and the Weather
+/// card is on. Falls back to the date while there is no forecast.
+class _TabLabel extends StatefulWidget {
+  const _TabLabel({required this.color});
 
   final Color color;
 
   @override
-  State<_TabClock> createState() => _TabClockState();
+  State<_TabLabel> createState() => _TabLabelState();
 }
 
-class _TabClockState extends State<_TabClock> {
-  Timer? _timer;
-  DateTime _now = DateTime.now();
+class _TabLabelState extends State<_TabLabel> {
+  Timer? _midnight;
 
   @override
   void initState() {
@@ -578,41 +582,73 @@ class _TabClockState extends State<_TabClock> {
     _schedule();
   }
 
+  /// Refreshes the date right after midnight.
   void _schedule() {
     final now = DateTime.now();
-    final next = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      now.hour,
-      now.minute + 1,
-    );
-    _timer = Timer(next.difference(now), () {
+    final next = DateTime(now.year, now.month, now.day + 1, 0, 0, 5);
+    _midnight = Timer(next.difference(now), () {
       if (!mounted) return;
-      setState(() => _now = DateTime.now());
+      // The date is read in build; this only triggers the rebuild.
+      setState(() {});
       _schedule();
     });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _midnight?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    return Text(
-      DateFormat.Hm(locale).format(_now),
-      textScaler: MediaQuery.textScalerOf(context)
-          .clamp(maxScaleFactor: maxLabelScale),
-      style: TextStyle(
-        fontSize: 21,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.5,
-        color: widget.color,
-      ),
+    final scope = AppScope.of(context);
+    final weather = scope.controller.weather;
+    return ListenableBuilder(
+      listenable: Listenable.merge([scope.settings, weather]),
+      builder: (context, _) {
+        final w = weather.weather;
+        final showWeather =
+            scope.settings.homeTabLabel == HomeTabLabel.weather &&
+            scope.settings.weatherCard &&
+            w != null;
+        final style = TextStyle(
+          fontSize: 21,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.5,
+          color: widget.color,
+        );
+        final textScaler = MediaQuery.textScalerOf(context)
+            .clamp(maxScaleFactor: maxLabelScale);
+        final Widget label;
+        if (showWeather) {
+          label = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                weatherIcon(w.kind, isDay: w.isDay),
+                color: widget.color,
+                size: 22,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                degrees(w.temperature),
+                textScaler: textScaler,
+                style: style,
+              ),
+            ],
+          );
+        } else {
+          final locale = Localizations.localeOf(context).toLanguageTag();
+          label = Text(
+            DateFormat.MMMd(locale).format(DateTime.now()),
+            textScaler: textScaler,
+            style: style,
+          );
+        }
+        // Long dates in some languages: shrink rather than overflow.
+        return FittedBox(fit: BoxFit.scaleDown, child: label);
+      },
     );
   }
 }
@@ -754,7 +790,7 @@ class SpacesDrawer extends StatelessWidget {
             Widget spaceRow(SpaceKind kind) => row(
               icon: spaceIcon(kind),
               color: c.spaceKind(kind),
-              label: spaceLabel(l, kind, workLabel: scope.settings.workLabel),
+              label: spaceLabel(l, kind, workKind: scope.controller.workKind),
               selected: !automatic && current == kind,
               badge: kind == auto ? l.spaceNow : null,
               onTap: () => onSelect(kind),
@@ -790,7 +826,7 @@ class SpacesDrawer extends StatelessWidget {
                                 ? spaceLabel(
                                     l,
                                     auto,
-                                    workLabel: scope.settings.workLabel,
+                                    workKind: scope.controller.workKind,
                                   )
                                 : null,
                             onTap: () => onSelect(null),
@@ -806,13 +842,17 @@ class SpacesDrawer extends StatelessWidget {
                     ),
                   ),
                 ),
+                group(l.spacesPlaces, [
+                  for (final kind in [SpaceKind.home, SpaceKind.work])
+                    spaceRow(kind),
+                ]),
                 group(l.spacesContext, [
                   for (final kind in [
-                    SpaceKind.home,
-                    SpaceKind.work,
                     SpaceKind.moving,
+                    SpaceKind.exercise,
                     SpaceKind.listening,
                     SpaceKind.travel,
+                    SpaceKind.nightOut,
                   ])
                     spaceRow(kind),
                 ]),
@@ -859,7 +899,7 @@ int _glassLevel(AppScope scope) =>
     ? 1
     : 2;
 
-/// With glass and the contextual photo, the blurred version of the photo sits
+/// With glass and the Unsplash Home photo, its blurred version sits
 /// behind everything (bar included). The blur comes for free: decoded at
 /// 32 px and upscaled.
 class _GlassPhoto extends StatelessWidget {

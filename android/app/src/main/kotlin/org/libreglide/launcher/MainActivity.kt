@@ -3,6 +3,8 @@ package org.libreglide.launcher
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.SurfaceView
 import android.view.View
 import android.view.ViewGroup
@@ -84,8 +86,29 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    /**
+     * Set when another MainActivity took the shared engine away from this one.
+     * It happens when a second instance is started outside the Home task (for
+     * example "Open" from another launcher or the store while libreGLIDE is
+     * the Home): when that one closes, this one would be left without the
+     * engine, showing only the wallpaper.
+     */
+    private var evicted = false
+
+    override fun detachFromFlutterEngine() {
+        evicted = true
+        super.detachFromFlutterEngine()
+    }
+
     override fun onStart() {
         super.onStart()
+        if (evicted) {
+            // Becoming visible again without the engine: recreate, so the new
+            // instance takes the engine back (state lives in the engine).
+            evicted = false
+            recreate()
+            return
+        }
         (application as LibreGlideApplication).widgetHost.startListening()
     }
 
@@ -104,8 +127,37 @@ class MainActivity : FlutterActivity() {
         bridge?.onActivityResult(requestCode, resultCode)
     }
 
+    /** Whether this activity has shown the Flutter UI at least once. */
+    private var shownOnce = false
+    private val main = Handler(Looper.getMainLooper())
+
+    /**
+     * Watchdog: back in the foreground, the UI must be on screen. If it was
+     * shown before and now nothing is drawn (the surface was taken or
+     * stopped by another instance of this activity), recreate: the state
+     * lives in the engine, so the user just sees the launcher again instead
+     * of a bare wallpaper.
+     */
+    private val checkUi = Runnable {
+        val renderer = flutterEngine?.renderer ?: return@Runnable
+        if (renderer.isDisplayingFlutterUi) {
+            shownOnce = true
+        } else if (shownOnce && !isFinishing && !isDestroyed) {
+            shownOnce = false
+            recreate()
+        }
+    }
+
+    override fun onPause() {
+        main.removeCallbacks(checkUi)
+        super.onPause()
+    }
+
     override fun onResume() {
         super.onResume()
+        if (flutterEngine?.renderer?.isDisplayingFlutterUi == true) shownOnce = true
+        main.removeCallbacks(checkUi)
+        main.postDelayed(checkUi, 1200)
         bridge?.notifyResumed()
         // Development command: `adb shell am start -n org.libreglide.launcher/.MainActivity
         // --es open settings` opens a screen without touching the phone.

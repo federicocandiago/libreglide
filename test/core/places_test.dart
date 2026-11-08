@@ -221,4 +221,49 @@ void main() {
     );
     expect(near(e.byId(id), gym), isTrue);
   });
+
+  group('work or school', () {
+    // Workdays from Monday 2 November 2026.
+    final now = DateTime(2026, 11, 20, 20);
+    List<DateTime> seen({required bool afternoons, int days = 10}) => [
+      for (var d = 2; d < 2 + 14 && days > 0; d++)
+        if (DateTime(2026, 11, d).weekday <= DateTime.friday) ...[
+          DateTime(2026, 11, d, 9, 30),
+          if (afternoons) DateTime(2026, 11, d, 16),
+        ],
+    ].take(afternoons ? days * 2 : days).toList();
+
+    test('morning and afternoon on most days: work', () {
+      expect(inferWorkKind(seen(afternoons: true), now: now), WorkKind.work);
+    });
+
+    test('mornings only: school', () {
+      expect(inferWorkKind(seen(afternoons: false), now: now), WorkKind.school);
+    });
+
+    test('not enough days yet: unknown (or the previous answer)', () {
+      final few = seen(afternoons: false, days: 3);
+      expect(inferWorkKind(few, now: now), isNull);
+      expect(
+        inferWorkKind(few, now: now, previous: WorkKind.work),
+        WorkKind.work,
+      );
+    });
+
+    test('in between keeps the previous answer', () {
+      // 10 days, afternoons on 4 of them (40%).
+      final mixed = [
+        ...seen(afternoons: false),
+        DateTime(2026, 11, 2, 16),
+        DateTime(2026, 11, 3, 16),
+        DateTime(2026, 11, 4, 16),
+        DateTime(2026, 11, 5, 16),
+      ];
+      expect(
+        inferWorkKind(mixed, now: now, previous: WorkKind.school),
+        WorkKind.school,
+      );
+      expect(inferWorkKind(mixed, now: now), isNull);
+    });
+  });
 }

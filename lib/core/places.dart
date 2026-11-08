@@ -61,6 +61,9 @@ class LocationSample {
 
 enum PlaceRole { home, work, frequent, none }
 
+/// What the work place is: a full-day job or a morning school.
+enum WorkKind { work, school }
+
 class Place {
   Place({
     required this.id,
@@ -187,6 +190,10 @@ class PlaceEngine {
 
   /// Scores from the last inference, per place.
   final Map<int, PlaceScores> scores = {};
+
+  /// Work or school, inferred from the hours spent at the work place; null
+  /// until there are enough days (see [inferWorkKind]).
+  WorkKind? workKind;
 
   List<Map<String, dynamic>> toJson() => [for (final p in places) p.toJson()];
 
@@ -511,6 +518,19 @@ class PlaceEngine {
           ..roleConfidence = 0;
       }
     }
+
+    // --- Work or school ---
+    final work = withRole(PlaceRole.work);
+    workKind = work == null
+        ? null
+        : inferWorkKind(
+            [
+              for (final (s, id) in items)
+                if (id == work.id) s.ts,
+            ],
+            now: now,
+            previous: workKind,
+          );
   }
 
   /// The place that gets [role]: the user's choice wins; then the best one
@@ -564,4 +584,35 @@ class PlaceEngine {
   }
 
   void reset() => places.clear();
+}
+
+/// Work or school from the times the user was seen at the work place in the
+/// last 4 weeks. Each workday counts as "morning" (seen 8:00–13:00) and/or
+/// "afternoon" (seen 14:30–19:30). With at least [minDays] days: afternoons
+/// on half the days or more mean a full-day job; on a quarter or less, a
+/// morning school. In between the [previous] answer stays (hysteresis).
+WorkKind? inferWorkKind(
+  Iterable<DateTime> seenAt, {
+  required DateTime now,
+  WorkKind? previous,
+  int minDays = 5,
+}) {
+  final days = <String>{};
+  final afternoons = <String>{};
+  for (final t in seenAt) {
+    if (now.difference(t) > const Duration(days: 28)) continue;
+    if (dayTypeFor(t) != DayType.workday) continue;
+    final m = t.hour * 60 + t.minute;
+    final key = '${t.year}-${t.month}-${t.day}';
+    if (m >= 8 * 60 && m < 13 * 60) days.add(key);
+    if (m >= 14 * 60 + 30 && m < 19 * 60 + 30) {
+      days.add(key);
+      afternoons.add(key);
+    }
+  }
+  if (days.length < minDays) return previous;
+  final share = afternoons.length / days.length;
+  if (share >= 0.5) return WorkKind.work;
+  if (share <= 0.25) return WorkKind.school;
+  return previous;
 }

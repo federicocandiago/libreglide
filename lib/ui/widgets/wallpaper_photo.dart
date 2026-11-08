@@ -1,38 +1,53 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import '../../state/wallpaper_controller.dart';
 import '../scope.dart';
 
-/// Contextual wallpaper photo, when enabled; otherwise nothing, so the
-/// phone's own wallpaper shows through.
-class ContextWallpaper extends StatelessWidget {
-  const ContextWallpaper({super.key, this.alignment = Alignment.center});
+/// The Unsplash photo for [view], when there is one; otherwise nothing, so
+/// the phone's own wallpaper shows through. In the Space it is slightly
+/// blurred (if enabled), so the date and the Space name stay legible.
+class WallpaperPhoto extends StatelessWidget {
+  const WallpaperPhoto({
+    super.key,
+    required this.view,
+    this.alignment = Alignment.center,
+  });
 
+  final WallpaperView view;
   final Alignment alignment;
 
   @override
   Widget build(BuildContext context) {
-    final wallpaper = AppScope.of(context).wallpaper;
+    final scope = AppScope.of(context);
+    final wallpaper = scope.wallpaper;
     final width =
         (MediaQuery.sizeOf(context).width *
                 MediaQuery.devicePixelRatioOf(context))
             .round();
     return ListenableBuilder(
-      listenable: wallpaper,
+      listenable: Listenable.merge([wallpaper, scope.settings]),
       builder: (context, _) {
-        final file = wallpaper.file;
+        final file = wallpaper.fileFor(view);
+        final blur =
+            view == WallpaperView.space && scope.settings.spaceHeaderBlur;
+        // The blur comes for free: the photo is decoded at 1/8 of the width
+        // and scaled up smoothly (no filter recomputed while scrolling).
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 600),
           child: file == null
               ? const SizedBox.expand(key: ValueKey('none'))
               : Image.file(
                   file,
-                  key: ValueKey(file.path),
+                  key: ValueKey('${file.path}|$blur'),
                   fit: BoxFit.cover,
                   alignment: alignment,
                   width: double.infinity,
                   height: double.infinity,
-                  cacheWidth: width,
+                  cacheWidth: blur ? (width / 8).round() : width,
+                  filterQuality: blur
+                      ? FilterQuality.medium
+                      : FilterQuality.low,
                   gaplessPlayback: true,
                   errorBuilder: (_, _, _) => const SizedBox.expand(),
                 ),
@@ -42,9 +57,12 @@ class ContextWallpaper extends StatelessWidget {
   }
 }
 
-/// Attribution required by Unsplash ("Photo by Name · Unsplash"), with link.
+/// Attribution required by Unsplash ("Photo by Name · Unsplash"), with link,
+/// for the photo shown in [view].
 class WallpaperCredit extends StatelessWidget {
-  const WallpaperCredit({super.key});
+  const WallpaperCredit({super.key, required this.view});
+
+  final WallpaperView view;
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +71,8 @@ class WallpaperCredit extends StatelessWidget {
     return ListenableBuilder(
       listenable: wallpaper,
       builder: (context, _) {
-        final w = wallpaper.current;
-        if (wallpaper.file == null || w == null) return const SizedBox();
+        final w = wallpaper.photoFor(view);
+        if (w == null) return const SizedBox();
         const shadow = [Shadow(blurRadius: 6, color: Colors.black87)];
         return GestureDetector(
           onTap: () => scope.controller.bridge.openUrl(w.photoUrl),

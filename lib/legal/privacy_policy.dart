@@ -9,9 +9,9 @@ const String controllerName = 'Federico Candiago';
 const String controllerContact =
     'https://github.com/federicocandiago/libreglide/issues';
 
-const String policyVersion = '1.2';
-const String _policyDateIt = '6 novembre 2026';
-const String _policyDateEn = 'November 6, 2026';
+const String policyVersion = '1.3';
+const String _policyDateIt = '8 novembre 2026';
+const String _policyDateEn = 'November 8, 2026';
 
 /// Policy date written for [languageCode] (Italian or English, like the text).
 String policyDate(String languageCode) =>
@@ -30,7 +30,7 @@ const List<PolicySection> _it = [
   PolicySection('In breve', [
     'libreGLIDE non raccoglie, non invia e non vende dati personali. Non ci sono account, pubblicità, statistiche d\'uso né telemetria.',
     'Tutto quello che il launcher impara sulle tue abitudini resta sul tuo telefono. Lo sviluppatore non vi ha accesso.',
-    'Le connessioni a Internet sono facoltative e partono solo se le attivi tu: lo sfondo contestuale (Unsplash, con una tua chiave) e la card Meteo (Open-Meteo).',
+    'Le connessioni a Internet sono facoltative e partono solo se le attivi tu: gli sfondi giornaliero e contestuale (Unsplash, con una tua chiave) e la card Meteo (Open-Meteo).',
   ]),
   PolicySection('Titolare e contatti', [
     'libreGLIDE è un launcher open source sviluppato da $controllerName. Contatto: $controllerContact.',
@@ -38,7 +38,7 @@ const List<PolicySection> _it = [
   ]),
   PolicySection('Dati che restano sul telefono', [
     'Per suggerirti le app giuste, libreGLIDE salva sul dispositivo lo storico delle aperture: quale app, quando, la fascia oraria, se è un giorno feriale o festivo, il tipo di rete (Wi-Fi, dati, offline) e l\'uscita audio (altoparlante o cuffie). Non salva nomi di reti, posizioni o contenuti delle app.',
-    'Salva inoltre le tue impostazioni, le app preferite e nascoste, le raccolte preferite scelte all\'avvio e, se attivi lo sfondo contestuale, la foto in uso con il nome dell\'autore.',
+    'Salva inoltre le tue impostazioni, le app preferite e nascoste, le raccolte preferite scelte all\'avvio e, se attivi gli sfondi Unsplash, le foto in uso con il nome dell\'autore.',
     'Lo storico delle aperture viene cancellato automaticamente dopo 180 giorni ed è escluso dal backup nel cloud e dal trasferimento tra dispositivi. Le impostazioni possono essere incluse nel backup di Android, secondo le tue impostazioni di sistema.',
   ]),
   PolicySection('Permessi', [
@@ -52,14 +52,16 @@ const List<PolicySection> _it = [
     'Posizione in background (facoltativo, spento di default): solo per "Dove ho parcheggiato". Viene letta una volta, quando il telefono si scollega dall\'autoradio Bluetooth; il punto resta sul telefono, viene sostituito al parcheggio successivo e non viene mai inviato.',
     'Accesso ai dati di utilizzo (facoltativo, da concedere nelle impostazioni di Android): per mostrare il tempo di utilizzo di oggi e per imparare anche dalle app aperte fuori da libreGLIDE. Di queste aperture si salvano sul telefono solo l\'app, l\'ora, la fascia oraria e il tipo di giorno, come per le aperture fatte dal launcher; non vengono mai inviate e si possono escludere o cancellare in Impostazioni → Dati e privacy.',
     'Servizio di accessibilità (facoltativo, spento di default): solo per Digital detox. Riceve soltanto il nome dell\'app che passa in primo piano, per mostrare la schermata di blocco se è tra quelle scelte; non può leggere il contenuto dello schermo e non registra nulla. Il PIN è salvato solo come hash, sul telefono.',
+    'Attività fisica (facoltativo, disattivato di default): solo per lo Space Attività fisica. Quando apri il launcher viene letto il contapassi del telefono (il numero di passi dall\'accensione) per capire se stai correndo o camminando a passo svelto. Restano in memoria solo l\'ultima lettura e l\'esito, sul telefono; nulla viene salvato in modo permanente o inviato.',
     'Widget: se aggiungi widget di altre app, sono quelle app a fornirne il contenuto, secondo le loro informative.',
     'Internet: usato soltanto per lo sfondo Unsplash e per la card Meteo, se li attivi.',
+    'Cerca sul web: se lo scegli dalla ricerca, il testo scritto viene passato al tuo browser, che fa la ricerca con il proprio motore e secondo la propria informativa. libreGLIDE non invia nulla.',
     'Richiesta di disinstallazione: per disinstallare un\'app dal suo menu, sempre con la conferma di sistema.',
   ]),
   PolicySection('Unsplash (facoltativo)', [
-    'Se inserisci una tua chiave Unsplash e attivi lo sfondo contestuale, il telefono si collega direttamente ai server di Unsplash per cercare una foto. Vengono inviati: parole chiave generiche legate al momento (per esempio "sunset" o "christmas lights"), la tua chiave, l\'indirizzo IP e i dati tecnici della connessione. Come richiesto dalle regole di Unsplash, viene anche segnalato l\'utilizzo della foto scelta.',
+    'Se inserisci una tua chiave Unsplash e attivi lo sfondo giornaliero o quello contestuale, il telefono si collega direttamente ai server di Unsplash per cercare una foto. Vengono inviati: parole chiave generiche legate al momento o allo stile scelto (per esempio "sunset", "christmas lights" o "nature wallpaper"), la tua chiave, l\'indirizzo IP e i dati tecnici della connessione. Come richiesto dalle regole di Unsplash, viene anche segnalato l\'utilizzo della foto scelta.',
     'Non vengono inviate coordinate GPS né altri dati sul tuo utilizzo del telefono.',
-    'Unsplash tratta questi dati come titolare autonomo, secondo la propria informativa: https://unsplash.com/privacy. Puoi disattivare lo sfondo contestuale o cancellare la chiave in qualsiasi momento dalle impostazioni.',
+    'Unsplash tratta questi dati come titolare autonomo, secondo la propria informativa: https://unsplash.com/privacy. Puoi disattivare gli sfondi o cancellare la chiave in qualsiasi momento dalle impostazioni.',
   ]),
   PolicySection('Open-Meteo (facoltativo)', [
     'Se attivi la card Meteo, il telefono chiede le previsioni a Open-Meteo (open-meteo.com) inviando le coordinate arrotondate a circa 10 km, l\'indirizzo IP e i dati tecnici della connessione. Non serve alcun account o chiave.',
@@ -81,7 +83,7 @@ const List<PolicySection> _en = [
   PolicySection('In short', [
     'libreGLIDE does not collect, send or sell personal data. There are no accounts, ads, usage analytics or telemetry.',
     'Everything the launcher learns about your habits stays on your phone. The developer has no access to it.',
-    'Internet connections are optional and start only if you turn them on: the contextual wallpaper (Unsplash, with your own key) and the Weather card (Open-Meteo).',
+    'Internet connections are optional and start only if you turn them on: the daily and contextual wallpapers (Unsplash, with your own key) and the Weather card (Open-Meteo).',
   ]),
   PolicySection('Controller and contact', [
     'libreGLIDE is an open source launcher developed by $controllerName. Contact: $controllerContact.',
@@ -89,7 +91,7 @@ const List<PolicySection> _en = [
   ]),
   PolicySection('Data that stays on the phone', [
     'To suggest the right apps, libreGLIDE stores a launch history on the device: which app, when, the time of day, whether it is a workday or a day off, the network type (Wi-Fi, mobile, offline) and the audio output (speaker or headphones). It does not store network names, locations or app content.',
-    'It also stores your settings, favorite and hidden apps, the favorite collections chosen at first launch and, if you turn on the contextual wallpaper, the photo in use with its author\'s name.',
+    'It also stores your settings, favorite and hidden apps, the favorite collections chosen at first launch and, if you turn on the Unsplash wallpapers, the photos in use with their authors\' names.',
     'The launch history is deleted automatically after 180 days and is excluded from cloud backup and device-to-device transfer. Settings may be included in Android backup, depending on your system settings.',
   ]),
   PolicySection('Permissions', [
@@ -103,14 +105,16 @@ const List<PolicySection> _en = [
     'Background location (optional, off by default): only for "Where I parked". It is read once, when the phone disconnects from the Bluetooth car stereo; the spot stays on the phone, is replaced at the next parking and is never sent.',
     'Usage access (optional, granted in Android settings): to show today\'s screen time and to learn also from apps opened outside libreGLIDE. For these openings only the app, the time, the time slot and the type of day are stored on the phone, as for openings made from the launcher; they are never sent and can be excluded or deleted in Settings → Data & privacy.',
     'Accessibility service (optional, off by default): only for Digital detox. It receives just the name of the app coming to the foreground, to show the lock screen if it is one you chose; it cannot read the content of the screen and records nothing. The PIN is stored only as a hash, on the phone.',
+    'Physical activity (optional, off by default): only for the Exercise Space. When you open the launcher, the phone\'s step counter (the number of steps since it was turned on) is read to tell whether you are running or walking briskly. Only the last reading and the result are kept in memory, on the phone; nothing is stored permanently or sent.',
     'Widgets: if you add widgets from other apps, those apps provide their content under their own policies.',
     'Internet: used only for the Unsplash wallpaper and the Weather card, if you turn them on.',
+    'Search the web: if you choose it from search, the text you typed is handed to your browser, which searches with its own engine and under its own policy. libreGLIDE sends nothing.',
     'Request to uninstall: to uninstall an app from its menu, always with the system confirmation.',
   ]),
   PolicySection('Unsplash (optional)', [
-    'If you enter your own Unsplash key and turn on the contextual wallpaper, the phone connects directly to Unsplash servers to look for a photo. What is sent: generic keywords tied to the moment (for example "sunset" or "christmas lights"), your key, your IP address and technical connection data. As required by Unsplash guidelines, the use of the chosen photo is also reported.',
+    'If you enter your own Unsplash key and turn on the daily or the contextual wallpaper, the phone connects directly to Unsplash servers to look for a photo. What is sent: generic keywords tied to the moment or to the chosen style (for example "sunset", "christmas lights" or "nature wallpaper"), your key, your IP address and technical connection data. As required by Unsplash guidelines, the use of the chosen photo is also reported.',
     'No GPS coordinates or other data about your phone usage are sent.',
-    'Unsplash processes this data as an independent controller under its own policy: https://unsplash.com/privacy. You can turn off the contextual wallpaper or delete the key at any time in settings.',
+    'Unsplash processes this data as an independent controller under its own policy: https://unsplash.com/privacy. You can turn off the wallpapers or delete the key at any time in settings.',
   ]),
   PolicySection('Open-Meteo (optional)', [
     'If you turn on the Weather card, the phone asks Open-Meteo (open-meteo.com) for the forecast, sending coordinates rounded to about 10 km, your IP address and technical connection data. No account or key is needed.',

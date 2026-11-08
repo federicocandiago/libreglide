@@ -39,6 +39,12 @@ class DiagnosticsPage extends StatelessWidget {
                 children: [
                   for (final e in ctx.toMap().entries)
                     Text('${e.key}: ${e.value ?? '—'}', style: mono),
+                  if (AppScope.of(context).settings.exerciseSpace)
+                    Text(
+                      'steps: ${controller.exercise.lastCadence?.round() ?? '—'}'
+                      '/min · exercising: ${controller.exercising}',
+                      style: mono,
+                    ),
                   const SizedBox(height: 8),
                   Text(
                     l.launchesCount(controller.predictor.totalLaunches),
@@ -51,6 +57,18 @@ class DiagnosticsPage extends StatelessWidget {
                       if (usage == 0) return const SizedBox();
                       return Text(
                         l.launchSourcesNote(usage),
+                        style: TextStyle(color: c.muted, fontSize: 13),
+                      );
+                    },
+                  ),
+                  // Database size, to see the compaction at work.
+                  FutureBuilder<(int, int)>(
+                    future: controller.databaseRows(),
+                    builder: (context, snap) {
+                      final rows = snap.data;
+                      if (rows == null) return const SizedBox();
+                      return Text(
+                        'db: ${rows.$1} launch rows · ${rows.$2} samples',
                         style: TextStyle(color: c.muted, fontSize: 13),
                       );
                     },

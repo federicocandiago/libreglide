@@ -10,11 +10,12 @@ import '../core/space_profile.dart';
 import '../data/settings.dart';
 import 'glide_style.dart';
 import 'labels.dart';
+import '../state/wallpaper_controller.dart';
 import 'scope.dart';
 import 'settings/space_cards_page.dart';
 import 'space_cards.dart';
 import 'widgets/app_icon.dart';
-import 'widgets/context_wallpaper.dart';
+import 'widgets/wallpaper_photo.dart';
 
 /// Current Space: date over the wallpaper, colored strip with the Space name,
 /// action and app cards.
@@ -97,7 +98,7 @@ class _SpacePageState extends State<SpacePage>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: cardGap),
-                      if (!_evening(context))
+                      if (!_evening(context, kind))
                         _padded(_ActionsCard(actions: _actionsFor(kind))),
                       ..._cards(
                         context,
@@ -185,7 +186,7 @@ class _SpacePageState extends State<SpacePage>
     final home = controller.places.home;
     final work = controller.places.work;
     final out = <(IconData, String, VoidCallback)>[
-      for (final a in profileFor(kind).actions)
+      for (final a in profileFor(kind, workKind: controller.workKind).actions)
         ...switch (a) {
           QuickAction.alarm => [
             (Icons.alarm_rounded, l.actionAlarm, bridge.openAlarms),
@@ -249,7 +250,17 @@ class _SpacePageState extends State<SpacePage>
   }
 
   /// In the evening and at night, the Good night card replaces the alarm.
-  bool _evening(BuildContext context) {
+  /// The Good night card replaces the quick actions in the evening, but not
+  /// in the Spaces where you are out and about: there the actions (such as
+  /// "Navigate home") matter more than the alarm for tomorrow.
+  bool _evening(BuildContext context, SpaceKind kind) {
+    const outAndAbout = {
+      SpaceKind.nightOut,
+      SpaceKind.moving,
+      SpaceKind.exercise,
+      SpaceKind.travel,
+    };
+    if (outAndAbout.contains(kind)) return false;
     final scope = AppScope.of(context);
     final slot = scope.controller.currentSlot;
     return scope.settings.eveningCard &&
@@ -269,7 +280,7 @@ class _SpacePageState extends State<SpacePage>
     final settings = scope.settings;
     final controller = scope.controller;
     final cards = controller.cards;
-    final profile = profileFor(kind);
+    final profile = profileFor(kind, workKind: controller.workKind);
     final headphones =
         controller.context.audio == 'headphones' ||
         controller.context.audio == 'bt';
@@ -297,7 +308,7 @@ class _SpacePageState extends State<SpacePage>
     final available = <SpaceCard, Widget>{
       if (driving) SpaceCard.car: CarCard(destination: destination),
       if (showParking) SpaceCard.parking: const ParkingCard(),
-      if (_evening(context))
+      if (_evening(context, kind))
         SpaceCard.evening: EveningCard(nextAlarm: _nextAlarm)
       else if (_nextAlarm != null)
         SpaceCard.alarm: _AlarmCard(time: _nextAlarm!),
@@ -371,7 +382,9 @@ class _DateHeader extends StatelessWidget {
             height: cardHeight,
             child: Stack(
               children: [
-                const Positioned.fill(child: ContextWallpaper()),
+                const Positioned.fill(
+                  child: WallpaperPhoto(view: WallpaperView.space),
+                ),
                 // Light scrim to keep the date readable on any wallpaper.
                 const Positioned.fill(
                   child: DecoratedBox(
@@ -407,6 +420,11 @@ class _DateHeader extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+                const Positioned(
+                  left: 4,
+                  bottom: 0,
+                  child: WallpaperCredit(view: WallpaperView.space),
                 ),
               ],
             ),
@@ -453,7 +471,7 @@ class _SpacePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = AppScope.of(context).settings;
+    final workKind = AppScope.of(context).controller.workKind;
     final color = GlideColors.of(context).spaceKind(kind);
     final onColor =
         ThemeData.estimateBrightnessForColor(color) == Brightness.dark
@@ -479,7 +497,7 @@ class _SpacePill extends StatelessWidget {
               spaceLabel(
                 context.l10n,
                 kind,
-                workLabel: settings.workLabel,
+                workKind: workKind,
               ).toUpperCase(),
               maxLines: 1,
               textScaler: MediaQuery.textScalerOf(context)
@@ -687,7 +705,11 @@ class _CardShellState extends State<_CardShell> {
     final settings = AppScope.of(context).settings;
     final l = context.l10n;
     final rule = settings.cardRulesFor(widget.kind)[widget.card];
-    final space = spaceLabel(l, widget.kind, workLabel: settings.workLabel);
+    final space = spaceLabel(
+      l,
+      widget.kind,
+      workKind: AppScope.of(context).controller.workKind,
+    );
     return showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,

@@ -7,12 +7,13 @@ import '../platform/launcher_bridge.dart';
 import 'glide_style.dart';
 import 'gestures.dart';
 import 'labels.dart';
+import '../state/wallpaper_controller.dart';
 import 'scope.dart';
 import 'settings/widgets_page.dart';
 import 'space_cards.dart';
 import 'widgets/app_actions.dart';
 import 'widgets/app_icon.dart';
-import 'widgets/context_wallpaper.dart';
+import 'widgets/wallpaper_photo.dart';
 
 /// Home (the time-of-day tab): the phone's wallpaper and, at the bottom, the
 /// white dock with a single row of 4 apps.
@@ -104,7 +105,7 @@ class _HomePageState extends State<HomePage>
     }
     return Stack(
       children: [
-        const Positioned.fill(child: ContextWallpaper()),
+        const Positioned.fill(child: WallpaperPhoto(view: WallpaperView.home)),
         Column(
           children: [
             Expanded(
@@ -120,8 +121,16 @@ class _HomePageState extends State<HomePage>
                 onVerticalDragEnd: (d) {
                   if (_editing) return;
                   final v = d.primaryVelocity ?? 0;
-                  if (v > 300) runGesture(context, settings.swipeDown);
-                  if (v < -300) runGesture(context, settings.swipeUp);
+                  if (v > 300) {
+                    runGesture(
+                      context,
+                      settings.swipeDown,
+                      SwipeDirection.down,
+                    );
+                  }
+                  if (v < -300) {
+                    runGesture(context, settings.swipeUp, SwipeDirection.up);
+                  }
                 },
                 child: Stack(
                   children: [
@@ -166,7 +175,7 @@ class _HomePageState extends State<HomePage>
                     const Positioned(
                       left: 8,
                       bottom: 4,
-                      child: WallpaperCredit(),
+                      child: WallpaperCredit(view: WallpaperView.home),
                     ),
                     if (settings.screenTime == ScreenTimePlace.home)
                       const Positioned(

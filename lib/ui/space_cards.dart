@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import '../core/agenda.dart';
 import '../core/app_entry.dart';
 import '../core/categories.dart';
-import '../core/weather.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../platform/launcher_bridge.dart';
 import '../state/launcher_controller.dart';
@@ -696,33 +695,6 @@ class AppWidgetCard extends StatelessWidget {
       FlatCard(child: AppWidgetHostView(widget: widget));
 }
 
-/// Weather condition icon (night variant for clear sky).
-IconData weatherIcon(WeatherKind k, {bool isDay = true}) => switch (k) {
-  WeatherKind.clear =>
-    isDay ? Icons.wb_sunny_outlined : Icons.nightlight_outlined,
-  WeatherKind.partly =>
-    isDay ? Icons.wb_cloudy_outlined : Icons.nights_stay_outlined,
-  WeatherKind.cloudy => Icons.cloud_outlined,
-  WeatherKind.fog => Icons.foggy,
-  WeatherKind.drizzle => Icons.grain_rounded,
-  WeatherKind.rain => Icons.water_drop_outlined,
-  WeatherKind.snow => Icons.ac_unit_rounded,
-  WeatherKind.showers => Icons.umbrella_outlined,
-  WeatherKind.storm => Icons.thunderstorm_outlined,
-};
-
-String weatherLabel(L10n l, WeatherKind k) => switch (k) {
-  WeatherKind.clear => l.weatherClear,
-  WeatherKind.partly => l.weatherPartly,
-  WeatherKind.cloudy => l.weatherCloudy,
-  WeatherKind.fog => l.weatherFog,
-  WeatherKind.drizzle => l.weatherDrizzle,
-  WeatherKind.rain => l.weatherRain,
-  WeatherKind.snow => l.weatherSnow,
-  WeatherKind.showers => l.weatherShowers,
-  WeatherKind.storm => l.weatherStorm,
-};
-
 /// Weather, as in Glide: large thin temperature, icon, high and low with
 /// colored bars; the next hours below.
 class WeatherCard extends StatelessWidget {
@@ -756,7 +728,7 @@ class WeatherCard extends StatelessWidget {
     if (w == null) return const SizedBox();
 
     final locale = Localizations.localeOf(context).toLanguageTag();
-    String deg(double v) => '${v.round()}°';
+    String deg(double v) => degrees(v);
     Widget bar(Color color) => Container(
       width: 4,
       height: 16,

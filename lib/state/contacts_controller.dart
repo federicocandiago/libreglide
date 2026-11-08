@@ -6,6 +6,7 @@
 library;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 
 import '../core/contact.dart';
 import '../data/launch_store.dart';
@@ -55,7 +56,27 @@ class ContactsController extends ChangeNotifier {
 
   Future<void> requestPermission() => _bridge.requestContacts();
 
-  Future<List<Contact>> search(String query) => _bridge.searchContacts(query);
+  /// Contacts matching [query], best match first (see [rankContacts]).
+  Future<List<Contact>> search(String query) async {
+    final results = await _bridge.searchContacts(query);
+    final usage = {
+      for (final (key, weight) in await _store.topContacts(_clock(), n: 500))
+        key: weight,
+    };
+    return rankContacts(results, query, usage: usage);
+  }
+
+  final Map<int, Future<ImageProvider?>> _photos = {};
+
+  /// Photo of [c], loaded once and kept: while typing the same contacts come
+  /// back without reading or decoding their photo again.
+  Future<ImageProvider?> photo(Contact c) {
+    if (!c.hasPhoto) return Future.value();
+    return _photos[c.id] ??= _bridge
+        .contactPhoto(c.id)
+        .then<ImageProvider?>((b) => b == null ? null : MemoryImage(b))
+        .catchError((Object _) => null);
+  }
 
   Future<void> _used(Contact c) => _store.recordContact(c.lookupKey, _clock());
 

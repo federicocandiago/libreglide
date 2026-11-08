@@ -28,7 +28,11 @@ class SpaceCardsListPage extends StatelessWidget {
             for (final k in kinds)
               SettingsTile(
                 icon: spaceIcon(k),
-                title: spaceLabel(l, k, workLabel: settings.workLabel),
+                title: spaceLabel(
+                  l,
+                  k,
+                  workKind: AppScope.of(context).controller.workKind,
+                ),
                 subtitle: _summary(context, k),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => Navigator.of(context).push(
@@ -52,6 +56,17 @@ class SpaceCardsListPage extends StatelessWidget {
               style: TextStyle(color: c.muted, height: 1.4),
             ),
           ),
+          group(l.spacesPlaces, Icons.place_rounded, const [
+            SpaceKind.home,
+            SpaceKind.work,
+          ]),
+          group(l.spacesContext, Icons.explore_rounded, const [
+            SpaceKind.moving,
+            SpaceKind.exercise,
+            SpaceKind.listening,
+            SpaceKind.travel,
+            SpaceKind.nightOut,
+          ]),
           group(l.spacesTime, Icons.schedule_rounded, const [
             SpaceKind.wakeUp,
             SpaceKind.morning,
@@ -59,13 +74,6 @@ class SpaceCardsListPage extends StatelessWidget {
             SpaceKind.afternoon,
             SpaceKind.evening,
             SpaceKind.night,
-          ]),
-          group(l.spacesContext, Icons.explore_rounded, const [
-            SpaceKind.home,
-            SpaceKind.work,
-            SpaceKind.moving,
-            SpaceKind.listening,
-            SpaceKind.travel,
           ]),
         ],
       ),
@@ -104,15 +112,16 @@ class SpaceCardsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = AppScope.of(context).settings;
+    final scope = AppScope.of(context);
+    final settings = scope.settings;
     final l = context.l10n;
-    final profile = profileFor(kind);
+    final profile = profileFor(kind, workKind: scope.controller.workKind);
     return ListenableBuilder(
       listenable: settings,
       builder: (context, _) {
         final rules = settings.cardRulesFor(kind);
         return SettingsScaffold(
-          title: spaceLabel(l, kind, workLabel: settings.workLabel),
+          title: spaceLabel(l, kind, workKind: scope.controller.workKind),
           children: [
             SettingsSection(
               icon: spaceIcon(kind),

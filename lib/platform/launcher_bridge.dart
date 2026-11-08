@@ -289,6 +289,18 @@ class LauncherBridge {
   Future<bool> requestCalendar() async =>
       await _methods.invokeMethod<bool>('requestCalendar') ?? false;
 
+  /// "Physical activity" permission, needed to read the step counter.
+  Future<bool> hasActivityRecognition() async =>
+      await _methods.invokeMethod<bool>('hasActivityRecognition') ?? false;
+
+  Future<bool> requestActivityRecognition() async =>
+      await _methods.invokeMethod<bool>('requestActivityRecognition') ?? false;
+
+  /// Steps since boot from the system step counter, or null (no permission
+  /// or no sensor).
+  Future<int?> stepCount() async =>
+      (await _methods.invokeMethod<num>('stepCount'))?.toInt();
+
   Future<bool> openEvent(CalendarEvent e) async =>
       await _methods.invokeMethod<bool>('openEvent', {
         'id': e.id,
@@ -503,6 +515,19 @@ class LauncherBridge {
 
   Future<List<Contact>> searchContacts(String query) =>
       _contacts('searchContacts', {'query': query});
+
+  /// Thumbnail of a contact (JPEG bytes), or null.
+  Future<Uint8List?> contactPhoto(int id) =>
+      _methods.invokeMethod<Uint8List>('contactPhoto', {'id': id});
+
+  /// Whether a browser can run a web search.
+  Future<bool> canWebSearch() async =>
+      await _methods.invokeMethod<bool>('canWebSearch') ?? false;
+
+  /// Searches [query] on the web with the default browser and its engine.
+  Future<bool> webSearch(String query) async =>
+      await _methods.invokeMethod<bool>('webSearch', {'query': query}) ??
+      false;
 
   /// Opens the dialer with the number: the user starts the call.
   Future<bool> dial(String number) async =>
