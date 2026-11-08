@@ -672,6 +672,22 @@ class L10nIt extends L10n {
       'Leggermente sfocata dietro data e nome dello Space, per leggerli meglio.';
 
   @override
+  String get creditHome => 'Crediti sulla Home';
+
+  @override
+  String get creditSpace => 'Crediti nello Space';
+
+  @override
+  String get creditDesc =>
+      'Nome del fotografo e Unsplash sulla foto, come chiedono le regole di Unsplash. Se li nascondi, restano qui sotto.';
+
+  @override
+  String get currentPhotoHome => 'Foto della Home';
+
+  @override
+  String get currentPhotoSpace => 'Foto dello Space';
+
+  @override
   String get dailyWallpaper => 'Sfondo giornaliero';
 
   @override
@@ -683,10 +699,6 @@ class L10nIt extends L10n {
 
   @override
   String get wallpaperStyle => 'Stile delle foto';
-
-  @override
-  String get wallpaperStyleDesc =>
-      'Si aggiunge alla ricerca degli sfondi giornaliero e contestuale.';
 
   @override
   String get photoStyleNone => 'Nessuno';
@@ -747,9 +759,6 @@ class L10nIt extends L10n {
   String changePhotoDesc(Object moment) {
     return 'Un\'altra foto per questo momento: $moment';
   }
-
-  @override
-  String get wallpaperLoading => 'Cerco una foto…';
 
   @override
   String get wallpaperError =>

@@ -781,8 +781,9 @@ class _WallpaperSection extends StatelessWidget {
             wallpaper.daily.status == WallpaperStatus.invalidKey ||
             wallpaper.contextual.status == WallpaperStatus.invalidKey;
         final scheme = Theme.of(context).colorScheme;
-        String? statusOf(WallpaperSlot slot) => switch (slot.status) {
-          WallpaperStatus.loading => l.wallpaperLoading,
+        // Only problems replace the description; loading is a spinner next
+        // to the switch, so the page doesn't jump while photos arrive.
+        String? errorOf(WallpaperSlot slot) => switch (slot.status) {
           WallpaperStatus.invalidKey => l.keyInvalid,
           WallpaperStatus.error => l.wallpaperError,
           _ => null,
@@ -822,9 +823,10 @@ class _WallpaperSection extends StatelessWidget {
               SettingsSwitchTile(
                 icon: Icons.today_rounded,
                 title: l.dailyWallpaper,
-                subtitle: statusOf(wallpaper.daily) ?? l.dailyWallpaperDesc,
+                subtitle: errorOf(wallpaper.daily) ?? l.dailyWallpaperDesc,
                 value: settings.dailyWallpaper,
                 onChanged: settings.setDailyWallpaper,
+                busy: wallpaper.daily.status == WallpaperStatus.loading,
               )
             else
               SettingsTile(
@@ -844,23 +846,16 @@ class _WallpaperSection extends StatelessWidget {
                 icon: Icons.auto_awesome_rounded,
                 title: l.contextWallpaper,
                 subtitle:
-                    statusOf(wallpaper.contextual) ?? l.contextWallpaperDesc,
+                    errorOf(wallpaper.contextual) ?? l.contextWallpaperDesc,
                 value: settings.contextWallpaper,
                 onChanged: settings.setContextWallpaper,
+                busy: wallpaper.contextual.status == WallpaperStatus.loading,
               )
             else
               SettingsTile(
                 icon: Icons.auto_awesome_rounded,
                 title: l.contextWallpaper,
                 subtitle: l.contextWallpaperDesc,
-              ),
-            if (wallpaper.dailyActive || wallpaper.contextActive)
-              SettingsSwitchTile(
-                icon: Icons.blur_on_rounded,
-                title: l.spaceHeaderBlur,
-                subtitle: l.spaceHeaderBlurDesc,
-                value: settings.spaceHeaderBlur,
-                onChanged: settings.setSpaceHeaderBlur,
               ),
             if (wallpaper.contextActive)
               SettingsTile(
@@ -871,34 +866,55 @@ class _WallpaperSection extends StatelessWidget {
                     : l.changePhotoDesc(wallpaper.moment!.query),
                 onTap: wallpaper.next,
               ),
-            // --- Photo style, for both ---
-            if (wallpaper.dailyActive || wallpaper.contextActive) ...[
-              SettingsTile(
-                icon: Icons.style_outlined,
-                title: l.wallpaperStyle,
-                subtitle: l.wallpaperStyleDesc,
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  cardPadding,
-                  0,
-                  cardPadding,
-                  14,
-                ),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final style in WallpaperStyle.values)
-                      ChoiceChip(
-                        label: Text(wallpaperStyleLabel(l, style)),
-                        selected: settings.wallpaperStyle == style,
-                        onSelected: (_) => settings.setWallpaperStyle(style),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+            // --- For both photos: blur in the Space, style ---
+            // Always visible: they are preferences, kept for when a photo
+            // is on.
+            SettingsSwitchTile(
+              icon: Icons.blur_on_rounded,
+              title: l.spaceHeaderBlur,
+              subtitle: l.spaceHeaderBlurDesc,
+              value: settings.spaceHeaderBlur,
+              onChanged: settings.setSpaceHeaderBlur,
+            ),
+            // --- Unsplash credits ---
+            SettingsSwitchTile(
+              icon: Icons.copyright_rounded,
+              title: l.creditHome,
+              subtitle: l.creditDesc,
+              value: settings.creditHome,
+              onChanged: settings.setCreditHome,
+            ),
+            SettingsSwitchTile(
+              icon: Icons.copyright_rounded,
+              title: l.creditSpace,
+              value: settings.creditSpace,
+              onChanged: settings.setCreditSpace,
+            ),
+            // Hidden on screen: the credit stays here, with its link.
+            for (final (view, shown, label) in [
+              (WallpaperView.home, settings.creditHome, l.currentPhotoHome),
+              (WallpaperView.space, settings.creditSpace, l.currentPhotoSpace),
+            ])
+              if (!shown)
+                if (wallpaper.photoFor(view) case final photo?)
+                  SettingsTile(
+                    icon: Icons.photo_outlined,
+                    title: label,
+                    subtitle: l.photoBy(photo.authorName),
+                    trailing: const Icon(Icons.open_in_new_rounded),
+                    onTap: () =>
+                        scope.controller.bridge.openUrl(photo.photoUrl),
+                  ),
+            SettingsSelectTile<WallpaperStyle>(
+              icon: Icons.style_outlined,
+              title: l.wallpaperStyle,
+              options: [
+                for (final style in WallpaperStyle.values)
+                  (style, wallpaperStyleLabel(l, style)),
+              ],
+              selected: settings.wallpaperStyle,
+              onChanged: settings.setWallpaperStyle,
+            ),
           ],
         );
       },

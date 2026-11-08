@@ -220,6 +220,7 @@ class SettingsSwitchTile extends StatelessWidget {
     this.subtitle,
     required this.value,
     required this.onChanged,
+    this.busy,
   });
 
   final IconData icon;
@@ -228,14 +229,87 @@ class SettingsSwitchTile extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
 
+  /// Work in progress (e.g. a photo being fetched): a small spinner next to
+  /// the switch. When not null, its space is always reserved, so the text
+  /// never reflows when the work starts or ends.
+  final bool? busy;
+
   @override
   Widget build(BuildContext context) => SettingsTile(
     icon: icon,
     title: title,
     subtitle: subtitle,
     onTap: () => onChanged(!value),
-    trailing: Switch(value: value, onChanged: onChanged),
+    trailing: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (busy != null)
+          SizedBox.square(
+            dimension: 18,
+            child: busy!
+                ? const CircularProgressIndicator(strokeWidth: 2)
+                : null,
+          ),
+        if (busy != null) const SizedBox(width: 6),
+        Switch(value: value, onChanged: onChanged),
+      ],
+    ),
   );
+}
+
+/// Choice among many options: the row shows the current one; tapping it
+/// opens a list with a check mark on the selected option (like the
+/// language list). Fixed height, so choosing never reflows the page.
+class SettingsSelectTile<T> extends StatelessWidget {
+  const SettingsSelectTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.options,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+
+  /// Value → label, in display order.
+  final List<(T, String)> options;
+  final T selected;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = options.firstWhere((o) => o.$1 == selected).$2;
+    return SettingsTile(
+      icon: icon,
+      title: title,
+      subtitle: label,
+      trailing: const Icon(Icons.unfold_more_rounded),
+      onTap: () async {
+        final picked = await showDialog<T>(
+          context: context,
+          builder: (context) {
+            final scheme = Theme.of(context).colorScheme;
+            return SimpleDialog(
+              title: Text(title),
+              children: [
+                for (final (value, text) in options)
+                  ListTile(
+                    title: Text(text),
+                    trailing: value == selected
+                        ? Icon(Icons.check_rounded, color: scheme.primary)
+                        : null,
+                    onTap: () => Navigator.pop(context, value),
+                  ),
+              ],
+            );
+          },
+        );
+        if (picked != null && picked != selected) onChanged(picked);
+      },
+    );
+  }
 }
 
 /// Choice among a few options: title above, full-width selector below, so

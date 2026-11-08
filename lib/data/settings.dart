@@ -78,6 +78,12 @@ class SettingsController extends ChangeNotifier {
 
   /// Slight blur of the photo behind the Space date card, for legibility.
   bool spaceHeaderBlur = true;
+
+  /// Unsplash credit ("Photo by … · Unsplash") on the photo, on Home and in
+  /// the Space. Unsplash asks for it; when hidden, it stays in the wallpaper
+  /// settings.
+  bool creditHome = true;
+  bool creditSpace = true;
   String? unsplashKey;
 
   /// Home time zone (e.g. "Europe/Rome"): if the current one differs, the
@@ -331,6 +337,8 @@ class SettingsController extends ChangeNotifier {
     dailyWallpaper = p.getBool('dailyWallpaper') ?? contextWallpaper;
     wallpaperStyle = WallpaperStyle.byName(p.getString('wallpaperStyle'));
     spaceHeaderBlur = p.getBool('spaceHeaderBlur') ?? true;
+    creditHome = p.getBool('creditHome') ?? true;
+    creditSpace = p.getBool('creditSpace') ?? true;
     unsplashKey = p.getString('unsplashKey');
     homeTimeZone = p.getString('homeTimeZone');
     wallpaperShuffle = p.getInt('wallpaperShuffle') ?? 0;
@@ -511,6 +519,18 @@ class SettingsController extends ChangeNotifier {
   void setDailyWallpaper(bool v) {
     dailyWallpaper = v;
     _prefs.setBool('dailyWallpaper', v);
+    _changed();
+  }
+
+  void setCreditHome(bool v) {
+    creditHome = v;
+    _prefs.setBool('creditHome', v);
+    _changed();
+  }
+
+  void setCreditSpace(bool v) {
+    creditSpace = v;
+    _prefs.setBool('creditSpace', v);
     _changed();
   }
 

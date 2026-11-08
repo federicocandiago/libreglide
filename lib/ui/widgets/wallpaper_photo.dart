@@ -58,7 +58,8 @@ class WallpaperPhoto extends StatelessWidget {
 }
 
 /// Attribution required by Unsplash ("Photo by Name · Unsplash"), with link,
-/// for the photo shown in [view].
+/// for the photo shown in [view]. It can be hidden in the wallpaper
+/// settings, where it then stays visible.
 class WallpaperCredit extends StatelessWidget {
   const WallpaperCredit({super.key, required this.view});
 
@@ -69,10 +70,13 @@ class WallpaperCredit extends StatelessWidget {
     final scope = AppScope.of(context);
     final wallpaper = scope.wallpaper;
     return ListenableBuilder(
-      listenable: wallpaper,
+      listenable: Listenable.merge([wallpaper, scope.settings]),
       builder: (context, _) {
         final w = wallpaper.photoFor(view);
-        if (w == null) return const SizedBox();
+        final shown = view == WallpaperView.home
+            ? scope.settings.creditHome
+            : scope.settings.creditSpace;
+        if (w == null || !shown) return const SizedBox();
         const shadow = [Shadow(blurRadius: 6, color: Colors.black87)];
         return GestureDetector(
           onTap: () => scope.controller.bridge.openUrl(w.photoUrl),

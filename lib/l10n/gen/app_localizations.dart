@@ -1297,6 +1297,36 @@ abstract class L10n {
   /// **'Leggermente sfocata dietro data e nome dello Space, per leggerli meglio.'**
   String get spaceHeaderBlurDesc;
 
+  /// No description provided for @creditHome.
+  ///
+  /// In it, this message translates to:
+  /// **'Crediti sulla Home'**
+  String get creditHome;
+
+  /// No description provided for @creditSpace.
+  ///
+  /// In it, this message translates to:
+  /// **'Crediti nello Space'**
+  String get creditSpace;
+
+  /// No description provided for @creditDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Nome del fotografo e Unsplash sulla foto, come chiedono le regole di Unsplash. Se li nascondi, restano qui sotto.'**
+  String get creditDesc;
+
+  /// No description provided for @currentPhotoHome.
+  ///
+  /// In it, this message translates to:
+  /// **'Foto della Home'**
+  String get currentPhotoHome;
+
+  /// No description provided for @currentPhotoSpace.
+  ///
+  /// In it, this message translates to:
+  /// **'Foto dello Space'**
+  String get currentPhotoSpace;
+
   /// No description provided for @dailyWallpaper.
   ///
   /// In it, this message translates to:
@@ -1320,12 +1350,6 @@ abstract class L10n {
   /// In it, this message translates to:
   /// **'Stile delle foto'**
   String get wallpaperStyle;
-
-  /// No description provided for @wallpaperStyleDesc.
-  ///
-  /// In it, this message translates to:
-  /// **'Si aggiunge alla ricerca degli sfondi giornaliero e contestuale.'**
-  String get wallpaperStyleDesc;
 
   /// No description provided for @photoStyleNone.
   ///
@@ -1434,12 +1458,6 @@ abstract class L10n {
   /// In it, this message translates to:
   /// **'Un\'altra foto per questo momento: {moment}'**
   String changePhotoDesc(Object moment);
-
-  /// No description provided for @wallpaperLoading.
-  ///
-  /// In it, this message translates to:
-  /// **'Cerco una foto…'**
-  String get wallpaperLoading;
 
   /// No description provided for @wallpaperError.
   ///
