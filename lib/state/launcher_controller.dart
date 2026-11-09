@@ -149,15 +149,27 @@ class LauncherController extends ChangeNotifier {
   final CardAffinity cardAffinity = CardAffinity();
   String? _cardKey;
   Map<SpaceCard, double> _cardScores = const {};
+  Map<SpaceCard, double> _cardUsedHere = const {};
 
-  /// A tap on a card: records it along with the current context.
-  void recordCardUse(SpaceCard card) {
+  /// Context features of the displayed Space: the real ones, or those of
+  /// the situation the manually picked Space stands for.
+  Map<String, String?> _spaceFeatures(ContextFeatures real) =>
+      spaceOverride == null ? real.toMap() : situation.features(real.toMap());
+
+  /// A tap on [card] in the Space [kind]: records it with the context and
+  /// the Space. Stored as `card@space` in the package column.
+  void recordCardUse(SpaceCard card, SpaceKind kind) {
+    if (steadyCards.contains(card)) return;
     final now = _clock();
-    final features = _contextNow().toMap();
-    cardAffinity.add(card, now, features);
+    final features = _spaceFeatures(_contextNow());
+    cardAffinity.add(card, now, features, space: kind);
     unawaited(
       store.insert(
-        LaunchRecord(ts: now, package: card.name, features: features),
+        LaunchRecord(
+          ts: now,
+          package: '${card.name}@${kind.name}',
+          features: features,
+        ),
         source: 'card',
       ),
     );
@@ -167,25 +179,49 @@ class LauncherController extends ChangeNotifier {
   /// (or the Space) changes, so tapping a card doesn't move the others while
   /// the user is looking at the page.
   Map<SpaceCard, double> cardScores(SpaceKind kind) {
+    _refreshCardScores(kind);
+    return _cardScores;
+  }
+
+  /// Recent taps on each card in the Space [kind] itself (same cache).
+  Map<SpaceCard, double> cardUsedHere(SpaceKind kind) {
+    _refreshCardScores(kind);
+    return _cardUsedHere;
+  }
+
+  void _refreshCardScores(SpaceKind kind) {
     final key = '${context.key}|${kind.name}';
-    if (key == _cardKey) return _cardScores;
+    if (key == _cardKey) return;
     _cardKey = key;
     final now = _clock();
-    final ctx = context.toMap();
-    return _cardScores = {
+    final ctx = _spaceFeatures(context);
+    _cardScores = {
       for (final c in SpaceCard.values)
         if (cardAffinity.affinity(c, now, ctx) case final a when a > 0) c: a,
+    };
+    _cardUsedHere = {
+      for (final c in SpaceCard.values)
+        if (cardAffinity.usedIn(c, kind, now) case final a when a > 0) c: a,
     };
   }
 
   Future<void> _loadCardEvents() async {
     try {
       for (final r in await store.loadCardEvents()) {
-        final card = SpaceCard.values
-            .where((c) => c.name == r.package)
-            .firstOrNull;
+        // `card@space`; rows from before 1.2.3 have no Space.
+        final [name, ...rest] = r.package.split('@');
+        final card = SpaceCard.values.where((c) => c.name == name).firstOrNull;
+        final space = rest.isEmpty
+            ? null
+            : SpaceKind.values.where((k) => k.name == rest.first).firstOrNull;
         if (card != null) {
-          cardAffinity.add(card, r.ts, r.features, count: r.count);
+          cardAffinity.add(
+            card,
+            r.ts,
+            r.features,
+            count: r.count,
+            space: space,
+          );
         }
       }
     } catch (e) {
@@ -725,6 +761,25 @@ class LauncherController extends ChangeNotifier {
   /// Displayed Space: the manually picked one or the context one.
   SpaceKind get currentSpace => spaceOverride ?? contextSpace;
 
+  /// The real situation, from the system signals.
+  SpaceSituation get realSituation => SpaceSituation(
+    slot: context.slot,
+    place: places.currentRole,
+    driving: driving,
+    exercising: exercising,
+    listening: context.audio == 'headphones' || context.audio == 'bt',
+    travelling: travelling,
+    nightOut: nightOut,
+  );
+
+  /// The situation the Space page is built from: the real one, or the one
+  /// the manually picked Space stands for.
+  SpaceSituation get situation {
+    final real = realSituation;
+    final picked = spaceOverride;
+    return picked == null ? real : real.picked(picked);
+  }
+
   /// Time slot to use for time-bound cards (Good night…).
   Slot get currentSlot => spaceOverride?.slot ?? context.slot;
 
@@ -817,30 +872,11 @@ class LauncherController extends ChangeNotifier {
       _clock().hour,
     ].join('|');
     if (key == _suggestionsKey) return _suggestions;
-    final features = context.toMap();
-    // Manually picked Space: predictions follow that Space.
-    switch (spaceOverride) {
-      case null:
-        break;
-      case final SpaceKind k when k.slot != null:
-        features['slot'] = k.slot!.name;
-      case SpaceKind.home:
-        features['place'] = 'home';
-      case SpaceKind.work:
-        features['place'] = 'work';
-      case SpaceKind.travel:
-        features['place'] = 'travel';
-      case SpaceKind.moving:
-        features['motion'] = 'driving';
-      case SpaceKind.nightOut:
-        features['place'] = 'other';
-      case SpaceKind.exercise:
-        features['motion'] = 'exercise';
-      case SpaceKind.listening:
-        features['audio'] = 'headphones';
-      default:
-        break;
-    }
+    // Manually picked Space: predictions follow the situation it stands
+    // for (place, time slot, activity).
+    final features = spaceOverride == null
+        ? context.toMap()
+        : situation.features(context.toMap());
     final top = predictor.top(
       features,
       n: n,

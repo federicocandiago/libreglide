@@ -236,7 +236,7 @@
   "gestureNone": "Rien",
   "gesturesDesc": "Sur l’accueil et, pour le balayage vers le bas, aussi sur la barre du haut. Dans la recherche et les contacts, le balayage inverse ferme et revient à l’accueil.",
   "collectionLabels": "Noms dans les Collections",
-  "collectionLabelsDesc": "Afficher les noms sous les icônes aussi dans les rangées repliées",
+  "collectionLabelsDesc": "Afficher les noms sous les icônes dans les rangées repliées et les apps de l'Espace",
   "contactsTitle": "Contacts",
   "contactsFavorites": "Favoris et plus utilisés",
   "contactsSearchHint": "Rechercher des contacts",

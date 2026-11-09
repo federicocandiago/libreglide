@@ -236,7 +236,7 @@
   "gestureNone": "Nichts",
   "gesturesDesc": "Auf Home und, beim Wischen nach unten, auch auf der oberen Leiste. In der Suche und in den Kontakten schließt das entgegengesetzte Wischen und führt zurück zu Home.",
   "collectionLabels": "Namen in Collections",
-  "collectionLabelsDesc": "Namen unter den Symbolen auch in eingeklappten Zeilen anzeigen",
+  "collectionLabelsDesc": "Namen unter den Symbolen in eingeklappten Zeilen und bei den Apps im Space anzeigen",
   "contactsTitle": "Kontakte",
   "contactsFavorites": "Favoriten und häufig genutzt",
   "contactsSearchHint": "Kontakte suchen",

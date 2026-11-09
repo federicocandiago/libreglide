@@ -313,7 +313,7 @@
   "gestureNone": "Niente",
   "gesturesDesc": "Sulla Home e, per lo swipe in giù, anche sulla barra in alto. Nella ricerca e nei contatti, lo swipe opposto chiude e torna alla Home.",
   "collectionLabels": "Nomi nelle Collections",
-  "collectionLabelsDesc": "Mostra il nome sotto le icone anche nelle righe chiuse",
+  "collectionLabelsDesc": "Mostra il nome sotto le icone nelle righe chiuse e nelle app dello Space",
   "contactsTitle": "Contatti",
   "contactsFavorites": "Preferiti e più usati",
   "contactsSearchHint": "Cerca contatti",

@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import '../core/time_context.dart';
 import '../core/agenda.dart';
-import '../core/places.dart';
 import '../core/space.dart';
 import '../core/space_profile.dart';
 import '../data/settings.dart';
@@ -139,7 +138,9 @@ class _SpacePageState extends State<SpacePage>
                                         Expanded(
                                           child: AppTile(
                                             app: app,
-                                            showLabel: false,
+                                            // Names as in the Collections.
+                                            showLabel:
+                                                settings.collectionLabels,
                                           ),
                                         ),
                                       for (var i = apps.length; i < 5; i++)
@@ -282,33 +283,35 @@ class _SpacePageState extends State<SpacePage>
     final controller = scope.controller;
     final cards = controller.cards;
     final profile = profileFor(kind, workKind: controller.workKind);
-    final headphones =
-        controller.context.audio == 'headphones' ||
-        controller.context.audio == 'bt';
+    // The real situation, or the one of the Space picked in the drawer.
+    final situation = controller.situation;
+    final headphones = situation.listening;
     final destination = settings.nextPlaceCard && cards.events != null
         ? nextDestination(DateTime.now(), cards.events!)
         : null;
     final parking = cards.parking;
     // At home or at work the car is usually right there: the saved spot is
     // not shown (the permission request still is).
-    final place = controller.places.currentRole;
-    final atHomeOrWork = place == PlaceRole.home || place == PlaceRole.work;
     final showParking =
         settings.parkingCard &&
-        !controller.driving &&
+        !situation.driving &&
         (cards.parkingMissing.isNotEmpty ||
-            (!atHomeOrWork &&
+            (!situation.atHomeOrWork &&
                 parking != null &&
                 DateTime.now().difference(parking.at) <
                     const Duration(hours: 24)));
-    final driving = settings.carCard && controller.driving;
+    final driving = settings.carCard && situation.driving;
+    final rules = settings.cardRulesFor(kind);
     final agenda = cards.eventsLoaded ? cards.agenda() : null;
-    // Empty agenda: only where the profile wants it (in the morning); without
-    // permission it stays, to ask for it.
+    // Empty agenda: only where the profile wants it (in the morning) or the
+    // user pinned it here; without permission it stays, to ask for it.
     final showAgenda =
         settings.agendaCard &&
         cards.eventsLoaded &&
-        (agenda == null || agenda.events.isNotEmpty || profile.agendaWhenEmpty);
+        (agenda == null ||
+            agenda.events.isNotEmpty ||
+            profile.agendaWhenEmpty ||
+            rules[SpaceCard.agenda] == CardRule.show);
     final category = profile.category;
 
     final available = <SpaceCard, Widget>{
@@ -342,7 +345,8 @@ class _SpacePageState extends State<SpacePage>
       profile: profile,
       available: available.keys,
       affinity: controller.cardScores(kind),
-      rules: settings.cardRulesFor(kind),
+      usedHere: controller.cardUsedHere(kind),
+      rules: rules,
     );
     final invite = order.remove(SpaceCard.placesInvite);
     return [
@@ -500,11 +504,7 @@ class _SpacePill extends StatelessWidget {
             Icon(spaceIcon(kind), color: onColor, size: 18),
             const SizedBox(width: 8),
             Text(
-              spaceLabel(
-                context.l10n,
-                kind,
-                workKind: workKind,
-              ).toUpperCase(),
+              spaceLabel(context.l10n, kind, workKind: workKind).toUpperCase(),
               maxLines: 1,
               textScaler: MediaQuery.textScalerOf(context)
                   .clamp(maxScaleFactor: maxLabelScale),
@@ -704,7 +704,7 @@ class _CardShellState extends State<_CardShell> {
     if (DateTime.now().difference(at) > const Duration(milliseconds: 600)) {
       return;
     }
-    AppScope.of(context).controller.recordCardUse(widget.card);
+    AppScope.of(context).controller.recordCardUse(widget.card, widget.kind);
   }
 
   Future<void> _menu() {

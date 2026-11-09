@@ -8,6 +8,7 @@ import 'glide_style.dart';
 import 'labels.dart';
 import 'scope.dart';
 import 'widgets/search_results.dart';
+import 'widgets/glass_photo.dart';
 import 'widgets/swipe_to_close.dart';
 
 /// Opens the contacts panel. It slides in following the swipe that
@@ -134,112 +135,123 @@ class _ContactsPageState extends State<ContactsPage> {
     final c = GlideColors.of(context);
     final l = context.l10n;
 
-    return Scaffold(
-      backgroundColor: c.page,
-      body: SafeArea(
-        child: SwipeToClose(
-          direction: widget.closeSwipe,
-          scroll: _scroll,
-          onClose: () => Navigator.of(context).maybePop(),
-          child: ListenableBuilder(
-            listenable: contacts,
-            builder: (context, _) {
-              final granted = contacts.permission ?? false;
-              return ListView(
-                controller: _scroll,
-                padding: const EdgeInsets.all(cardGap),
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                children: [
-                  if (granted) ...[
-                    PillSearchField(
-                      controller: _text,
-                      hint: l.contactsSearchHint,
-                      autofocus: true,
-                      onSubmitted: _submit,
-                      onClose: () => Navigator.of(context).pop(),
-                    ),
-                    const SizedBox(height: cardGap),
-                  ],
-                  if (contacts.permission == false)
-                    FlatCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          CapsHeader(
-                            icon: Icons.people_alt_rounded,
-                            label: l.contactsTitle,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 10, 12),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    l.contactsPermission,
-                                    style: TextStyle(
-                                      color: c.muted,
-                                      height: 1.35,
+    // The blurred Unsplash photo stays behind the page, as on Home: no
+    // fade to the phone's wallpaper.
+    return GlassPhoto(
+      child: Scaffold(
+        backgroundColor: c.page,
+        body: SafeArea(
+          child: SwipeToClose(
+            direction: widget.closeSwipe,
+            scroll: _scroll,
+            onClose: () => Navigator.of(context).maybePop(),
+            child: ListenableBuilder(
+              listenable: contacts,
+              builder: (context, _) {
+                final granted = contacts.permission ?? false;
+                return ListView(
+                  controller: _scroll,
+                  padding: const EdgeInsets.all(cardGap),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  children: [
+                    if (granted) ...[
+                      PillSearchField(
+                        controller: _text,
+                        hint: l.contactsSearchHint,
+                        autofocus: true,
+                        onSubmitted: _submit,
+                        onClose: () => Navigator.of(context).pop(),
+                      ),
+                      const SizedBox(height: cardGap),
+                    ],
+                    if (contacts.permission == false)
+                      FlatCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CapsHeader(
+                              icon: Icons.people_alt_rounded,
+                              label: l.contactsTitle,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 10, 12),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      l.contactsPermission,
+                                      style: TextStyle(
+                                        color: c.muted,
+                                        height: 1.35,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                FilledButton.tonal(
-                                  onPressed: contacts.requestPermission,
-                                  child: Text(l.allow),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else if (_query.isNotEmpty)
-                    _Results(
-                      contacts: _results,
-                      // No "not found" while the first results are on their
-                      // way.
-                      settled: _resultsFor == _query,
-                    )
-                  else if (granted)
-                    FlatCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          CapsHeader(
-                            icon: Icons.star_rounded,
-                            label: l.contactsFavorites,
-                          ),
-                          if (contacts.favorites.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                              child: Text(
-                                contacts.loading ? '' : l.contactsEmpty,
-                                style: TextStyle(color: c.muted, height: 1.35),
-                              ),
-                            )
-                          else
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
-                              child: Wrap(
-                                children: [
-                                  // A single row: the first 4.
-                                  for (final contact in contacts.favorites.take(
-                                    4,
-                                  ))
-                                    FractionallySizedBox(
-                                      widthFactor: 0.25,
-                                      child: _ContactTile(contact: contact),
-                                    ),
+                                  const SizedBox(width: 8),
+                                  FilledButton.tonal(
+                                    onPressed: contacts.requestPermission,
+                                    child: Text(l.allow),
+                                  ),
                                 ],
                               ),
                             ),
-                        ],
+                          ],
+                        ),
+                      )
+                    else if (_query.isNotEmpty)
+                      _Results(
+                        contacts: _results,
+                        // No "not found" while the first results are on their
+                        // way.
+                        settled: _resultsFor == _query,
+                      )
+                    else if (granted)
+                      FlatCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CapsHeader(
+                              icon: Icons.star_rounded,
+                              label: l.contactsFavorites,
+                            ),
+                            if (contacts.favorites.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  0,
+                                  16,
+                                  16,
+                                ),
+                                child: Text(
+                                  contacts.loading ? '' : l.contactsEmpty,
+                                  style: TextStyle(
+                                    color: c.muted,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              )
+                            else
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+                                child: Wrap(
+                                  children: [
+                                    // A single row: the first 4.
+                                    for (final contact
+                                        in contacts.favorites.take(4))
+                                      FractionallySizedBox(
+                                        widthFactor: 0.25,
+                                        child: _ContactTile(contact: contact),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),

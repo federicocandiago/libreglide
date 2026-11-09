@@ -194,15 +194,16 @@ SpaceProfile profileFor(SpaceKind kind, {WorkKind? workKind}) => switch (kind) {
 /// The user's choice for a card in a Space.
 enum CardRule { show, hide }
 
-/// Card interactions (taps) with their context. A card's affinity in a
-/// context is the number of taps in that time slot or place (or with
+/// Card interactions (taps) with their context and Space. A card's affinity
+/// in a context is the number of taps in that time slot or place (or with
 /// headphones, in the car), weighted with a decay: recent actions count
 /// more.
 class CardAffinity {
   CardAffinity({this.halfLife = const Duration(days: 21)});
 
   final Duration halfLife;
-  final List<(SpaceCard, DateTime, Map<String, String?>, int)> _events = [];
+  final List<(SpaceCard, DateTime, Map<String, String?>, int, SpaceKind?)>
+  _events = [];
 
   /// Signals describing the context of a tap.
   static const _features = ['slot', 'place', 'audio', 'motion'];
@@ -210,13 +211,15 @@ class CardAffinity {
   /// Values too generic to tell anything.
   static const _ignored = {'other', 'speaker'};
 
-  /// Adds a tap ([count] taps for a compacted row).
+  /// Adds a tap ([count] taps for a compacted row) made in [space] (null for
+  /// taps recorded before 1.2.3, when the Space wasn't saved).
   void add(
     SpaceCard card,
     DateTime t,
     Map<String, String?> features, {
     int count = 1,
-  }) => _events.add((card, t, features, count));
+    SpaceKind? space,
+  }) => _events.add((card, t, features, count, space));
 
   void clear() => _events.clear();
 
@@ -229,37 +232,63 @@ class CardAffinity {
       final v = ctx[f];
       if (v == null || _ignored.contains(v)) continue;
       var sum = 0.0;
-      for (final (c, t, features, count) in _events) {
+      for (final (c, t, features, count, _) in _events) {
         if (c != card || features[f] != v) continue;
-        final age = now.difference(t).inMinutes / halfLife.inMinutes;
-        sum += count * math.pow(0.5, age.clamp(0, 60)).toDouble();
+        sum += count * _decay(now, t);
       }
       if (sum > best) best = sum;
     }
     return best;
   }
+
+  /// Recent taps on [card] made in the Space [kind] itself.
+  double usedIn(SpaceCard card, SpaceKind kind, DateTime now) {
+    var sum = 0.0;
+    for (final (c, t, _, count, space) in _events) {
+      if (c == card && space == kind) sum += count * _decay(now, t);
+    }
+    return sum;
+  }
+
+  double _decay(DateTime now, DateTime t) {
+    final age = now.difference(t).inMinutes / halfLife.inMinutes;
+    return math.pow(0.5, age.clamp(0, 60)).toDouble();
+  }
 }
 
-/// Recent taps in the context above which a card hidden by the profile
-/// shows up anyway.
+/// Cards that keep the profile's place: their content already adapts (the
+/// apps change with the moment), and they are tapped far more than the
+/// others, so counting their taps would push every other card down.
+const Set<SpaceCard> steadyCards = {SpaceCard.apps, SpaceCard.category};
+
+/// Recent taps in the Space itself above which a card hidden by the profile
+/// stays (e.g. it was pinned with "Always show here", used, then unpinned).
+/// Taps in other Spaces don't count: tapping the agenda in the evening must
+/// not bring it back into Night out.
 const double promoteAt = 3;
 
 /// Orders the available cards for this Space: profile priority, usage
 /// boost, user choices. [available] are the cards that currently have
-/// something to show.
+/// something to show; [affinity] is the use in this context (time slot,
+/// place…), [usedHere] the use in this very Space.
 List<SpaceCard> arrangeCards({
   required SpaceProfile profile,
   required Iterable<SpaceCard> available,
   Map<SpaceCard, double> affinity = const {},
+  Map<SpaceCard, double> usedHere = const {},
   Map<SpaceCard, CardRule> rules = const {},
 }) {
   final scored = <(SpaceCard, double, int)>[];
   for (final (i, card) in available.indexed) {
     final rule = rules[card];
     if (rule == CardRule.hide) continue;
-    final a = affinity[card] ?? 0;
+    final a = steadyCards.contains(card) ? 0.0 : affinity[card] ?? 0;
     final hiddenByProfile = profile.hidden.contains(card);
-    if (hiddenByProfile && rule != CardRule.show && a < promoteAt) continue;
+    if (hiddenByProfile &&
+        rule != CardRule.show &&
+        (usedHere[card] ?? 0) < promoteAt) {
+      continue;
+    }
     var p = (profile.priority[card] ?? defaultCardPriority[card] ?? 50)
         .toDouble();
     // The more you use it here, the higher it goes (up to 18 priority steps).

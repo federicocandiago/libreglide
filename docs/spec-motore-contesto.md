@@ -465,7 +465,7 @@ class ContextState {
 
 ### 8.2 `SpaceSelector`
 
-Si valutano le regole in ordine di priorità e vince la prima che è vera. L'utente può sempre cambiare Space a mano, e la scelta manuale resta finché il contesto cambia di nuovo.
+Si valutano le regole in ordine di priorità e vince la prima che è vera. L'utente può sempre cambiare Space a mano, e la scelta manuale resta finché il contesto cambia di nuovo. Uno Space scelto a mano vale come la sua situazione: luogo (Casa, Lavoro), fascia oraria o attività (auto, allenamento, cuffie, viaggio, serata fuori). La pagina e le app suggerite si calcolano da quella; restano reali solo i dati veri (musica, agenda, posizione dell'auto, ora di casa in viaggio).
 
 | # | Space | Condizione |
 |---|---|---|

@@ -795,7 +795,7 @@ class L10nIt extends L10n {
 
   @override
   String get collectionLabelsDesc =>
-      'Mostra il nome sotto le icone anche nelle righe chiuse';
+      'Mostra il nome sotto le icone nelle righe chiuse e nelle app dello Space';
 
   @override
   String get contactsTitle => 'Contatti';

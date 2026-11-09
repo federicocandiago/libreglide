@@ -790,7 +790,7 @@ class L10nEn extends L10n {
 
   @override
   String get collectionLabelsDesc =>
-      'Show names under icons also in collapsed rows';
+      'Show names under icons in collapsed rows and in the Space apps';
 
   @override
   String get contactsTitle => 'Contacts';

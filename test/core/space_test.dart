@@ -135,4 +135,78 @@ void main() {
       expect(out(DateTime(2026, 11, 7, 16), slot: Slot.afternoon), isFalse);
     });
   });
+
+  group('picked Space situation', () {
+    const real = SpaceSituation(
+      slot: Slot.afternoon,
+      place: PlaceRole.none,
+      driving: true,
+      listening: true,
+    );
+
+    test('places set the place and drop the activities', () {
+      final home = real.picked(SpaceKind.home);
+      expect(home.place, PlaceRole.home);
+      expect(home.atHomeOrWork, isTrue);
+      expect(home.driving, isFalse);
+      expect(home.listening, isFalse);
+      expect(home.slot, Slot.afternoon);
+      expect(real.picked(SpaceKind.work).place, PlaceRole.work);
+    });
+
+    test('time Spaces set the slot and keep the real place', () {
+      final evening = real.picked(SpaceKind.evening);
+      expect(evening.slot, Slot.evening);
+      expect(evening.place, PlaceRole.none);
+      expect(evening.driving, isFalse);
+    });
+
+    test('travel and night out are away from home and work', () {
+      const atHome = SpaceSituation(slot: Slot.evening, place: PlaceRole.home);
+      expect(atHome.picked(SpaceKind.travel).atHomeOrWork, isFalse);
+      expect(atHome.picked(SpaceKind.travel).travelling, isTrue);
+      expect(atHome.picked(SpaceKind.nightOut).atHomeOrWork, isFalse);
+      expect(atHome.picked(SpaceKind.moving).driving, isTrue);
+    });
+
+    test('predictor features follow the picked Space', () {
+      final realFeatures = <String, String?>{
+        'slot': 'afternoon',
+        'daytype': 'weekday',
+        'network': 'mobile',
+        'place': 'other',
+        'audio': 'bt',
+        'motion': 'driving',
+      };
+      final work = real.picked(SpaceKind.work).features(realFeatures);
+      expect(work['place'], 'work');
+      expect(work['motion'], isNull);
+      expect(work['audio'], isNull);
+      expect(work['network'], 'mobile');
+      expect(work['daytype'], 'weekday');
+
+      final night = real.picked(SpaceKind.night).features(realFeatures);
+      expect(night['slot'], 'night');
+      expect(night['place'], 'other');
+
+      final listening = real.picked(SpaceKind.listening).features(realFeatures);
+      expect(listening['audio'], 'headphones');
+      expect(
+        real.picked(SpaceKind.travel).features(realFeatures)['place'],
+        'travel',
+      );
+    });
+
+    test('a frequent place keeps its id', () {
+      const atGym = SpaceSituation(
+        slot: Slot.evening,
+        place: PlaceRole.frequent,
+      );
+      final f = atGym.picked(SpaceKind.listening).features({
+        'slot': 'evening',
+        'place': 'frequent:3',
+      });
+      expect(f['place'], 'frequent:3');
+    });
+  });
 }

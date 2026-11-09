@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +27,7 @@ import 'settings/legal_pages.dart';
 import 'settings/settings_page.dart';
 import 'settings/space_cards_page.dart';
 import 'space_page.dart';
+import 'widgets/glass_photo.dart';
 import 'widgets/rows_icon.dart';
 
 /// Pages, in Glide's order: Space ← Home (time) → Collections → A-Z.
@@ -247,6 +249,8 @@ class _LauncherShellState extends State<LauncherShell> {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    // The device touch slop; pages keep it, the tab pager gets more.
+    final slop = MediaQuery.maybeGestureSettingsOf(context)?.touchSlop;
 
     return PopScope(
       canPop: false,
@@ -276,7 +280,7 @@ class _LauncherShellState extends State<LauncherShell> {
               _openSettings();
             },
           ),
-          body: _GlassPhoto(
+          body: GlassPhoto(
             child: Column(
               children: [
                 _TabBar(
@@ -289,28 +293,46 @@ class _LauncherShellState extends State<LauncherShell> {
                   child: _HomeFrame(
                     page: _page,
                     child: _GlassLayer(
-                      child: PageView(
-                        controller: _pages,
-                        children: [
-                          _ScrollWatch(
-                            scrolled: _scrolled[0],
-                            child: const SpacePage(),
-                          ),
-                          HomePage(onOpenSettings: _openSettings),
-                          _ScrollWatch(
-                            scrolled: _scrolled[2],
-                            child: _PageBackground(
-                              child: CollectionsPage(homeSignal: _homeSignal),
+                      // Tab swipes need more movement than vertical ones.
+                      child: TouchSlop(
+                        slop: (slop ?? kTouchSlop) * tabSwipeSlopFactor,
+                        child: PageView(
+                          controller: _pages,
+                          children: [
+                            TouchSlop(
+                              slop: slop,
+                              child: _ScrollWatch(
+                                scrolled: _scrolled[0],
+                                child: const SpacePage(),
+                              ),
                             ),
-                          ),
-                          _ScrollWatch(
-                            scrolled: _scrolled[3],
-                            child: _PageBackground(
-                              card: true,
-                              child: AllAppsPage(homeSignal: _homeSignal),
+                            TouchSlop(
+                              slop: slop,
+                              child: HomePage(onOpenSettings: _openSettings),
                             ),
-                          ),
-                        ],
+                            TouchSlop(
+                              slop: slop,
+                              child: _ScrollWatch(
+                                scrolled: _scrolled[2],
+                                child: _PageBackground(
+                                  child: CollectionsPage(
+                                    homeSignal: _homeSignal,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            TouchSlop(
+                              slop: slop,
+                              child: _ScrollWatch(
+                                scrolled: _scrolled[3],
+                                child: _PageBackground(
+                                  card: true,
+                                  child: AllAppsPage(homeSignal: _homeSignal),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -344,11 +366,14 @@ class _TabBar extends StatelessWidget {
     final controller = AppScope.of(context).controller;
     final l = context.l10n;
     final top = MediaQuery.paddingOf(context).top;
+    var dy = 0.0;
 
     return GestureDetector(
       // Swipe down on the bar: same as on Home.
+      onVerticalDragStart: (_) => dy = 0,
+      onVerticalDragUpdate: (d) => dy += d.delta.dy,
       onVerticalDragEnd: (d) {
-        if ((d.primaryVelocity ?? 0) > 300) {
+        if (isVerticalSwipe(d.primaryVelocity ?? 0, dy, SwipeDirection.down)) {
           runGesture(
             context,
             AppScope.of(context).settings.swipeDown,
@@ -898,45 +923,6 @@ int _glassLevel(AppScope scope) =>
     scope.wallpaper.file != null || scope.controller.bridge.blurAvailable.value
     ? 1
     : 2;
-
-/// With glass and the Unsplash Home photo, its blurred version sits
-/// behind everything (bar included). The blur comes for free: decoded at
-/// 32 px and upscaled.
-class _GlassPhoto extends StatelessWidget {
-  const _GlassPhoto({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final scope = AppScope.of(context);
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        scope.settings.appearance,
-        scope.wallpaper,
-      ]),
-      child: child,
-      builder: (context, child) {
-        final file = scope.wallpaper.file;
-        if (!scope.settings.frostedGlass || file == null) return child!;
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.file(
-              file,
-              fit: BoxFit.cover,
-              cacheWidth: 32,
-              filterQuality: FilterQuality.high,
-              gaplessPlayback: true,
-              errorBuilder: (_, _, _) => const SizedBox.expand(),
-            ),
-            child!,
-          ],
-        );
-      },
-    );
-  }
-}
 
 /// Page background, resolved inside the glass context (if enabled).
 class _PageBackground extends StatelessWidget {

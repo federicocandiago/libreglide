@@ -31,6 +31,9 @@ class _HomePageState extends State<HomePage>
   /// Home widgets edit mode.
   bool _editing = false;
 
+  /// Vertical distance of the drag in progress.
+  double _dragDy = 0;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -118,17 +121,19 @@ class _HomePageState extends State<HomePage>
                 onTap: _editing ? () => setState(() => _editing = false) : null,
                 // Vertical swipes: by default contacts on swipe down and
                 // search on swipe up (configurable).
+                // A quick flick or a slower, longer swipe both count.
+                onVerticalDragStart: (_) => _dragDy = 0,
+                onVerticalDragUpdate: (d) => _dragDy += d.delta.dy,
                 onVerticalDragEnd: (d) {
                   if (_editing) return;
                   final v = d.primaryVelocity ?? 0;
-                  if (v > 300) {
+                  if (isVerticalSwipe(v, _dragDy, SwipeDirection.down)) {
                     runGesture(
                       context,
                       settings.swipeDown,
                       SwipeDirection.down,
                     );
-                  }
-                  if (v < -300) {
+                  } else if (isVerticalSwipe(v, _dragDy, SwipeDirection.up)) {
                     runGesture(context, settings.swipeUp, SwipeDirection.up);
                   }
                 },

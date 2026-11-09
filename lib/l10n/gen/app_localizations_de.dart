@@ -795,7 +795,7 @@ class L10nDe extends L10n {
 
   @override
   String get collectionLabelsDesc =>
-      'Namen unter den Symbolen auch in eingeklappten Zeilen anzeigen';
+      'Namen unter den Symbolen in eingeklappten Zeilen und bei den Apps im Space anzeigen';
 
   @override
   String get contactsTitle => 'Kontakte';

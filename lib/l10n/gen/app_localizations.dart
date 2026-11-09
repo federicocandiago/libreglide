@@ -1522,7 +1522,7 @@ abstract class L10n {
   /// No description provided for @collectionLabelsDesc.
   ///
   /// In it, this message translates to:
-  /// **'Mostra il nome sotto le icone anche nelle righe chiuse'**
+  /// **'Mostra il nome sotto le icone nelle righe chiuse e nelle app dello Space'**
   String get collectionLabelsDesc;
 
   /// No description provided for @contactsTitle.

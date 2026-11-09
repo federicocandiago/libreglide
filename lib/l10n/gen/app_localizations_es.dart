@@ -796,7 +796,7 @@ class L10nEs extends L10n {
 
   @override
   String get collectionLabelsDesc =>
-      'Mostrar nombres bajo los iconos también en las filas contraídas';
+      'Mostrar nombres bajo los iconos en las filas contraídas y en las apps del Space';
 
   @override
   String get contactsTitle => 'Contactos';

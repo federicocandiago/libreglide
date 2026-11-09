@@ -114,3 +114,91 @@ bool isNightOut({
   if (evening.weekday == DateTime.sunday) return minutes >= 20 * 60 + 30;
   return minutes >= 21 * 60 && place == PlaceRole.none;
 }
+
+/// What the Space page is built from: where the phone is and what is
+/// happening. The automatic Space uses the real signals; a Space picked by
+/// hand stands for its own situation, so the whole page follows the choice
+/// (cards, suggested apps), not just the header.
+class SpaceSituation {
+  const SpaceSituation({
+    required this.slot,
+    this.place,
+    this.driving = false,
+    this.exercising = false,
+    this.listening = false,
+    this.travelling = false,
+    this.nightOut = false,
+  });
+
+  final Slot slot;
+  final PlaceRole? place;
+  final bool driving;
+  final bool exercising;
+  final bool listening;
+  final bool travelling;
+  final bool nightOut;
+
+  bool get atHomeOrWork => place == PlaceRole.home || place == PlaceRole.work;
+
+  /// The situation [kind] stands for, starting from this (real) one.
+  ///
+  /// A picked Space is that situation alone: the other activities are off.
+  /// Places set the place; time-of-day Spaces set the time slot and keep the
+  /// real place; travel and night out mean being away from home and work.
+  SpaceSituation picked(SpaceKind kind) => switch (kind) {
+    SpaceKind.home || SpaceKind.work => SpaceSituation(
+      slot: slot,
+      place: kind == SpaceKind.home ? PlaceRole.home : PlaceRole.work,
+    ),
+    SpaceKind.moving => SpaceSituation(slot: slot, place: place, driving: true),
+    SpaceKind.exercise => SpaceSituation(
+      slot: slot,
+      place: place,
+      exercising: true,
+    ),
+    SpaceKind.listening => SpaceSituation(
+      slot: slot,
+      place: place,
+      listening: true,
+    ),
+    SpaceKind.travel => SpaceSituation(
+      slot: slot,
+      place: PlaceRole.none,
+      travelling: true,
+    ),
+    SpaceKind.nightOut => SpaceSituation(
+      slot: slot,
+      place: PlaceRole.none,
+      nightOut: true,
+    ),
+    _ => SpaceSituation(slot: kind.slot!, place: place),
+  };
+
+  /// The predictor's context features, adjusted to this situation.
+  /// [real] are the features read from the system; network, weekday and the
+  /// like stay as they are.
+  Map<String, String?> features(Map<String, String?> real) => {
+    ...real,
+    'slot': slot.name,
+    'place': travelling
+        ? 'travel'
+        : switch (place) {
+            PlaceRole.home => 'home',
+            PlaceRole.work => 'work',
+            PlaceRole.none => 'other',
+            // A frequent place keeps its own id (frequent:ID).
+            PlaceRole.frequent => real['place'],
+            null => real['place'],
+          },
+    'motion': driving
+        ? 'driving'
+        : exercising
+        ? 'exercise'
+        : null,
+    'audio': listening
+        ? 'headphones'
+        : (real['audio'] == 'headphones' || real['audio'] == 'bt')
+        ? null
+        : real['audio'],
+  };
+}

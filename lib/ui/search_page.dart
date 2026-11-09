@@ -12,6 +12,7 @@ import 'scope.dart';
 import 'widgets/app_actions.dart';
 import 'widgets/app_icon.dart';
 import 'widgets/search_results.dart';
+import 'widgets/glass_photo.dart';
 import 'widgets/swipe_to_close.dart';
 
 /// Opens global search with the keyboard ready. It slides in following the
@@ -186,144 +187,155 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
       results = const [];
     }
 
-    return Scaffold(
-      backgroundColor: c.page,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        bottom: false,
-        child: SwipeToClose(
-          direction: widget.closeSwipe,
-          scroll: _scroll,
-          onClose: () => Navigator.of(context).maybePop(),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  cardGap,
-                  cardGap,
-                  cardGap,
-                  0,
-                ),
-                child: PillSearchField(
-                  controller: _text,
-                  hint: l.searchHint,
-                  autofocus: true,
-                  // Enter: the best match; with no apps, the web.
-                  onSubmitted: () {
-                    if (results.isNotEmpty) {
-                      _launch(results.first);
-                    } else if (q.isNotEmpty && _canWeb) {
-                      _webSearch(q);
-                    }
-                  },
-                  onClose: () => Navigator.of(context).pop(),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: _scroll,
-                  padding: EdgeInsets.fromLTRB(
+    // The blurred Unsplash photo stays behind the page, as on Home: no
+    // fade to the phone's wallpaper.
+    return GlassPhoto(
+      child: Scaffold(
+        backgroundColor: c.page,
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          bottom: false,
+          child: SwipeToClose(
+            direction: widget.closeSwipe,
+            scroll: _scroll,
+            onClose: () => Navigator.of(context).maybePop(),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
                     cardGap,
                     cardGap,
                     cardGap,
-                    MediaQuery.paddingOf(context).bottom + cardGap,
+                    0,
                   ),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  children: [
-                    // While typing the suggestions give way to the results.
-                    if (q.isEmpty && top.isNotEmpty)
-                      FlatCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            CapsHeader(
-                              icon: slotIcon(controller.context.slot),
-                              label: l.nowAppsHeader,
-                            ),
-                            for (var r = 0; r < top.length; r += 4)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    for (var i = r; i < r + 4; i++)
-                                      Expanded(
-                                        child: i < top.length
-                                            ? _AppCell(
-                                                app: top[i],
-                                                onLaunch: _launch,
-                                              )
-                                            : const SizedBox(),
-                                      ),
-                                  ],
-                                ),
+                  child: PillSearchField(
+                    controller: _text,
+                    hint: l.searchHint,
+                    autofocus: true,
+                    // Enter: the best match; with no apps, the web.
+                    onSubmitted: () {
+                      if (results.isNotEmpty) {
+                        _launch(results.first);
+                      } else if (q.isNotEmpty && _canWeb) {
+                        _webSearch(q);
+                      }
+                    },
+                    onClose: () => Navigator.of(context).pop(),
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: _scroll,
+                    padding: EdgeInsets.fromLTRB(
+                      cardGap,
+                      cardGap,
+                      cardGap,
+                      MediaQuery.paddingOf(context).bottom + cardGap,
+                    ),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    children: [
+                      // While typing the suggestions give way to the results.
+                      if (q.isEmpty && top.isNotEmpty)
+                        FlatCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              CapsHeader(
+                                icon: slotIcon(controller.context.slot),
+                                label: l.nowAppsHeader,
                               ),
-                          ],
-                        ),
-                      ),
-                    if (q.isEmpty) const SizedBox(height: cardGap),
-                    if (q.isNotEmpty) ...[
-                      if (results.isNotEmpty)
-                        BestMatchCard(
-                          leading: AppIconView(app: results.first, size: 48),
-                          title: results.first.label,
-                          subtitle: categoryLabel(
-                            l,
-                            controller.categoryOf(results.first),
+                              for (var r = 0; r < top.length; r += 4)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    6,
+                                    0,
+                                    6,
+                                    2,
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      for (var i = r; i < r + 4; i++)
+                                        Expanded(
+                                          child: i < top.length
+                                              ? _AppCell(
+                                                  app: top[i],
+                                                  onLaunch: _launch,
+                                                )
+                                              : const SizedBox(),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
-                          onTap: (ctx) => _launch(results.first, ctx),
-                          onLongPress: () =>
-                              showAppActions(context, results.first),
+                        ),
+                      if (q.isEmpty) const SizedBox(height: cardGap),
+                      if (q.isNotEmpty) ...[
+                        if (results.isNotEmpty)
+                          BestMatchCard(
+                            leading: AppIconView(app: results.first, size: 48),
+                            title: results.first.label,
+                            subtitle: categoryLabel(
+                              l,
+                              controller.categoryOf(results.first),
+                            ),
+                            onTap: (ctx) => _launch(results.first, ctx),
+                            onLongPress: () =>
+                                showAppActions(context, results.first),
+                          )
+                        else
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                            child: Text(
+                              l.noResults,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: c.muted),
+                            ),
+                          ),
+                        if (results.length > 1) ...[
+                          const SizedBox(height: cardGap),
+                          OtherResultsCard(
+                            rows: [
+                              for (final app in results.skip(1))
+                                _ResultRow(
+                                  app: app,
+                                  category: categoryLabel(
+                                    l,
+                                    controller.categoryOf(app),
+                                  ),
+                                  onLaunch: _launch,
+                                ),
+                            ],
+                          ),
+                        ],
+                        if (_canWeb) ...[
+                          const SizedBox(height: 4),
+                          WebSearchHint(
+                            query: q,
+                            enter: results.isEmpty,
+                            onTap: () => _webSearch(q),
+                          ),
+                        ],
+                      ] else if (_category == null)
+                        _BrowseCollections(
+                          onPick: (cat) => setState(() => _category = cat),
                         )
                       else
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                          child: Text(
-                            l.noResults,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: c.muted),
-                          ),
+                        _ResultsCard(
+                          results: results,
+                          category: _category,
+                          onClearCategory: () =>
+                              setState(() => _category = null),
+                          onLaunch: _launch,
                         ),
-                      if (results.length > 1) ...[
-                        const SizedBox(height: cardGap),
-                        OtherResultsCard(
-                          rows: [
-                            for (final app in results.skip(1))
-                              _ResultRow(
-                                app: app,
-                                category: categoryLabel(
-                                  l,
-                                  controller.categoryOf(app),
-                                ),
-                                onLaunch: _launch,
-                              ),
-                          ],
-                        ),
-                      ],
-                      if (_canWeb) ...[
-                        const SizedBox(height: 4),
-                        WebSearchHint(
-                          query: q,
-                          enter: results.isEmpty,
-                          onTap: () => _webSearch(q),
-                        ),
-                      ],
-                    ] else if (_category == null)
-                      _BrowseCollections(
-                        onPick: (cat) => setState(() => _category = cat),
-                      )
-                    else
-                      _ResultsCard(
-                        results: results,
-                        category: _category,
-                        onClearCategory: () => setState(() => _category = null),
-                        onLaunch: _launch,
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

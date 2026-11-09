@@ -236,7 +236,7 @@
   "gestureNone": "Nada",
   "gesturesDesc": "En Inicio y, al deslizar hacia abajo, también en la barra superior. En la búsqueda y los contactos, el deslizamiento contrario cierra y vuelve a Inicio.",
   "collectionLabels": "Nombres en Collections",
-  "collectionLabelsDesc": "Mostrar nombres bajo los iconos también en las filas contraídas",
+  "collectionLabelsDesc": "Mostrar nombres bajo los iconos en las filas contraídas y en las apps del Space",
   "contactsTitle": "Contactos",
   "contactsFavorites": "Favoritos y más usados",
   "contactsSearchHint": "Buscar contactos",

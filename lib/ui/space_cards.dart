@@ -426,6 +426,7 @@ class _CategoryApps extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context).controller;
+    final labels = AppScope.of(context).settings.collectionLabels;
     final group = controller.collections
         .where((g) => g.category == category)
         .firstOrNull;
@@ -436,7 +437,10 @@ class _CategoryApps extends StatelessWidget {
       child: Row(
         children: [
           for (final app in apps)
-            Expanded(child: AppTile(app: app, iconSize: 44, showLabel: false)),
+            Expanded(
+              // Names as in the Collections.
+              child: AppTile(app: app, iconSize: 44, showLabel: labels),
+            ),
           for (var i = apps.length; i < 4; i++)
             const Expanded(child: SizedBox()),
         ],

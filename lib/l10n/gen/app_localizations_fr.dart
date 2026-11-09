@@ -796,7 +796,7 @@ class L10nFr extends L10n {
 
   @override
   String get collectionLabelsDesc =>
-      'Afficher les noms sous les icônes aussi dans les rangées repliées';
+      'Afficher les noms sous les icônes dans les rangées repliées et les apps de l\'Espace';
 
   @override
   String get contactsTitle => 'Contacts';

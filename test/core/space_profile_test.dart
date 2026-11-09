@@ -27,17 +27,18 @@ void main() {
     expect(e.first, SpaceCard.screenTime);
   });
 
-  test('a card hidden by the profile appears if you use it there', () {
+  test('a card hidden by the profile stays only if used in that Space', () {
     final profile = profileFor(SpaceKind.morning);
     final aff = CardAffinity();
     expect(
       arrangeCards(profile: profile, available: [SpaceCard.screenTime]),
       isEmpty,
     );
+    // Taps in the morning, but in another Space: they don't unlock it.
     for (var i = 0; i < 4; i++) {
       aff.add(SpaceCard.screenTime, now.subtract(Duration(days: i)), {
         'slot': 'morning',
-      });
+      }, space: SpaceKind.home);
     }
     final a = aff.affinity(SpaceCard.screenTime, now, {'slot': 'morning'});
     expect(a, greaterThan(promoteAt));
@@ -46,11 +47,44 @@ void main() {
         profile: profile,
         available: [SpaceCard.screenTime],
         affinity: {SpaceCard.screenTime: a},
+        usedHere: {
+          SpaceCard.screenTime: aff.usedIn(
+            SpaceCard.screenTime,
+            SpaceKind.morning,
+            now,
+          ),
+        },
+      ),
+      isEmpty,
+    );
+    // Taps in the Morning Space itself do.
+    for (var i = 0; i < 4; i++) {
+      aff.add(SpaceCard.screenTime, now.subtract(Duration(days: i)), {
+        'slot': 'morning',
+      }, space: SpaceKind.morning);
+    }
+    final here = aff.usedIn(SpaceCard.screenTime, SpaceKind.morning, now);
+    expect(here, greaterThan(promoteAt));
+    expect(
+      arrangeCards(
+        profile: profile,
+        available: [SpaceCard.screenTime],
+        usedHere: {SpaceCard.screenTime: here},
       ),
       [SpaceCard.screenTime],
     );
     // The same taps don't count in the evening.
     expect(aff.affinity(SpaceCard.screenTime, now, {'slot': 'evening'}), 0);
+  });
+
+  test('suggested apps keep the profile place however much they are used', () {
+    final profile = profileFor(SpaceKind.morning);
+    final cards = arrangeCards(
+      profile: profile,
+      available: [SpaceCard.apps, SpaceCard.agenda, SpaceCard.weather],
+      affinity: {SpaceCard.apps: 50, SpaceCard.category: 50},
+    );
+    expect(cards, [SpaceCard.agenda, SpaceCard.weather, SpaceCard.apps]);
   });
 
   test('usage moves a card up', () {

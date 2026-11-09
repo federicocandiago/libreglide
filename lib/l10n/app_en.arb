@@ -236,7 +236,7 @@
   "gestureNone": "Nothing",
   "gesturesDesc": "On Home and, for swipe down, also on the top bar. In search and contacts, the opposite swipe closes and goes back to Home.",
   "collectionLabels": "Names in Collections",
-  "collectionLabelsDesc": "Show names under icons also in collapsed rows",
+  "collectionLabelsDesc": "Show names under icons in collapsed rows and in the Space apps",
   "contactsTitle": "Contacts",
   "contactsFavorites": "Favorites and most used",
   "contactsSearchHint": "Search contacts",
