@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../core/time_context.dart';
 import '../core/agenda.dart';
+import '../core/places.dart';
 import '../core/space.dart';
 import '../core/space_profile.dart';
 import '../data/settings.dart';
@@ -288,11 +289,16 @@ class _SpacePageState extends State<SpacePage>
         ? nextDestination(DateTime.now(), cards.events!)
         : null;
     final parking = cards.parking;
+    // At home or at work the car is usually right there: the saved spot is
+    // not shown (the permission request still is).
+    final place = controller.places.currentRole;
+    final atHomeOrWork = place == PlaceRole.home || place == PlaceRole.work;
     final showParking =
         settings.parkingCard &&
         !controller.driving &&
         (cards.parkingMissing.isNotEmpty ||
-            (parking != null &&
+            (!atHomeOrWork &&
+                parking != null &&
                 DateTime.now().difference(parking.at) <
                     const Duration(hours: 24)));
     final driving = settings.carCard && controller.driving;
