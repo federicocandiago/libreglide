@@ -185,9 +185,11 @@ Chiaro, scuro o automatico (segue il sistema).
 ### 6.4 Sfondo
 Senza Unsplash si vede lo sfondo di sistema; con il vetro smerigliato, lontano dalla Home lo sfoca Android (sfocatura della finestra).
 
-**Vetro con la foto Unsplash della Home** (`lib/ui/backdrop.dart`): la foto sta sotto tutte le pagine e tutte le schermate (sotto il Navigator), ferma mentre il contenuto scorre. Le pagine sono traslucide sopra di essa.
-- Più ci si allontana dalla Home, più la foto è sfocata, con un ease per ogni passo: Space e Collections un livello, A-Z due. Ricerca app e ricerca contatti la portano al livello massimo mentre si aprono, e il contenuto del launcher sotto di loro sfuma via.
-- La sfocatura non viene ricalcolata durante lo scorrimento: la foto viene preparata una volta, nitida e a 3 livelli di sfocatura calcolati su una copia a 1/4 della risoluzione (niente pixel visibili), e i livelli vicini si mescolano.
+**Vetro con la foto Unsplash della Home** (`lib/ui/backdrop.dart`): la foto e il velo traslucido delle pagine stanno sotto tutte le pagine e tutte le schermate (sotto il Navigator), fermi mentre il contenuto scorre. Le pagine hanno il fondo trasparente: scorrono solo le card, senza stacco tra una pagina e l'altra.
+- Più ci si allontana dalla Home, più la foto è sfocata, con un ease per ogni passo: Space e Collections un livello (≈11 px), A-Z due (≈24 px). Il velo compare con lo stesso ease ed è pieno a una pagina di distanza.
+- Aspetto "ghiaccio opaco", non nebbia: sfocatura moderata (le forme si intuiscono), colori un po' più saturi, velo chiaro e coprente, grana finissima.
+- Ricerca app e ricerca contatti si aprono in sequenza (400 ms; chiusura 300 ms): prima si forma il ghiaccio al livello massimo (≈49 px) e il launcher sotto sfuma via (sparito al 60%), poi, dal 35% del tempo, entrano i pannelli con dissolvenza e un leggero scorrimento. Il valore seguito è quello del controller della transizione (non `ModalRoute.animation`, che nel primo frame fuori schermo vale 1).
+- La sfocatura non viene ricalcolata durante lo scorrimento: la foto viene preparata una volta, nitida e a 3 livelli calcolati su una copia a 1/4 della risoluzione (niente pixel visibili), e i livelli vicini si mescolano.
 - Lo sfondo originale del telefono non compare mai al suo posto: né scorrendo tra le pagine, né aprendo o chiudendo ricerca, contatti e il cassetto degli Space.
 
 ## 7. Altre impostazioni (v0.1)

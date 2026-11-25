@@ -9,6 +9,14 @@
 /// route, no transition (pages, search, contacts, the drawer) can ever show
 /// the phone's own wallpaper in its place.
 ///
+/// The page tint is part of the backdrop too: still, and fading in with the
+/// same ease as the blur, so moving from Home to a side page is one
+/// continuum (pages are transparent over it; only their cards move).
+///
+/// The look is frosted ice rather than fog: a moderate blur (shapes still
+/// show), slightly richer colors, a fairly opaque light tint and a fine
+/// grain.
+///
 /// The blur is not recomputed while scrolling: the photo is rendered once at
 /// a few levels (sharp, then [_blurSigmas]) and the painter cross-fades the
 /// two levels around the current value.
@@ -17,6 +25,7 @@ library;
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -24,9 +33,41 @@ import 'package:flutter/material.dart';
 import 'glide_style.dart';
 import 'scope.dart';
 
-/// Blur of each level after the sharp one, as a fraction of the width of the
-/// reduced photo it is computed on (1/4 of the screen).
-const List<double> _blurSigmas = [0.015, 0.035, 0.06];
+/// Blur (sigma) of each level after the sharp one, as a fraction of the
+/// screen width: about 11, 24 and 49 px on a 1080 px screen (the last one
+/// under search and contacts).
+const List<double> _blurSigmas = [0.010, 0.022, 0.045];
+
+/// Saturation of the blurred levels (1 = unchanged): frosted ice lets color
+/// through, fog washes it out.
+const double _saturation = 1.25;
+
+/// Opacity of the grain at full tint.
+const double _grainOpacity = 0.09;
+
+/// The tint over the photo, fully in from one page away from Home: light
+/// and fairly opaque, like frosted ice.
+Color iceTint(ColorScheme scheme) => scheme.brightness == Brightness.dark
+    ? scheme.surfaceContainer.withValues(alpha: 0.6)
+    : Color.alphaBlend(
+        Colors.white.withValues(alpha: 0.35),
+        scheme.surfaceContainerHigh,
+      ).withValues(alpha: 0.62);
+
+/// How much of the launcher shows under a route open by [away]: gone by
+/// about 60%, so the route never sits on a half-visible launcher.
+double underRouteOpacity(double away) => (1 - away * 1.6).clamp(0.0, 1.0);
+
+ColorFilter _saturate(double s) {
+  const r = 0.2126, g = 0.7152, b = 0.0722;
+  final k = 1 - s;
+  return ColorFilter.matrix([
+    r * k + s, g * k, b * k, 0, 0, //
+    r * k, g * k + s, b * k, 0, 0, //
+    r * k, g * k, b * k + s, 0, 0, //
+    0, 0, 0, 1, 0,
+  ]);
+}
 
 /// Highest blur level (under search and contacts).
 const double maxBackdropLevel = 3;
@@ -205,21 +246,22 @@ class _LauncherBackdropState extends State<LauncherBackdrop>
 
   @override
   Widget build(BuildContext context) {
-    final layers = _layers;
+    final active = _path != null;
     return _BackdropScope(
       motion: _motion,
-      active: _path != null,
+      active: active,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (layers != null)
+          if (active)
             IgnorePointer(
               child: CustomPaint(
                 painter: _BackdropPainter(
-                  layers: layers,
+                  layers: _layers,
                   old: _old,
                   motion: _motion,
                   fade: _fade,
+                  tint: iceTint(Theme.of(context).colorScheme),
                 ),
               ),
             ),
@@ -248,14 +290,32 @@ class _BackdropScope extends InheritedWidget {
 /// a reduced copy (blurring hides the lower resolution, so there are no
 /// visible pixels when it is scaled up).
 class _Layers {
-  _Layers(this.images);
+  _Layers(this.images, this.grain);
 
   final List<ui.Image> images;
+
+  /// Fine neutral-grey noise, tiled over the tint.
+  final ui.Image grain;
 
   void dispose() {
     for (final i in images) {
       i.dispose();
     }
+    grain.dispose();
+  }
+
+  static Future<ui.Image> _grain() {
+    const n = 128;
+    final rnd = math.Random(7);
+    final px = Uint8List(n * n * 4);
+    for (var i = 0; i < px.length; i += 4) {
+      final v = (128 + (rnd.nextDouble() - 0.5) * 90).round();
+      px[i] = px[i + 1] = px[i + 2] = v;
+      px[i + 3] = 255;
+    }
+    final done = Completer<ui.Image>();
+    ui.decodeImageFromPixels(px, n, n, ui.PixelFormat.rgba8888, done.complete);
+    return done.future;
   }
 
   static Future<_Layers?> render(File file, Size screen) async {
@@ -288,9 +348,16 @@ class _Layers {
           Paint()..filterQuality = FilterQuality.medium,
         ),
       );
+      // Sigma in the reduced photo's pixels for a blur of f × screen width
+      // on screen (the sharp photo is shown scaled by `shown`).
+      final shown = math.max(
+        screen.width / sharp.width,
+        screen.height / sharp.height,
+      );
+      final toSmall = small.width / sharp.width / shown;
       final blurred = <ui.Image>[];
       for (final f in _blurSigmas) {
-        final sigma = small.width * f;
+        final sigma = f * screen.width * toSmall;
         blurred.add(
           await _draw(
             small.width,
@@ -299,6 +366,7 @@ class _Layers {
               small,
               Offset.zero,
               Paint()
+                ..colorFilter = _saturate(_saturation)
                 ..imageFilter = ui.ImageFilter.blur(
                   sigmaX: sigma,
                   sigmaY: sigma,
@@ -309,7 +377,7 @@ class _Layers {
         );
       }
       small.dispose();
-      return _Layers([sharp, ...blurred]);
+      return _Layers([sharp, ...blurred], await _grain());
     } catch (_) {
       return null;
     }
@@ -335,12 +403,17 @@ class _BackdropPainter extends CustomPainter {
     required this.old,
     required this.motion,
     required this.fade,
+    required this.tint,
   }) : super(repaint: Listenable.merge([motion, fade]));
 
-  final _Layers layers;
+  /// Null while the photo is still being prepared (only the tint shows).
+  final _Layers? layers;
   final _Layers? old;
   final BackdropMotion motion;
   final Animation<double> fade;
+
+  /// The pages' tint, fully in from one page away from Home.
+  final Color tint;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -365,13 +438,68 @@ class _BackdropPainter extends CustomPainter {
 
     final previous = old;
     if (previous != null && fade.value < 1) paintSet(previous, 1);
-    paintSet(layers, fade.value);
+    final current = layers;
+    if (current != null) paintSet(current, previous == null ? 1 : fade.value);
+
+    final t = motion.level.clamp(0.0, 1.0);
+    if (t > 0) {
+      canvas.drawRect(
+        rect,
+        Paint()..color = tint.withValues(alpha: tint.a * t),
+      );
+      final grain = (current ?? previous)?.grain;
+      if (grain != null) {
+        // Neutral grey with "overlay": it only adds texture. Each grain is
+        // 2 physical pixels.
+        final dpr =
+            ui.PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 1;
+        canvas.drawRect(
+          rect,
+          Paint()
+            ..shader = ImageShader(
+              grain,
+              TileMode.repeated,
+              TileMode.repeated,
+              Matrix4.diagonal3Values(2 / dpr, 2 / dpr, 1).storage,
+            )
+            ..blendMode = BlendMode.overlay
+            ..color = Colors.black.withValues(alpha: _grainOpacity * t),
+        );
+      }
+    }
   }
 
   @override
   bool shouldRepaint(_BackdropPainter old) =>
-      old.layers != layers || old.old != this.old;
+      old.layers != layers || old.old != this.old || old.tint != tint;
 }
+
+/// Search and contacts open in sequence: first the ice starts forming and
+/// the launcher fades away, then, from about a third of the way, the panels
+/// fade in, sliding by [fromY] (a fraction of the height). Closing runs the
+/// same steps backwards.
+RouteTransitionsBuilder panelTransition(double fromY) =>
+    (context, animation, _, child) {
+      final panels = CurvedAnimation(
+        parent: animation,
+        curve: const Interval(0.35, 1, curve: Curves.easeOutCubic),
+        reverseCurve: const Interval(0.35, 1, curve: Curves.easeInCubic),
+      );
+      return FadeTransition(
+        opacity: panels,
+        child: SlideTransition(
+          position: Tween(
+            begin: Offset(0, fromY),
+            end: Offset.zero,
+          ).animate(panels),
+          child: child,
+        ),
+      );
+    };
+
+/// Durations of the search and contacts transitions.
+const panelOpenDuration = Duration(milliseconds: 400);
+const panelCloseDuration = Duration(milliseconds: 300);
 
 /// A full-screen route (search, contacts) over the backdrop: with the
 /// backdrop on it is translucent (glass) and the backdrop blurs to the
@@ -393,17 +521,20 @@ class BackdropRoute<T> extends PageRouteBuilder<T> {
   @override
   void install() {
     super.install();
-    if (_active) animation!.addListener(_sync);
+    // The controller, not [animation]: on the push frame the route is built
+    // offstage (for Hero measurements) and [animation] then reads 1, which
+    // flashed the full ice for one frame before the transition.
+    if (_active) controller!.addListener(_sync);
   }
 
   void _sync() {
-    _motion.away = Curves.easeInOut.transform(animation!.value);
+    _motion.away = Curves.easeInOut.transform(controller!.value);
   }
 
   @override
   void dispose() {
     if (_active) {
-      animation?.removeListener(_sync);
+      controller?.removeListener(_sync);
       _motion.away = 0;
     }
     super.dispose();
@@ -416,7 +547,7 @@ class BackdropRoute<T> extends PageRouteBuilder<T> {
     Animation<double> secondaryAnimation,
   ) {
     final page = super.buildPage(context, animation, secondaryAnimation);
-    return _active ? Glass(level: 1, child: page) : page;
+    return _active ? Glass(level: 1, onBackdrop: true, child: page) : page;
   }
 }
 
@@ -435,8 +566,10 @@ class FadeUnderRoute extends StatelessWidget {
       listenable: motion,
       child: child,
       // Always the same Opacity, so the subtree keeps its state.
-      builder: (context, child) =>
-          Opacity(opacity: active ? 1 - motion.away : 1, child: child),
+      builder: (context, child) => Opacity(
+        opacity: active ? underRouteOpacity(motion.away) : 1,
+        child: child,
+      ),
     );
   }
 }

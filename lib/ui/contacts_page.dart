@@ -22,23 +22,12 @@ Future<void> showContactsPanel(
   return Navigator.of(context).push(
     BackdropRoute<void>(
       context: context,
-      transitionDuration: const Duration(milliseconds: 280),
-      reverseTransitionDuration: const Duration(milliseconds: 220),
+      transitionDuration: panelOpenDuration,
+      reverseTransitionDuration: panelCloseDuration,
       pageBuilder: (_, _, _) => ContactsPage(closeSwipe: enter.opposite),
-      transitionsBuilder: (context, animation, _, child) {
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic,
-        );
-        return SlideTransition(
-          position: Tween(
-            begin: Offset(0, enter == SwipeDirection.up ? 0.12 : -0.12),
-            end: Offset.zero,
-          ).animate(curved),
-          child: FadeTransition(opacity: curved, child: child),
-        );
-      },
+      transitionsBuilder: panelTransition(
+        enter == SwipeDirection.up ? 0.06 : -0.06,
+      ),
     ),
   );
 }

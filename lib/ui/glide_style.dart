@@ -43,37 +43,64 @@ const double maxLabelScale = 1.15;
 /// Enables frosted glass for the pages below this widget: backgrounds and
 /// cards become translucent over the blurred wallpaper.
 class Glass extends InheritedWidget {
-  const Glass({super.key, required this.level, required super.child});
+  const Glass({
+    super.key,
+    required this.level,
+    this.onBackdrop = false,
+    required super.child,
+  });
 
   /// 0 = off, 1 = blur active, 2 = blur unavailable (battery saver): nearly
   /// opaque backgrounds, to stay readable.
   final int level;
 
+  /// Over the launcher backdrop (backdrop.dart): the backdrop paints the
+  /// page tint itself, still and fading in with the blur, so page
+  /// backgrounds are transparent and only the content moves.
+  final bool onBackdrop;
+
   @override
-  bool updateShouldNotify(Glass old) => old.level != level;
+  bool updateShouldNotify(Glass old) =>
+      old.level != level || old.onBackdrop != onBackdrop;
 }
 
 class GlideColors {
-  const GlideColors._(this.scheme, this._glass);
+  const GlideColors._(this.scheme, this._glass, this.onBackdrop);
 
-  factory GlideColors.of(BuildContext context) => GlideColors._(
-    Theme.of(context).colorScheme,
-    context.dependOnInheritedWidgetOfExactType<Glass>()?.level ?? 0,
-  );
+  factory GlideColors.of(BuildContext context) {
+    final glass = context.dependOnInheritedWidgetOfExactType<Glass>();
+    return GlideColors._(
+      Theme.of(context).colorScheme,
+      glass?.level ?? 0,
+      glass?.onBackdrop ?? false,
+    );
+  }
 
   final ColorScheme scheme;
   final int _glass;
 
+  /// Pages sit over the launcher backdrop, which paints their tint.
+  final bool onBackdrop;
+
   bool get _dark => scheme.brightness == Brightness.dark;
 
   /// Page background (Glide's light grey, tinted by the palette).
+  /// Transparent over the backdrop, which paints it (see [glassPage]).
   Color get page {
+    if (onBackdrop) return Colors.transparent;
     final base = _dark ? scheme.surface : scheme.surfaceContainerHigh;
     return switch (_glass) {
-      1 => base.withValues(alpha: _dark ? 0.45 : 0.5),
+      1 => glassPage(scheme),
       2 => base.withValues(alpha: 0.9),
       _ => base,
     };
+  }
+
+  /// Translucent page tint with glass on.
+  static Color glassPage(ColorScheme scheme) {
+    final dark = scheme.brightness == Brightness.dark;
+    final base = dark ? scheme.surface : scheme.surfaceContainerHigh;
+    return base.withValues(alpha: dark ? 0.45 : 0.5);
   }
 
   /// Cards and bars (Glide's "white", slightly tinted, so icons with a white

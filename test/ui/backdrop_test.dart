@@ -40,6 +40,13 @@ void main() {
     });
   });
 
+  test('the launcher is gone before the route is half open', () {
+    expect(underRouteOpacity(0), 1);
+    expect(underRouteOpacity(0.3), closeTo(0.52, 1e-9));
+    expect(underRouteOpacity(0.625), 0);
+    expect(underRouteOpacity(1), 0);
+  });
+
   test('motion notifies only on changes', () {
     final m = BackdropMotion();
     var n = 0;

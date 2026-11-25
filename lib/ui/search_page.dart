@@ -26,26 +26,12 @@ Future<void> showGlobalSearch(
   return Navigator.of(context).push(
     BackdropRoute<void>(
       context: context,
-      transitionDuration: const Duration(milliseconds: 260),
-      reverseTransitionDuration: const Duration(milliseconds: 200),
+      transitionDuration: panelOpenDuration,
+      reverseTransitionDuration: panelCloseDuration,
       pageBuilder: (_, _, _) => GlobalSearchPage(closeSwipe: enter.opposite),
-      transitionsBuilder: (context, animation, _, child) {
-        final curved = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic,
-        );
-        return FadeTransition(
-          opacity: curved,
-          child: SlideTransition(
-            position: Tween(
-              begin: Offset(0, enter == SwipeDirection.down ? -0.08 : 0.08),
-              end: Offset.zero,
-            ).animate(curved),
-            child: child,
-          ),
-        );
-      },
+      transitionsBuilder: panelTransition(
+        enter == SwipeDirection.down ? -0.06 : 0.06,
+      ),
     ),
   );
 }

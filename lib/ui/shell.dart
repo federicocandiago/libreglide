@@ -924,7 +924,11 @@ class _GlassLayer extends StatelessWidget {
       child: child,
       builder: (context, child) {
         if (!scope.settings.frostedGlass) return child!;
-        return Glass(level: _glassLevel(scope), child: child!);
+        return Glass(
+          level: _glassLevel(scope),
+          onBackdrop: LauncherBackdrop.activeOf(context),
+          child: child!,
+        );
       },
     );
   }
@@ -945,7 +949,11 @@ class _PageBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = GlideColors.of(context);
-    return ColoredBox(color: card ? c.card : c.page, child: child);
+    // Over the backdrop every page lets its still tint through (A-Z too).
+    return ColoredBox(
+      color: card && !c.onBackdrop ? c.card : c.page,
+      child: child,
+    );
   }
 }
 
