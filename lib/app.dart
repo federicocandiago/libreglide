@@ -6,6 +6,7 @@ import 'l10n/gen/app_localizations.dart';
 import 'state/launcher_controller.dart';
 import 'state/wallpaper_controller.dart';
 import 'theme/palette.dart';
+import 'ui/backdrop.dart';
 import 'ui/scope.dart';
 import 'ui/shell.dart';
 
@@ -51,6 +52,8 @@ class LibreGlideApp extends StatelessWidget {
             locale: settings.locale,
             supportedLocales: L10n.supportedLocales,
             localizationsDelegates: L10n.localizationsDelegates,
+            // The frosted-glass backdrop sits below every route.
+            builder: (context, child) => LauncherBackdrop(child: child!),
             home: const LauncherShell(),
           ),
         ),

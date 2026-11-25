@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/categories.dart';
+import '../core/dock.dart';
 import '../core/detox.dart';
 import '../core/space.dart';
 import '../core/space_profile.dart';
@@ -64,7 +65,10 @@ class SettingsController extends ChangeNotifier {
   bool showSystemApps = true;
   bool fixedCollectionOrder = false;
   Set<String> hiddenApps = {};
-  List<String> favorites = [];
+
+  /// Dock slots from the left: an app id, or [freeDockSlot] (core/dock.dart).
+  /// Stored under the 'favorites' key.
+  List<String> dockSlots = readDockSlots(null);
   Map<String, AppCategory> categoryOverrides = {};
   List<AppCategory> pinnedCategories = [];
   Set<AppCategory> hiddenCategories = {};
@@ -226,7 +230,7 @@ class SettingsController extends ChangeNotifier {
   int collectionsRevision = 0;
 
   /// Dock slots: a single row of 4 (always 4 slots).
-  static const maxFavorites = 4;
+  static const maxFavorites = dockSlotCount;
 
   void _load() {
     final p = _prefs;
@@ -251,9 +255,7 @@ class SettingsController extends ChangeNotifier {
     showSystemApps = p.getBool('showSystemApps') ?? true;
     fixedCollectionOrder = p.getBool('fixedCollectionOrder') ?? false;
     hiddenApps = (p.getStringList('hiddenApps') ?? const []).toSet();
-    favorites = (p.getStringList('favorites') ?? [])
-        .take(maxFavorites)
-        .toList();
+    dockSlots = readDockSlots(p.getStringList('favorites'));
     final overrides = p.getString('categoryOverrides');
     if (overrides != null) {
       final decoded = jsonDecode(overrides) as Map<String, dynamic>;
@@ -422,35 +424,33 @@ class SettingsController extends ChangeNotifier {
 
   void setHidden(String appId, bool hidden) {
     hidden ? hiddenApps.add(appId) : hiddenApps.remove(appId);
-    if (hidden) favorites.remove(appId);
+    if (hidden) dockSlots = removeFromDock(dockSlots, appId);
     _prefs
       ..setStringList('hiddenApps', hiddenApps.toList())
-      ..setStringList('favorites', favorites);
+      ..setStringList('favorites', dockSlots);
     _changed(collections: true);
   }
 
-  bool isFavorite(String appId) => favorites.contains(appId);
+  bool isFavorite(String appId) =>
+      appId.isNotEmpty && dockSlots.contains(appId);
 
-  bool get favoritesFull => favorites.length >= maxFavorites;
+  /// Puts [appId] in dock slot [slot] (its "+", or the first free one).
+  void setDockSlot(int slot, String appId) =>
+      _saveDock(placeInDock(dockSlots, slot, appId));
 
-  /// Moves a dock app to slot [index] (drag and drop).
-  void moveFavorite(String appId, int index) {
-    final from = favorites.indexOf(appId);
-    if (from < 0) return;
-    favorites.removeAt(from);
-    favorites.insert(index.clamp(0, favorites.length), appId);
-    _prefs.setStringList('favorites', favorites);
-    _changed();
-  }
+  /// Frees the dock slot of [appId]; the other apps stay where they are.
+  void removeFavorite(String appId) =>
+      _saveDock(removeFromDock(dockSlots, appId));
 
-  void setFavorite(String appId, bool favorite) {
-    if (favorite) {
-      if (favorites.contains(appId) || favoritesFull) return;
-      favorites.add(appId);
-    } else {
-      favorites.remove(appId);
-    }
-    _prefs.setStringList('favorites', favorites);
+  /// Moves a dock app to slot [index] (drag and drop), swapping with the app
+  /// there.
+  void moveFavorite(String appId, int index) =>
+      _saveDock(moveInDock(dockSlots, appId, index));
+
+  void _saveDock(List<String> slots) {
+    if (identical(slots, dockSlots)) return;
+    dockSlots = slots;
+    _prefs.setStringList('favorites', slots);
     _changed();
   }
 

@@ -664,7 +664,9 @@ class TravelCard extends StatelessWidget {
   }
 }
 
-/// Native view of an Android widget, at the available width.
+/// Native view of an Android widget, at the available width. It never takes
+/// Flutter's focus: a native view that gets Android focus would otherwise
+/// pull it (and the keyboard) away from a search field on a page above.
 class AppWidgetHostView extends StatelessWidget {
   const AppWidgetHostView({super.key, required this.widget});
 
@@ -673,16 +675,18 @@ class AppWidgetHostView extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SizedBox(
     height: widget.height,
-    child: LayoutBuilder(
-      builder: (context, constraints) => AndroidView(
-        key: ValueKey('appwidget-${widget.id}'),
-        viewType: 'libreglide/appwidget',
-        creationParams: {
-          'id': widget.id,
-          'width': constraints.maxWidth,
-          'height': widget.height,
-        },
-        creationParamsCodec: const StandardMessageCodec(),
+    child: ExcludeFocus(
+      child: LayoutBuilder(
+        builder: (context, constraints) => AndroidView(
+          key: ValueKey('appwidget-${widget.id}'),
+          viewType: 'libreglide/appwidget',
+          creationParams: {
+            'id': widget.id,
+            'width': constraints.maxWidth,
+            'height': widget.height,
+          },
+          creationParamsCodec: const StandardMessageCodec(),
+        ),
       ),
     ),
   );

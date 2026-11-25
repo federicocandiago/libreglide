@@ -41,7 +41,10 @@ Future<void> showAppActions(BuildContext context, AppEntry app) {
               title: Text(isFavorite ? l.removeFavorite : l.addToDock),
               onTap: () {
                 Navigator.pop(sheetContext);
-                if (!isFavorite && settings.favoritesFull) {
+                if (isFavorite) {
+                  // Frees only this app's slot: the others stay put.
+                  settings.removeFavorite(app.id);
+                } else if (!controller.addToDock(app)) {
                   messenger?.showSnackBar(
                     SnackBar(
                       content: Text(
@@ -49,9 +52,7 @@ Future<void> showAppActions(BuildContext context, AppEntry app) {
                       ),
                     ),
                   );
-                  return;
                 }
-                settings.setFavorite(app.id, !isFavorite);
               },
             ),
             ListTile(

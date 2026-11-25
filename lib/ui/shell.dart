@@ -9,6 +9,7 @@ import '../core/space.dart';
 import '../data/settings.dart';
 import '../core/time_context.dart';
 import 'all_apps_page.dart';
+import 'backdrop.dart';
 import 'glide_style.dart';
 import 'collections_page.dart';
 import 'home_page.dart';
@@ -27,7 +28,6 @@ import 'settings/legal_pages.dart';
 import 'settings/settings_page.dart';
 import 'settings/space_cards_page.dart';
 import 'space_page.dart';
-import 'widgets/glass_photo.dart';
 import 'widgets/rows_icon.dart';
 
 /// Pages, in Glide's order: Space ← Home (time) → Collections → A-Z.
@@ -80,6 +80,13 @@ class _LauncherShellState extends State<LauncherShell> {
         .listen((_) => _goHome());
     _openSub ??= AppScope.of(context).controller.bridge.openRequests
         .listen(_open);
+    if (_motion == null) {
+      final motion = _motion = LauncherBackdrop.motionOf(context);
+      void syncMotion() =>
+          motion.page = pageBackdropLevel(_page.value, LauncherTab.home.index);
+      _page.addListener(syncMotion);
+      syncMotion();
+    }
     if (_glassListenable == null) {
       final scope = AppScope.of(context);
       _glassListenable = Listenable.merge([
@@ -93,12 +100,15 @@ class _LauncherShellState extends State<LauncherShell> {
 
   // --- Frosted glass ---
 
+  /// The backdrop's motion: its blur follows the pager (see backdrop.dart).
+  BackdropMotion? _motion;
+
   Listenable? _glassListenable;
   bool _glassOn = false;
   double _blur = -1;
 
   /// System blur only away from Home, and only without the Unsplash Home
-  /// photo (which already has its own blurred version behind the pages).
+  /// photo (the backdrop then blurs the photo itself, below every page).
   void _syncGlass() {
     final scope = AppScope.of(context);
     final bridge = scope.controller.bridge;
@@ -264,24 +274,25 @@ class _LauncherShellState extends State<LauncherShell> {
               systemNavigationBarColor: Colors.transparent,
               systemNavigationBarContrastEnforced: false,
             ),
-        child: Scaffold(
-          key: _scaffold,
-          backgroundColor: Colors.transparent,
-          resizeToAvoidBottomInset: false,
-          drawerScrimColor: Colors.black54,
-          drawer: SpacesDrawer(
-            onSelect: (kind) {
-              _scaffold.currentState?.closeDrawer();
-              AppScope.of(context).controller.chooseSpace(kind);
-              goTo(LauncherTab.space);
-            },
-            onSettings: () {
-              _scaffold.currentState?.closeDrawer();
-              _openSettings();
-            },
-          ),
-          body: GlassPhoto(
-            child: Column(
+        // Fades out under search and contacts, leaving only the backdrop.
+        child: FadeUnderRoute(
+          child: Scaffold(
+            key: _scaffold,
+            backgroundColor: Colors.transparent,
+            resizeToAvoidBottomInset: false,
+            drawerScrimColor: Colors.black54,
+            drawer: SpacesDrawer(
+              onSelect: (kind) {
+                _scaffold.currentState?.closeDrawer();
+                AppScope.of(context).controller.chooseSpace(kind);
+                goTo(LauncherTab.space);
+              },
+              onSettings: () {
+                _scaffold.currentState?.closeDrawer();
+                _openSettings();
+              },
+            ),
+            body: Column(
               children: [
                 _TabBar(
                   page: _page,

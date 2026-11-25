@@ -4,6 +4,8 @@
 /// 12 dp corners).
 library;
 
+import 'dart:async';
+
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -270,17 +272,43 @@ class PillSearchField extends StatefulWidget {
   State<PillSearchField> createState() => _PillSearchFieldState();
 }
 
-class _PillSearchFieldState extends State<PillSearchField> {
+class _PillSearchFieldState extends State<PillSearchField>
+    with WidgetsBindingObserver {
   final _focus = FocusNode();
   Animation<double>? _route;
+
+  // Autofocus alone sometimes doesn't open the keyboard: Android ignores the
+  // request if it comes while the window has no focus (just back from an
+  // app, the shade closing, the page still animating in), and nothing asks
+  // again. So, after the transition, the keyboard is requested explicitly:
+  // once the window has focus, and again a few times until it shows.
+
+  /// Explicit requests left, [_retryDelay] apart.
+  int _attempts = 4;
+  static const _retryDelay = Duration(milliseconds: 250);
+  Timer? _retry;
+
+  /// Waiting for the window to get focus before asking.
+  bool _waitingWindow = false;
+
+  /// The keyboard showed up, or the user moved focus away: stop asking.
+  bool _done = false;
+  bool _hadFocus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.autofocus) return;
+    WidgetsBinding.instance.addObserver(this);
+    _focus.addListener(_onFocus);
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!widget.autofocus || _route != null) return;
-    // Autofocus alone sometimes doesn't open the keyboard (the window isn't
-    // focused yet while the page animates in): once the transition ends,
-    // request focus and show the keyboard explicitly.
+    if (!widget.autofocus) return;
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) _stop();
+    if (_route != null) return;
     _route = ModalRoute.of(context)?.animation;
     if (_route == null || _route!.isCompleted) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showKeyboard());
@@ -295,15 +323,47 @@ class _PillSearchFieldState extends State<PillSearchField> {
     _showKeyboard();
   }
 
+  void _onFocus() {
+    if (_focus.hasFocus) {
+      _hadFocus = true;
+    } else if (_hadFocus) {
+      _stop(); // the user dismissed it (scrolling, a tap elsewhere)
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _waitingWindow) {
+      _waitingWindow = false;
+      _showKeyboard();
+    }
+  }
+
+  void _stop() {
+    _done = true;
+    _waitingWindow = false;
+    _retry?.cancel();
+  }
+
   void _showKeyboard() {
-    if (!mounted) return;
+    if (!mounted || _done) return;
+    // "resumed" means the window has focus (the engine reports Android's
+    // window focus): before that, the request would be dropped.
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      _waitingWindow = true;
+      return;
+    }
     if (!_focus.hasFocus) _focus.requestFocus();
     SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+    _retry?.cancel();
+    if (--_attempts > 0) _retry = Timer(_retryDelay, _showKeyboard);
   }
 
   @override
   void dispose() {
     _route?.removeStatusListener(_onRoute);
+    _retry?.cancel();
+    if (widget.autofocus) WidgetsBinding.instance.removeObserver(this);
     _focus.dispose();
     super.dispose();
   }

@@ -14,7 +14,7 @@ Struttura attuale (v0.2), che prevale sui paragrafi successivi dove sono in conf
 - **Barra delle schede in alto**, opaca: strisce colorate (aprono il cassetto degli Space) · icona dello Space · **ora** · griglia (Collections) · A-Z. Un indicatore in colore d'accento segue lo scorrimento.
 - **Pagine:** Space ← **Home** → Collections → A-Z. Si parte dalla Home. Il tasto Home riporta alla Home.
 - **Cassetto degli Space:** scuro, "SPACES", Impostazioni in testa, uno Space per fascia oraria con icona e nome colorati. Scegliere uno Space lo forza finché non cambia il contesto.
-- **Home:** solo lo sfondo del telefono e, in basso, il dock bianco 2×4 senza etichette, con un riquadro "+" per aggiungere app. Pressione lunga sullo sfondo: impostazioni.
+- **Home:** solo lo sfondo del telefono e, in basso, il dock di 4 posti senza etichette. I posti sono indipendenti: ogni posto libero ha il suo "+", che aggiunge l'app proprio in quel posto; "Rimuovi dai preferiti" libera solo il posto di quell'app e le altre non si spostano; trascinando un'app su un altro posto le due si scambiano. "Aggiungi al dock" dal menu di un'app usa il primo posto libero da sinistra. Un posto la cui app non è più installata torna libero; un'app nascosta dal detox tiene il suo posto, che appare vuoto. Pressione lunga sullo sfondo: impostazioni.
 - **Space:** giorno e data sopra lo sfondo; striscia colorata con icona e nome dello Space in maiuscolo sottile; card azioni (Sveglia | Non disturbare); card "Per questo momento" con le app previste; prossima sveglia; banner in colore d'accento ("Le informazioni utili compariranno qui durante la giornata", chiudibile con la spunta; "non è l'app Home" con Imposta).
 - **Collections:** fondo grigio, card piatte a tutta larghezza con bordo sottile, intestazione in maiuscoletto con piccola icona grigia e freccia ∨, una riga di icone senza nomi (5 su un Pixel 7); aperta, mostra il resto con i nomi.
 - **A-Z:** barra "A-Z APP" con ricerca e cambio griglia/lista; griglia a 4 colonne con nomi su 2 righe; la prima cella di ogni lettera è la lettera grande e sottile in colore d'accento; divisori sottili; alfabeto completo a destra.
@@ -99,7 +99,7 @@ v0.1, versione essenziale. Gli Space completi arriveranno con il motore di conte
 
 - **In alto:** orologio grande, data e chip del contesto, per esempio "Mattina · feriale".
 - **Al centro:** "Per te adesso", una riga con le 5 app più probabili nel contesto corrente (AppPredictor). Prima che ci siano dati compare un messaggio che spiega che il launcher sta imparando.
-- **In basso:** dock dei **preferiti**, fino a 5 app scelte dall'utente (pressione lunga, poi "Aggiungi ai preferiti").
+- **In basso:** dock dei **preferiti**, 4 posti indipendenti (vedi §0).
 - **Sfondo:** lo sfondo di sistema, visibile dietro al launcher, con una leggera sfumatura nella parte bassa per la leggibilità.
 
 ## 3. Collections (menu dinamico)
@@ -183,7 +183,12 @@ Chiaro, scuro o automatico (segue il sistema).
 - **A tema:** usa il layer monocromo delle adaptive icon (Android 13+), colorato con `onPrimaryContainer` su sfondo `primaryContainer`. Le app senza layer monocromo mostrano l'icona originale.
 
 ### 6.4 Sfondo
-v0.1 usa lo sfondo di sistema. Lo sfondo Unsplash (chiave facoltativa) è rimandato a una versione successiva.
+Senza Unsplash si vede lo sfondo di sistema; con il vetro smerigliato, lontano dalla Home lo sfoca Android (sfocatura della finestra).
+
+**Vetro con la foto Unsplash della Home** (`lib/ui/backdrop.dart`): la foto sta sotto tutte le pagine e tutte le schermate (sotto il Navigator), ferma mentre il contenuto scorre. Le pagine sono traslucide sopra di essa.
+- Più ci si allontana dalla Home, più la foto è sfocata, con un ease per ogni passo: Space e Collections un livello, A-Z due. Ricerca app e ricerca contatti la portano al livello massimo mentre si aprono, e il contenuto del launcher sotto di loro sfuma via.
+- La sfocatura non viene ricalcolata durante lo scorrimento: la foto viene preparata una volta, nitida e a 3 livelli di sfocatura calcolati su una copia a 1/4 della risoluzione (niente pixel visibili), e i livelli vicini si mescolano.
+- Lo sfondo originale del telefono non compare mai al suo posto: né scorrendo tra le pagine, né aprendo o chiudendo ricerca, contatti e il cassetto degli Space.
 
 ## 7. Altre impostazioni (v0.1)
 
@@ -197,7 +202,7 @@ v0.1 usa lo sfondo di sistema. Lo sfondo Unsplash (chiave facoltativa) è rimand
 
 - **Impostazioni:** `shared_preferences`.
 - **Storico delle aperture:** SQLite (`sqflite`), tabella `launch_event` come nel §5 della specifica del motore. Si conservano 180 giorni.
-- **Correzioni dell'utente** (categorie, preferiti, app nascoste, card fissate e nascoste): `shared_preferences`.
+- **Correzioni dell'utente** (categorie, preferiti — il dock è la chiave `favorites`, una lista di 4 id di app, uno per posto da sinistra, con `""` per un posto libero — app nascoste, card fissate e nascoste): `shared_preferences`.
 
 > In v0.1 si usa `sqflite` invece di Drift per evitare la generazione di codice. Si potrà passare a Drift quando arriveranno le tabelle dei luoghi.
 

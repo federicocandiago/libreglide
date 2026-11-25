@@ -122,9 +122,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final controller = scope.controller;
     final settings = scope.settings;
     await controller.setFavoriteCategories(_chosen);
-    if (_prefillDock && settings.favorites.isEmpty) {
+    if (_prefillDock && controller.dockSlots.every((a) => a == null)) {
       for (final app in controller.suggestedDock()) {
-        settings.setFavorite(app.id, true);
+        controller.addToDock(app);
       }
     }
     settings.setOnboardingDone(true);
@@ -388,7 +388,10 @@ class _Intro extends StatelessWidget {
                 divider(),
                 _Bullet(icon: Icons.schedule_rounded, text: l.obHowHome),
                 divider(),
-                _Bullet(icon: Icons.table_rows_rounded, text: l.obHowCollections),
+                _Bullet(
+                  icon: Icons.table_rows_rounded,
+                  text: l.obHowCollections,
+                ),
                 divider(),
                 _Bullet(
                   icon: Icons.swipe_vertical_rounded,

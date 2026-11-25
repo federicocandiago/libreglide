@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../core/app_entry.dart';
 import '../data/settings.dart';
 import '../platform/launcher_bridge.dart';
+import 'backdrop.dart';
 import 'glide_style.dart';
 import 'gestures.dart';
 import 'labels.dart';
@@ -108,7 +109,12 @@ class _HomePageState extends State<HomePage>
     }
     return Stack(
       children: [
-        const Positioned.fill(child: WallpaperPhoto(view: WallpaperView.home)),
+        // With the frosted-glass backdrop the photo is already below every
+        // page, still while the pages move.
+        if (!LauncherBackdrop.activeOf(context))
+          const Positioned.fill(
+            child: WallpaperPhoto(view: WallpaperView.home),
+          ),
         Column(
           children: [
             Expanded(
@@ -346,18 +352,16 @@ class _Dock extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([controller, scope.settings]),
       builder: (context, _) {
-        final favorites = controller.favorites;
+        final slots = controller.dockSlots;
         final tray = scope.settings.dockStyle == DockStyle.tray;
-        // Always 4 slots: the dock apps, then a "+" in each free slot.
-        // Long-pressing an app lets the user drag it to another slot.
+        // Always 4 independent slots: each one shows its app or a "+" that
+        // fills that very slot. Long-pressing an app lets the user drag it
+        // to another slot.
         final row = Row(
           children: [
-            for (var i = 0; i < SettingsController.maxFavorites; i++)
+            for (final (i, app) in slots.indexed)
               Expanded(
-                child: _DockSlot(
-                  index: i,
-                  app: i < favorites.length ? favorites[i] : null,
-                ),
+                child: _DockSlot(index: i, app: app),
               ),
           ],
         );
@@ -401,7 +405,9 @@ class _Dock extends StatelessWidget {
   }
 }
 
-/// A dock slot: accepts an app dragged from another slot.
+/// A dock slot: its app, or a "+" for this slot. Accepts an app dragged from
+/// another slot (the two swap). An app hidden by the detox keeps its slot,
+/// shown empty.
 class _DockSlot extends StatelessWidget {
   const _DockSlot({required this.index, required this.app});
 
@@ -410,10 +416,12 @@ class _DockSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = AppScope.of(context).settings;
+    final scope = AppScope.of(context);
+    final settings = scope.settings;
     final scheme = Theme.of(context).colorScheme;
+    final locked = app != null && scope.controller.isDetoxHidden(app!);
     return DragTarget<String>(
-      onWillAcceptWithDetails: (d) => d.data != app?.id,
+      onWillAcceptWithDetails: (d) => !locked && d.data != app?.id,
       onAcceptWithDetails: (d) => settings.moveFavorite(d.data, index),
       builder: (context, candidates, _) => AnimatedContainer(
         duration: const Duration(milliseconds: 150),
@@ -423,7 +431,11 @@ class _DockSlot extends StatelessWidget {
               : scheme.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(cardRadius),
         ),
-        child: app == null ? const _AddTile() : _DockApp(app: app!),
+        child: locked
+            ? const SizedBox(height: _DockApp._iconSize + 16)
+            : app == null
+            ? _AddTile(slot: index)
+            : _DockApp(app: app!),
       ),
     );
   }
@@ -484,9 +496,11 @@ class _DockApp extends StatelessWidget {
   }
 }
 
-/// "+" tile to add an app to the dock.
+/// "+" tile: adds an app to the dock in this very [slot].
 class _AddTile extends StatelessWidget {
-  const _AddTile();
+  const _AddTile({required this.slot});
+
+  final int slot;
 
   @override
   Widget build(BuildContext context) {
@@ -497,7 +511,7 @@ class _AddTile extends StatelessWidget {
       message: context.l10n.addToDock,
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: () => _pickApp(context),
+        onTap: () => _pickApp(context, slot),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Center(
@@ -525,7 +539,8 @@ class _AddTile extends StatelessWidget {
   }
 }
 
-Future<void> _pickApp(BuildContext context) {
+/// Picks an app (not already in the dock) for dock slot [slot].
+Future<void> _pickApp(BuildContext context, int slot) {
   final scope = AppScope.of(context);
   final settings = scope.settings;
   final apps = [
@@ -558,7 +573,7 @@ Future<void> _pickApp(BuildContext context) {
                 app: apps[i],
                 onTap: () {
                   Navigator.pop(sheetContext);
-                  settings.setFavorite(apps[i].id, true);
+                  settings.setDockSlot(slot, apps[i].id);
                 },
               ),
             ),

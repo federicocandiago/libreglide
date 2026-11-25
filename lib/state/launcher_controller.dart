@@ -838,10 +838,30 @@ class LauncherController extends ChangeNotifier {
 
   CategorySource? categorySourceOf(AppEntry app) => _categories[app.id]?.source;
 
-  List<AppEntry> get favorites => [
-    for (final id in settings.favorites)
-      if (byId(id) case final a? when !_detoxHidden(a)) a,
+  /// The dock, slot by slot from the left: the app in each slot, or null if
+  /// the slot is free (never filled, or its app is no longer installed: the
+  /// "+" fills it again).
+  List<AppEntry?> get dockSlots => [
+    for (final id in settings.dockSlots) id.isEmpty ? null : byId(id),
   ];
+
+  /// Dock apps that can be shown now (not hidden by the detox).
+  List<AppEntry> get favorites => [
+    for (final a in dockSlots)
+      if (a != null && !_detoxHidden(a)) a,
+  ];
+
+  /// Whether the detox hides [app] right now (its dock slot stays taken).
+  bool isDetoxHidden(AppEntry app) => _detoxHidden(app);
+
+  /// Puts [app] in the leftmost free dock slot (from the app menu). False if
+  /// the dock is full.
+  bool addToDock(AppEntry app) {
+    final slot = dockSlots.indexOf(null);
+    if (slot < 0) return false;
+    settings.setDockSlot(slot, app.id);
+    return true;
+  }
 
   Map<String, double> _scores() {
     final visible = visibleApps;
