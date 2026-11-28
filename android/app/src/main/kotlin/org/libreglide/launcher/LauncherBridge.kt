@@ -58,7 +58,6 @@ import android.provider.ContactsContract
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
@@ -71,12 +70,16 @@ import java.util.concurrent.Executors
  * list, icons, launch, info, uninstall, Home role.
  *
  * It makes no decisions: it reads the system and returns normalized data.
- * Channels: `libreglide/launcher` (methods) and `libreglide/launcher/events`.
+ * Channel: `libreglide/launcher`. Notifications to Flutter are method calls
+ * too: Dart registers its handler once, on the long-lived engine, so they
+ * keep arriving when the activity (and this bridge) is recreated. An event
+ * channel's sink, instead, belonged to the first bridge only: after a
+ * recreation, removed apps stayed in the lists.
  */
 class LauncherBridge(
     private val activity: Activity,
     messenger: BinaryMessenger,
-) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
+) : MethodChannel.MethodCallHandler {
 
     private val context: Context = activity.applicationContext
     private val launcherApps = context.getSystemService(LauncherApps::class.java)
@@ -85,12 +88,10 @@ class LauncherBridge(
     private val worker = Executors.newFixedThreadPool(2)
 
     private val methods = MethodChannel(messenger, METHOD_CHANNEL)
-    private val events = EventChannel(messenger, EVENT_CHANNEL)
-    private var sink: EventChannel.EventSink? = null
 
     /** Music being played: notifies Flutter when it changes. */
     private val media = MediaWatcher(context) {
-        main.post { sink?.success(mapOf("type" to "media_changed")) }
+        main.post { methods.invokeMethod("onMediaChanged", null) }
     }
 
     /** Last list read, to resolve icons quickly. */
@@ -108,9 +109,12 @@ class LauncherBridge(
 
     init {
         methods.setMethodCallHandler(this)
-        events.setStreamHandler(this)
         launcherApps.registerCallback(packageCallback, main)
         media.startIfPossible()
+        // Apps may have changed while no bridge was listening (between the
+        // old activity and this one): Flutter re-reads the list. At process
+        // start Dart isn't listening yet and reads it anyway.
+        main.post { changed(null) }
     }
 
     fun dispose() {
@@ -118,7 +122,6 @@ class LauncherBridge(
         media.stop()
         unregisterWifiCallback()
         methods.setMethodCallHandler(null)
-        events.setStreamHandler(null)
         glass.dispose()
         worker.shutdown()
     }
@@ -141,18 +144,8 @@ class LauncherBridge(
     }
 
     private fun changed(packageName: String?) {
-        sink?.success(mapOf("type" to "packages_changed", "package" to packageName))
+        methods.invokeMethod("onPackagesChanged", packageName)
     }
-
-    // region EventChannel
-    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-        sink = events
-    }
-
-    override fun onCancel(arguments: Any?) {
-        sink = null
-    }
-    // endregion
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
@@ -1306,7 +1299,6 @@ class LauncherBridge(
 
     companion object {
         const val METHOD_CHANNEL = "libreglide/launcher"
-        const val EVENT_CHANNEL = "libreglide/launcher/events"
         private const val REQUEST_HOME_ROLE = 4201
         private const val REQUEST_CALENDAR = 4202
         private const val REQUEST_CONTACTS = 4203

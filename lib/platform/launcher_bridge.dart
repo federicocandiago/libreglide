@@ -161,9 +161,10 @@ class LauncherBridge {
   }
 
   static const _methods = MethodChannel('libreglide/launcher');
-  static const _events = EventChannel('libreglide/launcher/events');
 
   final _homePressed = StreamController<void>.broadcast();
+  final _packagesChanged = StreamController<String?>.broadcast();
+  final _mediaChanged = StreamController<void>.broadcast();
   final _resumed = StreamController<void>.broadcast();
   final _open = StreamController<String>.broadcast();
 
@@ -178,23 +179,16 @@ class LauncherBridge {
   /// The launcher activity came back to the foreground.
   Stream<void> get resumed => _resumed.stream;
 
-  /// A single stream from the native channel, shared by all listeners: a
-  /// second `receiveBroadcastStream` would steal the channel from the first.
-  late final Stream<Map<Object?, Object?>> _eventStream = _events
-      .receiveBroadcastStream()
-      .where((e) => e is Map)
-      .cast<Map<Object?, Object?>>()
-      .asBroadcastStream();
+  // Notifications from the system arrive as method calls, like the others:
+  // this handler is registered once, on the long-lived engine, so they keep
+  // arriving when the Android activity is recreated (an event channel's
+  // listener did not, and removed apps stayed in the lists).
 
-  /// Apps installed, updated or removed.
-  late final Stream<String?> packagesChanged = _eventStream
-      .where((e) => e['type'] == 'packages_changed')
-      .map((e) => e['package'] as String?);
+  /// Apps installed, updated or removed (null: re-read everything).
+  Stream<String?> get packagesChanged => _packagesChanged.stream;
 
   /// The music playing has changed.
-  late final Stream<void> mediaChanged = _eventStream
-      .where((e) => e['type'] == 'media_changed')
-      .map((_) {});
+  Stream<void> get mediaChanged => _mediaChanged.stream;
 
   Future<void> _onNativeCall(MethodCall call) async {
     switch (call.method) {
@@ -202,6 +196,10 @@ class LauncherBridge {
         _homePressed.add(null);
       case 'onResumed':
         _resumed.add(null);
+      case 'onPackagesChanged':
+        _packagesChanged.add(call.arguments as String?);
+      case 'onMediaChanged':
+        _mediaChanged.add(null);
       case 'onBlurAvailable':
         blurAvailable.value = call.arguments == true;
       case 'onOpen':
@@ -526,8 +524,7 @@ class LauncherBridge {
 
   /// Searches [query] on the web with the default browser and its engine.
   Future<bool> webSearch(String query) async =>
-      await _methods.invokeMethod<bool>('webSearch', {'query': query}) ??
-      false;
+      await _methods.invokeMethod<bool>('webSearch', {'query': query}) ?? false;
 
   /// Opens the dialer with the number: the user starts the call.
   Future<bool> dial(String number) async =>
